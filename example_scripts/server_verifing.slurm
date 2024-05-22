@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name mpi_verifier
 #SBATCH --time=00:02:00
-#SBATCH --account=pas2136
 
 if [ "$#" -eq 0 ]; then
     echo "Usage: $0 schedule# iteration_number"
@@ -12,12 +11,11 @@ schedule=$1
 iteration_number=$2
 recheck_flag=$3
 
-source "${REPO_ROOT}/config/osc.env"
+source "${REPO_ROOT}/config/hpc.env"
 
-input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/multimedia_prep"
-schedule_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/multimedia_prep/${DOWNLOADER_SCHEDULES_FOLDER}/${schedule}"
+input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/${DOWNLOAD_DIR}"
 
-
+schedule_path="${input_path}/${DOWNLOADER_SCHEDULES_FOLDER}/${schedule}"
 logs_dir="${input_path}/${DOWNLOADER_LOGS_FOLDER}/${schedule}/${iteration_number}"
 mkdir -p "${logs_dir}"
 
