@@ -9,7 +9,7 @@ from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
 from schemes import multimedia_scheme
-from server_profiling_data_prep.utils import truncate_folder
+from utils.utils import truncate_folder
 
 BATCH_SIZE = 10_000
 

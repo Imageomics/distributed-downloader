@@ -35,10 +35,6 @@ Server_profile_spec = f"{Input_path}/profile_spec.csv"
 Batch_size: int = _args.batch_size
 
 rank = MPI.COMM_WORLD.rank
-# log_f = open(f"{Input_path}/logs/log_{rank}", "w")
-# size = MPI.COMM_WORLD.size
-
-# truncate_server_folders(Output_path)
 
 scheduler_df = pandas.read_csv(Server_profile_spec)
 scheduler_dicts = scheduler_df[scheduler_df["Rank"] == rank].to_dict("records")
@@ -77,8 +73,6 @@ for idx, schedule_dict in enumerate(scheduler_dicts):
     for _ in range(Time_to_profile):
         completed_batch_final = CompletedBatch(Queue(), Queue())
         print(f"Rank {rank} starting batch 0|{rate_limit}|{schedule_dict['ServerName']}")
-        # sys.stdout.write(f"Rank {rank} starting batch 0|{rate_limit}|{schedule_dict['ServerName']}\n")
-        # sys.stdout.flush()
 
         input_path = f"{Server_urls_batched}/ServerName={schedule_dict['ServerName']}/partition_id=0"
         completed_batch, new_rate_limit = download_batch(downloader, rate_limit, input_path)
@@ -88,8 +82,6 @@ for idx, schedule_dict in enumerate(scheduler_dicts):
         new_rate_limit_final = new_rate_limit
 
         print(f"Rank {rank} finished batch 0|{schedule_dict['ServerName']}")
-        # sys.stdout.write(f"Rank {rank} finished batch 0|{schedule_dict['ServerName']}\n")
-        # sys.stdout.flush()
 
     ProfilerWriter.write_batch(
         profiles_hdf["profiles"],
@@ -106,4 +98,3 @@ for idx, schedule_dict in enumerate(scheduler_dicts):
 
 profiles_hdf.close()
 errors_hdf.close()
-# log_f.close()

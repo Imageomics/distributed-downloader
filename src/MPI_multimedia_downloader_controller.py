@@ -23,15 +23,11 @@ Server_schedule: str = _args.schedule_path
 Number_of_workers: int = _args.max_nodes * _args.max_workers_per_nodes
 
 Server_urls_downloaded = f"{Input_path}/downloaded_images"
-# Server_profiler_df = pandas.DataFrame(np.array(h5py.File(f"{Input_path}/servers_profiles.hdf5", 'r')['profiles']),
-#                                       columns=profile_dtype.names)
-# Server_profiler_df["server_name"] = Server_profiler_df["server_name"].astype(str)
 
 Server_profiler_df = pandas.read_csv(f"{Input_path}/servers_profiles.csv")
-
 Server_verifier_df = pandas.read_csv(f"{Server_schedule}/_verification.csv")
-
 Server_config_df = pandas.read_csv(f"{Server_schedule}/_config.csv")
+
 Server_config_df["StartIndex"] = 0
 Server_config_df["EndIndex"] = 0
 server_config_columns = Server_config_df.columns.to_list()

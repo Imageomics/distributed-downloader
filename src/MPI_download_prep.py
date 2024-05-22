@@ -74,10 +74,6 @@ profiles_df = profiles_df[["ServerName", "TotalBatches", "ProcessPerNode", "Node
 shutil.rmtree(Server_schedules_path, ignore_errors=True)
 os.makedirs(Server_schedules_path, exist_ok=True)
 
-create_schedule_configs(profiles_df.query("Nodes == 1"), Number_of_workers, Server_schedules_path)
-create_schedule_configs(profiles_df.query("Nodes == 2"), Number_of_workers, Server_schedules_path)
-create_schedule_configs(profiles_df.query("Nodes == 4"), Number_of_workers, Server_schedules_path)
-create_schedule_configs(profiles_df.query("Nodes == 8"), Number_of_workers, Server_schedules_path)
-create_schedule_configs(profiles_df.query("Nodes == 10"), Number_of_workers, Server_schedules_path)
+create_schedule_configs(profiles_df, Number_of_workers, Server_schedules_path)
 
 print("Done")

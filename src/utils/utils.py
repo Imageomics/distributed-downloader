@@ -1,5 +1,6 @@
 import math
 import os
+import shutil
 import sys
 from collections import deque
 from typing import List, Deque
@@ -107,6 +108,9 @@ def ensure_created(list_of_path: List[str]) -> None:
     for path in list_of_path:
         os.makedirs(path, exist_ok=True)
 
+def truncate_folder(path: str):
+    shutil.rmtree(path, ignore_errors=True)
+    os.makedirs(path, exist_ok=True)
 
 def split_dataframe(df: pandas.DataFrame, by_column: str = "Nodes", chunk_size=20) -> List[pandas.DataFrame]:
     chunks: List[pandas.DataFrame] = []

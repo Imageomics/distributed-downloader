@@ -67,37 +67,3 @@ profile_spec_df = pandas.DataFrame(profile_spec, columns=["Rank", "ServerName", 
 profile_spec_df.to_csv(Server_profile_spec, index=True, index_label="Offset", header=True)
 
 pandas.DataFrame(profile_csv, columns=profile_dtype.names).to_csv(Server_profiler_csv, index=False, header=True)
-print("wrote csv to disk")
-
-print("Profiling started")
-
-# for folder in os.listdir(Input_path):
-#     for file in os.listdir(f"{Input_path}/{folder}"):
-#         success_len += Batch_size
-#         error_len += Batch_size
-
-# successes = f.create_dataset("successes",
-#                               (success_len,),
-#                               maxshape=(success_len,),
-#                               dtype=success_dtype,
-#                               chunks=(Batch_size,),
-#                               # compression="gzip"
-#                               )
-
-# errors = f.create_dataset("errors",
-#                            (error_len,),
-#                            maxshape=(error_len,),
-#                            dtype=error_dtype,
-#                            chunks=(Batch_size,),
-#                            # compression="gzip"
-#                            )
-
-# images = f.create_dataset("images",
-#                            (success_len, 1024, 1024, 3),
-#                            maxshape=(success_len, 1024, 1024, 3),
-#                            dtype='uint8',
-#                            chunks=(Batch_size, 1024, 1024, 3),
-#
-#                            # compression='gzip',
-#                            **hdf5plugin.LZ4()
-#                            )

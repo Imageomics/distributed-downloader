@@ -14,7 +14,9 @@ input_path = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep"
 logs_path = f"{input_path}/logs"
 schedules_path = f"{input_path}/schedules"
 submitted_jobs_file = "_jobs_ids.csv"
-
+mpi_submitter_script = "/users/PAS2119/andreykopanev/gbif/scripts/submit_mpi_download.sh"
+downloading_script = "/users/PAS2119/andreykopanev/gbif/scripts/server_downloading.slurm"
+verifying_script = "/users/PAS2119/andreykopanev/gbif/scripts/server_verifing.slurm"
 
 def get_logs_offset(path: str) -> int:
     if not os.path.exists(path):
@@ -34,8 +36,8 @@ def get_id(output: bytes) -> int:
 
 def submit_downloader(_schedule: str, iteration_id: int, dep_id: int) -> int:
     iteration = str(iteration_id).zfill(4)
-    output = subprocess.check_output(f"/users/PAS2119/andreykopanev/gbif/scripts/submit_mpi_download.sh "
-                                     f"/users/PAS2119/andreykopanev/gbif/scripts/server_downloading.slurm "
+    output = subprocess.check_output(f"{mpi_submitter_script} "
+                                     f"{downloading_script} "
                                      f"{_schedule} "
                                      f"{iteration} "
                                      f"{dep_id}", shell=True)
@@ -47,8 +49,7 @@ def submit_downloader(_schedule: str, iteration_id: int, dep_id: int) -> int:
 def submit_verifier(_schedule: str, iteration_id: int, dep_id: int = None) -> int:
     iteration = str(iteration_id).zfill(4)
 
-    command_str = (f"/users/PAS2119/andreykopanev/gbif/scripts/submit_mpi_download.sh "
-                   f"/users/PAS2119/andreykopanev/gbif/scripts/server_verifing.slurm {_schedule} {iteration}")
+    command_str = f"{mpi_submitter_script} {verifying_script} {_schedule} {iteration}"
     if dep_id is not None:
         command_str += f" {dep_id}"
     if RECHECK:

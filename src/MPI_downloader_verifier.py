@@ -63,9 +63,9 @@ for idx, row in Server_config_df.iterrows():
 
 Verification_df.to_csv(verification_file, index=False, header=True)
 
-verification_unchanged = Verification_df.equals(Verification_original_df)
-unchanged_warning = os.path.exists(f"{Server_schedule}/_UNCHANGED")
-
+# verification_unchanged = Verification_df.equals(Verification_original_df)
+# unchanged_warning = os.path.exists(f"{Server_schedule}/_UNCHANGED")
+#
 # if unchanged_warning:
 #     if verification_unchanged:
 #         os.remove(f"{Server_schedule}/_UNCHANGED")
