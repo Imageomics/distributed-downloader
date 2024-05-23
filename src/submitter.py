@@ -5,7 +5,6 @@ import subprocess
 from typing import List
 from dotenv import load_dotenv
 
-import pandas
 import pandas as pd
 
 NUM_DOWNLOADERS: int = 10
@@ -100,12 +99,12 @@ def main():
             continue
         submitted_jobs_path = f"{schedules_path}/{schedule}/{SUBMITTED_JOBS_FILE}"
 
-        prev_jobs = pandas.DataFrame({
+        prev_jobs = pd.DataFrame({
             "job_id": pd.Series(dtype="int"),
             "is_verification": pd.Series(dtype="bool")
         })
         if os.path.exists(submitted_jobs_path):
-            prev_jobs = pandas.read_csv(submitted_jobs_path)
+            prev_jobs = pd.read_csv(submitted_jobs_path)
         prev_jobs = prev_jobs.to_dict("records")
         offset = math.ceil(len(prev_jobs) / 2)
 
@@ -132,7 +131,7 @@ def main():
 
             offset += 1
 
-        pandas.DataFrame(prev_jobs).to_csv(submitted_jobs_path, index=False, header=True)
+        pd.DataFrame(prev_jobs).to_csv(submitted_jobs_path, index=False, header=True)
 
 
 if __name__ == "__main__":
