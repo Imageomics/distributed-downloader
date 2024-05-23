@@ -37,14 +37,14 @@ srun --mpi=pmi2 --nodes=1 --ntasks-per-node=1 --cpus-per-task=3 \
     "$max_nodes" \
     "$max_worker_per_node" \
     "$batch_size" \
-    > "${input_path}/logs/MPI_server_profiler_controller.log"
+    > "${input_path}/${DOWNLOADER_LOGS_FOLDER}/MPI_server_profiler_controller.log"
 
 # srun \
 # --mpi=pmi2 \
 #  --nodes=$max_nodes \
 #  --ntasks-per-node=$max_worker_per_node \
 #  --cpus-per-task=10 \
-#  --output="${input_path}/logs/MPI_server_profiler-%2t.log" \
+#  --output="${input_path}/${DOWNLOADER_LOGS_FOLDER}/MPI_server_profiler-%2t.log" \
 #  python src/MPI_server_profiler.py \
 #  "$input_path" \
 #  "$batch_size" \
