@@ -1,8 +1,7 @@
 import argparse
 import os
-import subprocess
 
-import pandas
+import pandas as pd
 
 from mpi_downloader.utils import get_latest_schedule, verify_downloaded_batches
 
@@ -27,19 +26,19 @@ if not os.path.exists(config_file):
     raise ValueError(f"Config file {config_file} not found")
 
 if Recheck:
-    Verification_df = pandas.DataFrame(columns=["ServerName", "PartitionId", "Status"])
+    Verification_df = pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
 else:
     if os.path.exists(verification_file):
-        Verification_df = pandas.read_csv(verification_file)
+        Verification_df = pd.read_csv(verification_file)
     else:
-        Verification_df = pandas.DataFrame(columns=["ServerName", "PartitionId", "Status"])
+        Verification_df = pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
 
 Verification_original_df = Verification_df.copy()
 
-Server_profiler_df = pandas.read_csv(f"{Input_path}/servers_profiles.csv")
+Server_profiler_df = pd.read_csv(f"{Input_path}/servers_profiles.csv")
 
 latest_schedule = get_latest_schedule(Server_schedule)
-Server_config_df = pandas.read_csv(config_file)
+Server_config_df = pd.read_csv(config_file)
 Server_config_df["StartIndex"] = 0
 Server_config_df["EndIndex"] = 0
 server_config_columns = Server_config_df.columns.to_list()
@@ -59,7 +58,7 @@ if Latest_schedule is not None and len(Latest_schedule) > 0:
 
 for idx, row in Server_config_df.iterrows():
     new_verification_df = verify_downloaded_batches(row, Server_urls_downloaded)
-    Verification_df = pandas.concat([Verification_df, pandas.DataFrame(new_verification_df)], ignore_index=True).drop_duplicates()
+    Verification_df = pd.concat([Verification_df, pd.DataFrame(new_verification_df)], ignore_index=True).drop_duplicates()
 
 Verification_df.to_csv(verification_file, index=False, header=True)
 

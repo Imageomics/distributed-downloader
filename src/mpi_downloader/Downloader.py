@@ -11,22 +11,25 @@ import requests
 
 from mpi_downloader.dataclasses import DownloadedImage, CompletedBatch, RateLimit
 
-_HEADERS = {
-    "User-Agent": "Imageomics Institute (https://imageomics.org; imageomics-contact@osu.edu)"
-}
 _MAX_RETRIES = 5
-_TIMOUT = 5
+_TIMEOUT = 5
 
 _RETRY_ERRORS = [429, 500, 501, 502, 503, 504]
 
-_IMAGE_SIZE = 1024
-
 
 class Downloader:
-    def __init__(self, session: requests.Session, rate_limit: RateLimit, job_end_time: int = 0, convert_image: bool = True):
+    def __init__(self,
+                 header: dict,
+                 session: requests.Session,
+                 rate_limit: RateLimit,
+                 img_size: int = 1024,
+                 job_end_time: int = 0,
+                 convert_image: bool = True):
+        self.header = header
         self.job_end_time = job_end_time
         self.session: requests.Session = session
         self.rate_limit: float = rate_limit.initial_rate
+        self.img_size = img_size
         self.upper_limit: int = rate_limit.upper_bound
         self.bottom_limit: int = rate_limit.lower_bound
         self.semaphore: threading.Semaphore = threading.Semaphore(self.upper_limit)
@@ -62,7 +65,7 @@ class Downloader:
 
                 time.sleep(1 / self.rate_limit)
 
-                (executor.submit(self.load_url, prepared_image, _TIMOUT, True)
+                (executor.submit(self.load_url, prepared_image, _TIMEOUT, True)
                  .add_done_callback(
                     self._callback_builder(executor, prepared_image)
                 ))
@@ -84,7 +87,7 @@ class Downloader:
             url.start_time = time.perf_counter()
 
             response = self.session.get(url.identifier,
-                                        headers=_HEADERS,
+                                        headers=self.header,
                                         stream=True,
                                         allow_redirects=True,
                                         timeout=timeout)
@@ -102,7 +105,7 @@ class Downloader:
                     is_retry = self.process_error(prep_img, e)
                     if is_retry:
                         self.rate_limit = max(self.rate_limit - 1, self.bottom_limit)
-                        executor.submit(self.load_url, prep_img, _TIMOUT, False).add_done_callback(
+                        executor.submit(self.load_url, prep_img, _TIMEOUT, False).add_done_callback(
                             self._callback_builder(executor, prep_img))
                     else:
                         self._error_count += 1
@@ -137,10 +140,11 @@ class Downloader:
 
         original_hashsum = hashlib.md5(raw_image_bytes).hexdigest()
 
+        img_size = self.img_size
         resized_image = original_image
         resized_size = original_image.shape[:2]
-        if original_image.shape[0] > _IMAGE_SIZE or original_image.shape[1] > _IMAGE_SIZE:
-            resized_image, resized_size = self.image_resize(original_image, _IMAGE_SIZE)
+        if original_image.shape[0] > img_size or original_image.shape[1] > img_size:
+            resized_image, resized_size = self.image_resize(original_image, img_size)
 
         resized_image = resized_image.tobytes()
 

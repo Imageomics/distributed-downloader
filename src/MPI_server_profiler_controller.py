@@ -4,7 +4,7 @@ import shutil
 
 import h5py
 import mpi4py.MPI as MPI
-import pandas
+import pandas as pd
 
 from mpi_downloader.dataclasses import error_dtype, profile_dtype
 
@@ -63,7 +63,7 @@ with h5py.File(Server_profiler_hdf, 'w', driver='mpio', comm=MPI.COMM_WORLD) as 
 
 print("created df")
 
-profile_spec_df = pandas.DataFrame(profile_spec, columns=["Rank", "ServerName", "BatchesCount"])
+profile_spec_df = pd.DataFrame(profile_spec, columns=["Rank", "ServerName", "BatchesCount"])
 profile_spec_df.to_csv(Server_profile_spec, index=True, index_label="Offset", header=True)
 
-pandas.DataFrame(profile_csv, columns=profile_dtype.names).to_csv(Server_profiler_csv, index=False, header=True)
+pd.DataFrame(profile_csv, columns=profile_dtype.names).to_csv(Server_profiler_csv, index=False, header=True)

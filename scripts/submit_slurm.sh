@@ -3,8 +3,8 @@
 SCRIPTS_DIR=$(dirname "$(realpath "$0")")
 REPO_ROOT=$(dirname "$(realpath "${SCRIPTS_DIR}")")
 export REPO_ROOT
-LOGS_DIR="${REPO_ROOT}/logs"
-mkdir -p "${LOGS_DIR}"
+logs_dir="${REPO_ROOT}/${DOWNLOADER_LOGS_FOLDER}"
+mkdir -p "${logs_dir}"
 
 # Check if any arguments were passed
 if [ "$#" -eq 0 ]; then
@@ -24,5 +24,5 @@ for script in "$@"; do
     base_filename=$(basename "${filename}" ."${ext}")
 
     # Submit the script to Slurm
-    sbatch --output="${REPO_ROOT}/logs/${base_filename}.out" --error="${REPO_ROOT}/logs/${base_filename}.err" "${script}"
+    sbatch --output="${logs_dir}/${base_filename}.out" --error="${logs_dir}/${base_filename}.err" "${script}"
 done

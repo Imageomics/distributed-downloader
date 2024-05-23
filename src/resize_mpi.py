@@ -8,7 +8,7 @@ import mpi4py.MPI as MPI
 
 import cv2
 import numpy as np
-import pandas
+import pandas as pd
 import py7zr
 from PIL import Image, UnidentifiedImageError
 from py7zr import FILTER_ZSTD
@@ -22,15 +22,15 @@ base_path = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downl
 _new_size = 720
 read_time = 900
 write_time = 600
-schedule_df = pandas.read_csv(schedule_path)
+schedule_df = pd.read_csv(schedule_path)
 schedule = schedule_df.query(f"Rank == {rank}").set_index("ServerName").to_dict("index")
 
 if len(schedule) == 0:
     raise ValueError(f"Empty schedule for rank {rank}")
 
 
-def read_parquets(base_path: str, filename: str) -> pandas.DataFrame:
-    empty_df = pandas.DataFrame()
+def read_parquets(base_path: str, filename: str) -> pd.DataFrame:
+    empty_df = pd.DataFrame()
 
     for folder, content in schedule.items():
         ids = content["Ids"].split()
@@ -38,11 +38,11 @@ def read_parquets(base_path: str, filename: str) -> pandas.DataFrame:
             if not os.path.exists(f"{base_path}/ServerName={folder}/partition_id={_id}/{filename}"):
                 continue
 
-            new_df = pandas.read_parquet(f"{base_path}/ServerName={folder}/partition_id={_id}/{filename}")
+            new_df = pd.read_parquet(f"{base_path}/ServerName={folder}/partition_id={_id}/{filename}")
             new_df["ServerName"] = folder
             new_df["partition_id"] = int(_id)
 
-            empty_df = pandas.concat([empty_df, new_df]).reset_index(drop=True)
+            empty_df = pd.concat([empty_df, new_df]).reset_index(drop=True)
 
     return empty_df
 
@@ -93,18 +93,18 @@ def validate_image_data(img_bytes: bytes,
         return False, str(e)
 
 
-def resize_partition(partition: pandas.DataFrame) -> pandas.DataFrame:
+def resize_partition(partition: pd.DataFrame) -> pd.DataFrame:
     server_name = partition['ServerName'].iloc[0]
     partition_id = partition['partition_id'].iloc[0]
     partition_path = f"{base_path}/ServerName={server_name}/partition_id={partition_id}"
     print(f"Starting {server_name} {partition_id}")
 
     if not os.path.exists(partition_path):
-        return pandas.DataFrame(columns=["uuid", "identifier", "ServerName", "verified", "verification_msg"])
+        return pd.DataFrame(columns=["uuid", "identifier", "ServerName", "verified", "verification_msg"])
 
     if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 0)) - (write_time + read_time):
         print(f"Not enough time to resize {int(os.getenv('SLURM_JOB_END_TIME', 0)) - time.time()} left, {write_time + read_time} needed")
-        return pandas.DataFrame(columns=["uuid", "identifier", "ServerName", "verified", "verification_msg"])
+        return pd.DataFrame(columns=["uuid", "identifier", "ServerName", "verified", "verification_msg"])
 
     partition_dict = partition.to_dict("index")
 
@@ -144,7 +144,7 @@ def resize_partition(partition: pandas.DataFrame) -> pandas.DataFrame:
 
             if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 0)) - write_time:
                 print(f"Not enough time to write {int(os.getenv('SLURM_JOB_END_TIME', 0)) - time.time()} left, {write_time} needed")
-                return pandas.DataFrame(columns=["uuid", "identifier", "ServerName", "verified", "verification_msg"])
+                return pd.DataFrame(columns=["uuid", "identifier", "ServerName", "verified", "verification_msg"])
 
             with py7zr.SevenZipFile(f"{partition_path}/images.7z", 'w', filters=[{'id': FILTER_ZSTD, 'level': 3}]) as f:
                 for fname in os.listdir(resized_dir):
@@ -154,15 +154,15 @@ def resize_partition(partition: pandas.DataFrame) -> pandas.DataFrame:
         corrupted = open(f"{partition_path}/_corrupted.txt", "w")
         print(str(e), file=corrupted)
         corrupted.close()
-        return pandas.DataFrame(columns=["uuid", "identifier", "ServerName", "verified", "verification_msg"])
+        return pd.DataFrame(columns=["uuid", "identifier", "ServerName", "verified", "verification_msg"])
     else:
-        (pandas.DataFrame
+        (pd.DataFrame
          .from_dict(partition_dict, orient="index")
          .reset_index(names="uuid")
          .drop(columns=["ServerName", "partition_id"])
          .to_parquet(f"{partition_path}/successes.parquet", index=False))
 
-        verification_df = pandas.DataFrame.from_dict(verification_dict, orient="index").reset_index(names="uuid")
+        verification_df = pd.DataFrame.from_dict(verification_dict, orient="index").reset_index(names="uuid")
 
         (verification_df.drop(columns=["identifier", "ServerName"])
          .to_parquet(f"{partition_path}/verification.parquet", index=False))

@@ -15,7 +15,7 @@ max_worker_per_node=4
 # ================== DO NOT TOUCH BELOW THIS LINE ==============================
 source "${REPO_ROOT}/config/osc.env"
 
-input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/multimedia_prep"
+input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/${DOWNLOAD_DIR}"
 
 module load intel/2021.10.0
 module load intelmpi/2021.10
@@ -47,4 +47,6 @@ srun --mpi=pmi2 --nodes=1 --ntasks-per-node=1 --cpus-per-task=3 \
 #  --output="${input_path}/logs/MPI_server_profiler-%2t.log" \
 #  python src/MPI_server_profiler.py \
 #  "$input_path" \
-#  "$batch_size"
+#  "$batch_size" \
+#  --header "$HEADER" \
+#  --img-size "$IMAGE_SIZE"

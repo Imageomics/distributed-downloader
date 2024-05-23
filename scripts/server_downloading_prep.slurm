@@ -5,7 +5,7 @@
 
 source "${REPO_ROOT}/config/osc.env"
 
-input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/multimedia_prep"
+input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/${DOWNLOAD_DIR}"
 
 logs_dir="${input_path}/${DOWNLOADER_LOGS_FOLDER}"
 mkdir -p "${logs_dir}"

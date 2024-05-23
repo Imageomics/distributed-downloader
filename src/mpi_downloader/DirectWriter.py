@@ -2,7 +2,7 @@ import os
 import time
 from typing import List, Any
 
-import pandas
+import pandas as pd
 import py7zr
 from py7zr import FILTER_ZSTD
 
@@ -43,8 +43,8 @@ def write_batch(
             errors_list.append(error_entry.to_list_download(error))
             completed_batch.error_queue.task_done()
 
-        pandas.DataFrame(successes_list, columns=success_dtype.names).to_parquet(f"{output_path}/successes.parquet", index=False)
-        pandas.DataFrame(errors_list, columns=error_dtype.names).to_parquet(f"{output_path}/errors.parquet", index=False)
+        pd.DataFrame(successes_list, columns=success_dtype.names).to_parquet(f"{output_path}/successes.parquet", index=False)
+        pd.DataFrame(errors_list, columns=error_dtype.names).to_parquet(f"{output_path}/errors.parquet", index=False)
 
         open(f"{output_path}/completed", "w").close()
     except (TimeoutError, ValueError) as error:

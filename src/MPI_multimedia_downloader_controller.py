@@ -1,9 +1,8 @@
 import argparse
-import os
 from collections import deque
 from typing import Any, Dict, List, Deque
 
-import pandas
+import pandas as pd
 
 from mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, separate_to_blocks, \
     get_largest_nonempty_bucket, get_schedule_count
@@ -24,9 +23,9 @@ Number_of_workers: int = _args.max_nodes * _args.max_workers_per_nodes
 
 Server_urls_downloaded = f"{Input_path}/downloaded_images"
 
-Server_profiler_df = pandas.read_csv(f"{Input_path}/servers_profiles.csv")
-Server_verifier_df = pandas.read_csv(f"{Server_schedule}/_verification.csv")
-Server_config_df = pandas.read_csv(f"{Server_schedule}/_config.csv")
+Server_profiler_df = pd.read_csv(f"{Input_path}/servers_profiles.csv")
+Server_verifier_df = pd.read_csv(f"{Server_schedule}/_verification.csv")
+Server_config_df = pd.read_csv(f"{Server_schedule}/_config.csv")
 
 Server_config_df["StartIndex"] = 0
 Server_config_df["EndIndex"] = 0
@@ -44,7 +43,7 @@ if Latest_schedule is not None and len(Latest_schedule) > 0:
     Server_config_df["StartIndex"] = Server_config_df["PartitionIdFrom"].astype(int)
     Server_config_df = Server_config_df[server_config_columns]
 
-batches_to_download: pandas.DataFrame = Server_config_df.apply(generate_ids_to_download, axis=1,
+batches_to_download: pd.DataFrame = Server_config_df.apply(generate_ids_to_download, axis=1,
                                                                args=(Server_verifier_df,))
 batches_to_download = batches_to_download.merge(Server_config_df, on="ServerName", how="left").drop(
     columns=["StartIndex", "EndIndex"])
@@ -101,4 +100,4 @@ while len(ids_to_schedule_in_buckets) != 0:
         del ids_to_schedule_in_buckets[largest_key]
 
 schedule_number = get_schedule_count(Server_schedule)
-pandas.DataFrame(schedule_list).to_csv(f"{Server_schedule}/{schedule_number:0=4}.csv", index=False, header=True)
+pd.DataFrame(schedule_list).to_csv(f"{Server_schedule}/{schedule_number:0=4}.csv", index=False, header=True)

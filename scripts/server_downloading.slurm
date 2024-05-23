@@ -38,6 +38,8 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
     "${REPO_ROOT}/src/MPI_multimedia_downloader_controller.py" \
     "$input_path" \
     "$schedule_path" \
+    --header "$HEADER" \
+    --img-size "$IMAGE_SIZE" \
     "$DOWNLOADER_MAX_NODES" \
     "$DOWNLOADER_WORKERS_PER_NODE"
 } && {

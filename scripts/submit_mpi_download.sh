@@ -2,6 +2,7 @@
 
 SCRIPTS_DIR=$(dirname "$(realpath "$0")")
 REPO_ROOT=$(dirname "$(realpath "${SCRIPTS_DIR}")")
+source "${REPO_ROOT}/config/hpc.env"
 export REPO_ROOT
 
 if [ "$#" -eq 0 ]; then
@@ -13,8 +14,8 @@ script=$1
 schedule=$2
 iteration_number=$3
 
-LOGS_DIR="${REPO_ROOT}/logs/${schedule}/${iteration_number}"
-mkdir -p "${LOGS_DIR}"
+logs_dir="${REPO_ROOT}/${DOWNLOADER_LOGS_FOLDER}/${schedule}/${iteration_number}"
+mkdir -p "${logs_dir}"
 
 if [ "$4" != "" ] && [ "$4" != "--recheck" ]; then
     dependency=$4
@@ -24,8 +25,8 @@ if [ "$4" != "" ] && [ "$4" != "--recheck" ]; then
 
     # Submit the script to Slurm
     sbatch \
-        --output="${LOGS_DIR}/${base_filename}.out" \
-        --error="${LOGS_DIR}/${base_filename}.err" \
+        --output="${logs_dir}/${base_filename}.out" \
+        --error="${logs_dir}/${base_filename}.err" \
         --dependency=afterany:"${dependency}" \
         "${script}" "${schedule}" "${iteration_number}" "$5" \
         --nodes="${DOWNLOADER_MAX_NODES}" \
@@ -40,8 +41,8 @@ else
 
     # Submit the script to Slurm
     sbatch \
-        --output="${LOGS_DIR}/${base_filename}.out" \
-        --error="${LOGS_DIR}/${base_filename}.err" \
+        --output="${logs_dir}/${base_filename}.out" \
+        --error="${logs_dir}/${base_filename}.err" \
         "${script}" "${schedule}" "${iteration_number}" "$4" \
         --nodes="${DOWNLOADER_MAX_NODES}" \
         --ntasks-per-node="${DOWNLOADER_WORKERS_PER_NODE}" \
