@@ -20,7 +20,9 @@ This MPI-based distributed downloader was initially designed for the purpose of 
 ### Running on other systems
 
 The parameters for step 3 can all be set in the configuration file. This includes information about your HPC account and paths to various files, as well as distribution of work and download settings; be sure to fill in your information. 
-The configuration file (`config/hpc.env`) should be in this location relative to the root of the directory from which these files are being run. 
+The configuration file (`config/hpc.env`) should be in this location relative to the root of the directory from which these files are being run.
+
+Note that the current default is to download images such that the longest side is 1024 pixels. The original size and resized size are recorded in the metadata, and the aspect ratio is preserved.
 
 The provided `slurm` scripts for running steps 1 and 2 (`scripts/server_downloading_prep.slurm` and `scripts/server_profiling.slurm`, which are only done once at the start of the project) must have the account info changed at the top of their files (`#SBATCH --account=<your account here>`).
 
