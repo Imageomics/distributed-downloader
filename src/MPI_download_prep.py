@@ -2,7 +2,7 @@ import argparse
 import os
 import shutil
 
-import pandas
+import pandas as pd
 
 from mpi_downloader.dataclasses import profile_dtype
 from utils.utils import ensure_created, create_schedule_configs
@@ -63,7 +63,7 @@ for i, server in enumerate(server_list):
     server_total_partitions = len(os.listdir(f"{Server_urls_batched}/{server}"))
     profile_csv.append([server_name, server_total_partitions, 0, 0, _DEFAULT_RATE_LIMIT])
 
-profiles_df = pandas.DataFrame(profile_csv, columns=profile_dtype.names)
+profiles_df = pd.DataFrame(profile_csv, columns=profile_dtype.names)
 profiles_df.to_csv(Server_profiler_csv, index=False, header=True)
 
 profiles_df["Nodes"] = profiles_df["total_batches"].apply(small_rule)

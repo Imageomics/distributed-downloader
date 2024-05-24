@@ -1,20 +1,17 @@
 import argparse
-import os
 import re
-import time
 from queue import Queue
 from typing import Dict, Tuple
-import sys
 
 import h5py
 import mpi4py.MPI as MPI
-import pandas
+import pandas as pd
 
 from mpi_downloader import CompletedBatch, ProfilerWriter
 from mpi_downloader.Downloader import Downloader
 from mpi_downloader.PreLoader import load_one_batch
 from mpi_downloader.dataclasses import RateLimit
-from mpi_downloader.utils import create_new_session, truncate_server_folders
+from mpi_downloader.utils import create_new_session
 
 Initial_rate = 20
 Rate_multiplier = 10
@@ -24,9 +21,14 @@ parser = argparse.ArgumentParser(description='Server profiler')
 
 parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder of work')
 parser.add_argument('batch_size', metavar='batch_size', type=int, help='size of the batch to download')
+parser.add_argument("--header", required=True, type=str, help="the requests header")
+parser.add_argument("--img-size", required = True, type=int, help="the max side-length of an image in pixels")
 
 # parse the arguments
 _args = parser.parse_args()
+header_str = _args.header
+header = {header_str.split(": ")[0]: header_str.split(": ")[1]}
+img_size = _args.img_size
 Input_path: str = _args.input_path
 Server_urls_batched = f"{Input_path}/servers_batched"
 Server_profiler_hdf = f"{Input_path}/servers_profiles.hdf5"
@@ -36,7 +38,7 @@ Batch_size: int = _args.batch_size
 
 rank = MPI.COMM_WORLD.rank
 
-scheduler_df = pandas.read_csv(Server_profile_spec)
+scheduler_df = pd.read_csv(Server_profile_spec)
 scheduler_dicts = scheduler_df[scheduler_df["Rank"] == rank].to_dict("records")
 
 if len(scheduler_dicts) < 1:
@@ -63,7 +65,7 @@ for idx, schedule_dict in enumerate(scheduler_dicts):
         server_name = re.sub(':', '%3A', schedule_dict["ServerName"])
         rate_limit = RateLimit(Initial_rate, Rate_multiplier)
         session = create_new_session(server_name, rate_limit.upper_bound)
-        downloader = Downloader(session, rate_limit, False)
+        downloader = Downloader(header, session, rate_limit, img_size, False)
         downloader_schedule[schedule_dict["ServerName"]] = (downloader, rate_limit)
 
     downloader, rate_limit = downloader_schedule[schedule_dict["ServerName"]]

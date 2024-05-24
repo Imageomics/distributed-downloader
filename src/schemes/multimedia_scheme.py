@@ -1,4 +1,4 @@
-from pyspark.sql.types import StructField, StructType, IntegerType, StringType, LongType, TimestampType
+from pyspark.sql.types import StructField, StructType, StringType, LongType, TimestampType
 
 schema = StructType([
     StructField("gbifID", LongType(), True),

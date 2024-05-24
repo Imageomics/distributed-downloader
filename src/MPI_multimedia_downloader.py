@@ -31,9 +31,14 @@ parser = argparse.ArgumentParser(description='Server downloader')
 
 parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder of work')
 parser.add_argument("schedule_path", metavar="schedule_path", type=str, help="the path to the schedule")
+parser.add_argument("--header", required=True, type=str, help="the requests header")
+parser.add_argument("--img-size", required = True, type=int, help="the max side-length of an image in pixels")
 
 # parse the arguments
 _args = parser.parse_args()
+header_str = _args.header
+header = {header_str.split(": ")[0]: header_str.split(": ")[1]}
+img_size = _args.img_size
 Input_path: str = _args.input_path
 Server_urls_batched = f"{Input_path}/servers_batched"
 Server_downloader_output = f"{Input_path}/downloaded_images"
@@ -64,8 +69,8 @@ try:
     print("Locking first window")
 
     for schedule_dict in Latest_schedule:
-        downloader, _, rate_limit = get_or_init_downloader(schedule_dict, downloader_schedule, _RATE_MULTIPLIER,
-                                                           job_end_time)
+        downloader, _, rate_limit = get_or_init_downloader(header, img_size, schedule_dict, downloader_schedule,
+                                                           _RATE_MULTIPLIER, job_end_time)
 
         for batch_id in range(schedule_dict["PartitionIdFrom"], schedule_dict["PartitionIdTo"]):
             window.Lock(schedule_dict["MainRank"], MPI.LOCK_EXCLUSIVE)

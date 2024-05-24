@@ -1,11 +1,10 @@
-import math
 import os
 import shutil
 import sys
 from collections import deque
 from typing import List, Deque
 
-import pandas
+import pandas as pd
 from pyspark.sql import DataFrame, SparkSession
 
 
@@ -112,15 +111,15 @@ def truncate_folder(path: str):
     shutil.rmtree(path, ignore_errors=True)
     os.makedirs(path, exist_ok=True)
 
-def split_dataframe(df: pandas.DataFrame, by_column: str = "Nodes", chunk_size=20) -> List[pandas.DataFrame]:
-    chunks: List[pandas.DataFrame] = []
+def split_dataframe(df: pd.DataFrame, by_column: str = "Nodes", chunk_size=20) -> List[pd.DataFrame]:
+    chunks: List[pd.DataFrame] = []
 
     row_list = df.to_dict("records")
 
     if len(row_list) == 0:
         raise ValueError("Empty list")
 
-    chunks.append(pandas.DataFrame(row_list[0], index=[0]))
+    chunks.append(pd.DataFrame(row_list[0], index=[0]))
     del row_list[0]
 
     while len(row_list) > 0:
@@ -133,7 +132,7 @@ def split_dataframe(df: pandas.DataFrame, by_column: str = "Nodes", chunk_size=2
             column_value = chunk[by_column].sum() + new_chunk[by_column]
 
             if column_value <= chunk_size:
-                chunks[-1] = pandas.concat([chunk, pandas.DataFrame(new_chunk, index=[0])], ignore_index=True)
+                chunks[-1] = pd.concat([chunk, pd.DataFrame(new_chunk, index=[0])], ignore_index=True)
                 del row_list[i]
                 break
 
@@ -142,19 +141,19 @@ def split_dataframe(df: pandas.DataFrame, by_column: str = "Nodes", chunk_size=2
             if len(row_list) == 0:
                 break
 
-            chunks.append(pandas.DataFrame(row_list[0], index=[0]))
+            chunks.append(pd.DataFrame(row_list[0], index=[0]))
             del row_list[0]
 
     return chunks
 
 
-def create_schedule_configs(group: pandas.DataFrame, number_of_workers: int, schedule_path: str,
+def create_schedule_configs(group: pd.DataFrame, number_of_workers: int, schedule_path: str,
                             by_column: str = "Nodes") -> None:
     print("Creating schedules")
 
     group = group.sort_values(by=[by_column], ascending=False).reset_index()
 
-    chunked_group: Deque[pandas.DataFrame] = deque(split_dataframe(group, by_column, number_of_workers))
+    chunked_group: Deque[pd.DataFrame] = deque(split_dataframe(group, by_column, number_of_workers))
     all_schedules = [int(folder) for folder in os.listdir(schedule_path) if os.path.isdir(f"{schedule_path}/{folder}")]
     number_of_schedules = 0
     if len(all_schedules) > 0:
@@ -164,7 +163,7 @@ def create_schedule_configs(group: pandas.DataFrame, number_of_workers: int, sch
         chunk = chunked_group.popleft()
 
         while len(chunked_group) > 0 and chunk["TotalBatches"].sum() < number_of_workers * 50:
-            chunk = pandas.concat([chunk, chunked_group.popleft()], ignore_index=True)
+            chunk = pd.concat([chunk, chunked_group.popleft()], ignore_index=True)
 
         chunk_folder = f"{schedule_path}/{number_of_schedules:0=4}"
         os.mkdir(chunk_folder)

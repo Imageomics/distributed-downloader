@@ -6,7 +6,7 @@ import shutil
 import time
 from typing import Dict, Tuple, Union, List, Any, Deque, Set
 
-import pandas
+import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
@@ -36,7 +36,7 @@ def truncate_server_folders(path: str) -> None:
             shutil.rmtree(f"{path}/{file}", ignore_errors=True)
 
 
-def get_latest_schedule(path_to_dir: str, rank: int = None) -> Union[pandas.DataFrame, None]:
+def get_latest_schedule(path_to_dir: str, rank: int = None) -> Union[pd.DataFrame, None]:
     if not os.path.exists(path_to_dir) or not os.path.isdir(path_to_dir):
         return None
 
@@ -47,14 +47,16 @@ def get_latest_schedule(path_to_dir: str, rank: int = None) -> Union[pandas.Data
 
     latest_schedule_file = sorted(latest_schedule_file, reverse=True)[0]
 
-    latest_schedule_df = pandas.read_csv(f"{path_to_dir}/{latest_schedule_file}")
+    latest_schedule_df = pd.read_csv(f"{path_to_dir}/{latest_schedule_file}")
 
     if rank is not None:
         return latest_schedule_df[latest_schedule_df["Rank"] == rank]
     return latest_schedule_df
 
 
-def get_or_init_downloader(schedule_dict: Dict[str, str],
+def get_or_init_downloader(header: dict,
+                           img_size: int,
+                           schedule_dict: Dict[str, str],
                            downloader_schedule: Dict[str, Tuple],
                            rate_multiplier: float,
                            job_end_time: int) -> Tuple[Downloader, requests.Session, RateLimit]:
@@ -62,14 +64,14 @@ def get_or_init_downloader(schedule_dict: Dict[str, str],
         server_name = re.sub('%3A', ':', schedule_dict["ServerName"])
         rate_limit = RateLimit(schedule_dict["RateLimit"], rate_multiplier)
         session = create_new_session(server_name, rate_limit.upper_bound)
-        downloader = Downloader(session, rate_limit, job_end_time=job_end_time)
+        downloader = Downloader(header, session, rate_limit, img_size, job_end_time=job_end_time)
         downloader_schedule[schedule_dict["ServerName"]] = (downloader, session, rate_limit)
 
     downloader, session, rate_limit = downloader_schedule[schedule_dict["ServerName"]]
     return downloader, session, rate_limit
 
 
-def generate_ids_to_download(schedule_row: pandas.Series, verifier_df: pandas.DataFrame) -> pandas.Series:
+def generate_ids_to_download(schedule_row: pd.Series, verifier_df: pd.DataFrame) -> pd.Series:
     server_name = schedule_row["ServerName"]
     server_start_idx = schedule_row["StartIndex"]
     server_end_idx = schedule_row["EndIndex"]
@@ -85,10 +87,10 @@ def generate_ids_to_download(schedule_row: pandas.Series, verifier_df: pandas.Da
     server_batches = server_batches - verifier_set
 
     # server_batches.extend(range(max_batch_idx, server_end_idx + 1))
-    return pandas.Series([server_name, list(server_batches)], index=["ServerName", "Batches"])
+    return pd.Series([server_name, list(server_batches)], index=["ServerName", "Batches"])
 
 
-def verify_downloaded_batches(schedule_row: pandas.Series, input_path: str) -> List[Dict[str, Any]]:
+def verify_downloaded_batches(schedule_row: pd.Series, input_path: str) -> List[Dict[str, Any]]:
     server_name = schedule_row["ServerName"]
     server_start_idx = schedule_row["StartIndex"]
     server_end_idx = schedule_row["EndIndex"]
@@ -111,11 +113,11 @@ def verify_downloaded_batches(schedule_row: pandas.Series, input_path: str) -> L
 
     return verified_batches
     # if len(verified_batches) == 0:
-    #     return pandas.DataFrame(columns=["ServerName", "PartitionId", "Status"])
-    # return pandas.DataFrame(verified_batches)
+    #     return pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
+    # return pd.DataFrame(verified_batches)
 
 
-def separate_to_blocks(data_row: pandas.Series) -> List[List[Tuple[int, int]]]:
+def separate_to_blocks(data_row: pd.Series) -> List[List[Tuple[int, int]]]:
     batches: List[int] = data_row["Batches"]
     num_of_blocks: int = data_row["ProcessPerNode"] * data_row["Nodes"]
 
