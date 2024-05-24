@@ -3,7 +3,7 @@
 #SBATCH --time=00:05:00
 #SBATCH --account=pas2136
 
-source "${REPO_ROOT}/config/osc.env"
+source "${REPO_ROOT}/config/hpc.env"
 
 input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/${DOWNLOAD_DIR}"
 
