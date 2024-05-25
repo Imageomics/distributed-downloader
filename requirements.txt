@@ -31,9 +31,8 @@ filelock==3.13.3
 fonttools==4.50.0
 frozenlist==1.4.1
 fsspec==2024.3.1
-gbif @ file:///mnt/c/Users/24122/PycharmProjects/ImUn/gbif
-h5py==3.10.0
-hdf5plugin==4.4.0
+h5py>=3.10.0
+hdf5plugin>=4.4.0
 huggingface-hub==0.22.2
 idna==3.6
 importlib_metadata==7.1.0
@@ -55,7 +54,7 @@ lz4==4.3.3
 MarkupSafe==2.1.5
 matplotlib==3.8.3
 matplotlib-inline==0.1.6
-mpi4py==3.1.5
+mpi4py>=3.1.5
 msgpack==1.0.8
 multidict==6.0.5
 multivolumefile==0.2.3
@@ -95,7 +94,7 @@ PyQt5-Qt5==5.15.2
 PyQt5-sip==12.12.2
 PySocks==1.7.1
 pyspark==3.5.1
-pyspark-stubs==3.0.0.post3
+# pyspark-stubs==3.0.0.post3
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.1
