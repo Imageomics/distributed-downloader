@@ -1,10 +1,9 @@
+import logging
 import os
 import time
 from typing import List, Any
 
 import pandas as pd
-import py7zr
-from py7zr import FILTER_ZSTD
 
 from mpi_downloader import CompletedBatch
 from mpi_downloader.dataclasses import error_entry, success_entry, success_dtype, error_dtype
@@ -15,8 +14,11 @@ from mpi_downloader.dataclasses import error_entry, success_entry, success_dtype
 def write_batch(
         completed_batch: CompletedBatch,
         output_path: str,
-        job_end_time: int
+        job_end_time: int,
+        logger: logging.Logger = logging.getLogger()
 ) -> None:
+    logger.debug(f"Writing batch to {output_path}")
+
     os.makedirs(output_path, exist_ok=True)
     successes_list: List[List[Any]] = []
     errors_list: List[List[Any]] = []
@@ -28,23 +30,32 @@ def write_batch(
         raise ValueError("Empty batch")
 
     try:
-        with py7zr.SevenZipFile(f"{output_path}/images.7z", 'w', filters=[{'id': FILTER_ZSTD, 'level': 3}]) as f:
-            for _ in range(completed_batch.success_queue.qsize()):
-                if job_end_time - time.time() < 0:
-                    raise TimeoutError("Not enough time")
+        for _ in range(completed_batch.success_queue.qsize()):
+            # if job_end_time - time.time() < 0:
+            #     raise TimeoutError("Not enough time")
 
-                success = completed_batch.success_queue.get()
-                successes_list.append(success_entry.to_list_download(success))
-                f.writestr(success.image, success.UUID)
-                completed_batch.success_queue.task_done()
+            success = completed_batch.success_queue.get()
+            success_entity = success_entry.to_list_download(success)
+            successes_list.append(success_entity)
+            completed_batch.success_queue.task_done()
 
-        for i in range(completed_batch.error_queue.qsize()):
+            logger.debug(f"Writing success entry {success_entity}")
+
+
+        for _ in range(completed_batch.error_queue.qsize()):
             error = completed_batch.error_queue.get()
-            errors_list.append(error_entry.to_list_download(error))
+            error_entity = error_entry.to_list_download(error)
+            errors_list.append(error_entity)
             completed_batch.error_queue.task_done()
 
-        pd.DataFrame(successes_list, columns=success_dtype.names).to_parquet(f"{output_path}/successes.parquet", index=False)
+            logger.debug(f"Writing error entry {error_entity}")
+
+        logger.info(f"Completed collecting entries for {output_path}")
+
+        pd.DataFrame(successes_list, columns=success_dtype(720).names).to_parquet(f"{output_path}/successes.parquet", index=False)
         pd.DataFrame(errors_list, columns=error_dtype.names).to_parquet(f"{output_path}/errors.parquet", index=False)
+
+        logger.info(f"Completed writing to {output_path}")
 
         open(f"{output_path}/completed", "w").close()
     except (TimeoutError, ValueError) as error:

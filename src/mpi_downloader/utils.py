@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import re
 import shutil
@@ -59,12 +60,13 @@ def get_or_init_downloader(header: dict,
                            schedule_dict: Dict[str, str],
                            downloader_schedule: Dict[str, Tuple],
                            rate_multiplier: float,
-                           job_end_time: int) -> Tuple[Downloader, requests.Session, RateLimit]:
+                           job_end_time: int,
+                           logger: logging.Logger) -> Tuple[Downloader, requests.Session, RateLimit]:
     if schedule_dict["ServerName"] not in downloader_schedule.keys():
         server_name = re.sub('%3A', ':', schedule_dict["ServerName"])
         rate_limit = RateLimit(schedule_dict["RateLimit"], rate_multiplier)
         session = create_new_session(server_name, rate_limit.upper_bound)
-        downloader = Downloader(header, session, rate_limit, img_size, job_end_time=job_end_time)
+        downloader = Downloader(header, session, rate_limit, img_size, job_end_time=job_end_time, logger=logger)
         downloader_schedule[schedule_dict["ServerName"]] = (downloader, session, rate_limit)
 
     downloader, session, rate_limit = downloader_schedule[schedule_dict["ServerName"]]
@@ -166,9 +168,9 @@ def get_largest_nonempty_bucket(buckets: Dict[int, Deque[Dict[str, Any]]], avail
     return largest_bucket
 
 
-def is_enough_time(rate_limit: RateLimit, batch_size: int = 10000, avg_write_time: int = 600) -> bool:
+def is_enough_time(rate_limit: RateLimit, batch_size: int = 10000, avg_write_time: int = 600, job_end_time: int = int(os.getenv("SLURM_JOB_END_TIME", 0))) -> bool:
     current_time = time.time()
-    job_end_time: int = int(os.getenv("SLURM_JOB_END_TIME", 0))
+
     # print(f"{current_time}|{job_end_time}")
 
     time_left = job_end_time - current_time - avg_write_time

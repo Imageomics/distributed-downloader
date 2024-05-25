@@ -81,6 +81,7 @@ class success_entry:
     hashsum_resized: str
     original_size: np.ndarray[np.uint32]
     resized_size: np.ndarray[np.uint32]
+    image: bytes
 
     # image: np.ndarray
 
@@ -97,7 +98,8 @@ class success_entry:
             hashsum_original=downloaded.hashsum_original,
             hashsum_resized=downloaded.hashsum_resized,
             original_size=downloaded.original_size,
-            resized_size=downloaded.resized_size
+            resized_size=downloaded.resized_size,
+            image=downloaded.image
         )
 
     @staticmethod
@@ -113,7 +115,8 @@ class success_entry:
             downloaded.original_size,
             downloaded.resized_size,
             downloaded.hashsum_original,
-            downloaded.hashsum_resized
+            downloaded.hashsum_resized,
+            downloaded.image
         ]
 
     def to_list(self) -> List:
@@ -128,7 +131,8 @@ class success_entry:
             self.original_size,
             self.resized_size,
             self.hashsum_original,
-            self.hashsum_resized
+            self.hashsum_resized,
+            self.image
         ]
 
     def to_np(self) -> np.ndarray:
@@ -144,9 +148,10 @@ class success_entry:
                  self.original_size,
                  self.resized_size,
                  self.hashsum_original,
-                 self.hashsum_resized)
+                 self.hashsum_resized,
+                 self.image)
             ],
-            dtype=success_dtype)
+            dtype=success_dtype(np.max(self.resized_size)))
 
         return np_structure
 
@@ -265,7 +270,7 @@ class RateLimit:
         self.upper_bound = self.initial_rate * (1 + self._multiplier)
 
 
-success_dtype = np.dtype([
+success_dtype = lambda img_size: np.dtype([
     ("uuid", "S32"),
     ("gbif_id", "i4"),
     ("identifier", "S256"),
@@ -276,7 +281,8 @@ success_dtype = np.dtype([
     ("original_size", "(2,)u4"),
     ("resized_size", "(2,)u4"),
     ("hashsum_original", "S32"),
-    ("hashsum_resized", "S32")
+    ("hashsum_resized", "S32"),
+    ("image", f"({img_size},{img_size},3)uint8")
 ])
 
 error_dtype = np.dtype([
@@ -287,7 +293,7 @@ error_dtype = np.dtype([
     ("error_msg", "S256")
 ])
 
-download_dtype = np.dtype([
+download_dtype = lambda img_size: np.dtype([
     ("is_downloaded", "bool"),
     ("retry_count", "i4"),
     ("error_code", "i4"),
@@ -303,7 +309,7 @@ download_dtype = np.dtype([
     ("resized_size", "(2,)u4"),
     ("hashsum_original", "S32"),
     ("hashsum_resized", "S32"),
-    ("image", "(1024,1024,3)uint8")
+    ("image", f"({img_size},{img_size},3)uint8")
 ])
 
 profile_dtype = np.dtype([

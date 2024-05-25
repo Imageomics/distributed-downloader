@@ -1,5 +1,6 @@
 import concurrent.futures
 import hashlib
+import logging
 import queue
 import threading
 import time
@@ -24,9 +25,11 @@ class Downloader:
                  rate_limit: RateLimit,
                  img_size: int = 1024,
                  job_end_time: int = 0,
-                 convert_image: bool = True):
+                 convert_image: bool = True,
+                 logger=logging.getLogger()):
         self.header = header
         self.job_end_time = job_end_time
+        self.logger = logger
         self.session: requests.Session = session
         self.rate_limit: float = rate_limit.initial_rate
         self.img_size = img_size
@@ -59,6 +62,8 @@ class Downloader:
         self.error_queue.queue.clear()
         images_length = len(images_requested)
 
+        self.logger.debug(f"Starting to download {images_length}")
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for idx, image in enumerate(images_requested):
                 prepared_image = DownloadedImage.from_row(image)
@@ -74,6 +79,11 @@ class Downloader:
                     lambda: self._success_count + self._error_count >= images_length or self._exit
                 )
 
+        self.logger.debug(f"Finished downloading {self._success_count} images")
+
+        if self._exit:
+            return CompletedBatch(queue.Queue(), queue.Queue()), 0
+
         return CompletedBatch(self.success_queue, self.error_queue), self.rate_limit
 
     def load_url(self, url: DownloadedImage, timeout: int = 2, was_delayed=True) -> bytes:
@@ -83,6 +93,8 @@ class Downloader:
 
             if not was_delayed:
                 time.sleep(1 / self.rate_limit)
+
+            self.logger.debug(f"Downloading {url.identifier}")
 
             url.start_time = time.perf_counter()
 
@@ -103,6 +115,11 @@ class Downloader:
                     self.process_image(prep_img, future.result())
                 except Exception as e:
                     is_retry = self.process_error(prep_img, e)
+
+                    if self._exit:
+                        self._condition.notify()
+                        return
+
                     if is_retry:
                         self.rate_limit = max(self.rate_limit - 1, self.bottom_limit)
                         executor.submit(self.load_url, prep_img, _TIMEOUT, False).add_done_callback(
@@ -120,6 +137,8 @@ class Downloader:
                     self._success_count += 1
                     self.success_queue.put(prep_img)
 
+                self.logger.debug(f"Downloaded {prep_img.identifier}")
+
                 self._condition.notify()
 
         return _done_callback
@@ -127,8 +146,11 @@ class Downloader:
     def process_image(self, return_entry: DownloadedImage, raw_image_bytes: bytes) -> None:
         return_entry.end_time = time.perf_counter()
 
+        self.logger.debug(f"Processing {return_entry.identifier}")
+
         if not self.convert_image:
             return_entry.image = raw_image_bytes
+            self.logger.debug(f"No image conversion for {return_entry.identifier}")
             return
 
         np_image = np.asarray(bytearray(raw_image_bytes), dtype="uint8")
@@ -156,12 +178,18 @@ class Downloader:
         return_entry.hashsum_original = original_hashsum
         return_entry.hashsum_resized = resized_hashsum
 
+        self.logger.debug(f"Processed {return_entry.identifier}")
+
     def process_error(self, return_entry: DownloadedImage, error: Exception) -> bool:
         if isinstance(error, TimeoutError):
+            self.logger.info(f"Timout, trying to exit")
+
             self._exit = True
             self._condition.notify()
-            raise error
+            raise False
         elif isinstance(error, requests.HTTPError):
+            self.logger.warning(f"HTTP error: {error.response.status_code} for {return_entry.identifier}")
+
             return_entry.error_code = error.response.status_code
             return_entry.error_msg = str(error)
 
@@ -172,15 +200,18 @@ class Downloader:
 
             return False
         elif isinstance(error, requests.RequestException):
+            self.logger.warning(f"Request error: {error} for {return_entry.identifier}")
+
             return_entry.error_code = -1
             return_entry.error_msg = str(error)
             return_entry.retry_count += 1
 
             return return_entry.retry_count < _MAX_RETRIES
         else:
+            self.logger.error(f"Error: {error} for {return_entry.identifier}")
+
             return_entry.error_code = -2
             return_entry.error_msg = str(error)
-            print(f"Error: {error}")
 
         return False
 
