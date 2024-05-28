@@ -31,7 +31,7 @@ def read_parquets(base_path: str, filename: str) -> pd.DataFrame:
     empty_df = pd.DataFrame()
 
     for folder, content in schedule.items():
-        ids = content["Ids"].split()
+        ids = str(content["Ids"]).split()
         for _id in ids:
             if not os.path.exists(f"{base_path}/ServerName={folder}/partition_id={_id}/{filename}"):
                 continue

@@ -2,7 +2,7 @@ import os
 import shutil
 import sys
 from collections import deque
-from typing import List, Deque
+from typing import List, Deque, Any, Dict
 
 import pandas as pd
 from pyspark.sql import DataFrame, SparkSession
@@ -107,9 +107,11 @@ def ensure_created(list_of_path: List[str]) -> None:
     for path in list_of_path:
         os.makedirs(path, exist_ok=True)
 
+
 def truncate_folder(path: str):
     shutil.rmtree(path, ignore_errors=True)
     os.makedirs(path, exist_ok=True)
+
 
 def split_dataframe(df: pd.DataFrame, by_column: str = "Nodes", chunk_size=20) -> List[pd.DataFrame]:
     chunks: List[pd.DataFrame] = []
@@ -172,3 +174,10 @@ def create_schedule_configs(group: pd.DataFrame, number_of_workers: int, schedul
         print(f"{number_of_schedules}={chunk['Nodes'].sum()}")
 
         number_of_schedules += 1
+
+
+def load_env(env: str) -> Dict[str, Any]:
+    from dotenv import load_dotenv, dotenv_values
+
+    load_dotenv(env)
+    return dotenv_values(env)

@@ -7,7 +7,8 @@ import pandas as pd
 from mpi_downloader.dataclasses import profile_dtype
 from utils.utils import ensure_created, create_schedule_configs
 
-_DEFAULT_RATE_LIMIT = 6
+_DEFAULT_RATE_LIMIT = 10
+_SERVERS_TO_EXCLUDE = ["observation.org", "quod.lib.umich.edu"]
 _DOWNLOADER_URLS_FOLDER = os.getenv("DOWNLOADER_URLS_FOLDER", "servers_batched")
 _DOWNLOADER_LOGS_FOLDER = os.getenv("DOWNLOADER_LOGS_FOLDER", "logs")
 _DOWNLOADER_IMAGES_FOLDER = os.getenv("DOWNLOADER_IMAGES_FOLDER", "downloaded_images")
@@ -16,7 +17,11 @@ _DOWNLOADER_PROFILES_PATH = os.getenv("DOWNLOADER_PROFILES_PATH", "servers_profi
 
 
 def small_rule(total_batches: int) -> int:
-    if total_batches >= 500:
+    if total_batches >= 5000:
+        return 40
+    elif total_batches >= 1000:
+        return 20
+    elif total_batches >= 500:
         return 10
     elif total_batches >= 200:
         return 8
@@ -70,6 +75,7 @@ profiles_df["Nodes"] = profiles_df["total_batches"].apply(small_rule)
 profiles_df["ProcessPerNode"] = 1
 profiles_df = profiles_df.rename(columns={"server_name": "ServerName", "total_batches": "TotalBatches"})
 profiles_df = profiles_df[["ServerName", "TotalBatches", "ProcessPerNode", "Nodes"]]
+profiles_df = profiles_df[~profiles_df["ServerName"].str.contains("|".join(_SERVERS_TO_EXCLUDE))]
 
 shutil.rmtree(Server_schedules_path, ignore_errors=True)
 os.makedirs(Server_schedules_path, exist_ok=True)

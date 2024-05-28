@@ -41,7 +41,6 @@ def write_batch(
 
             logger.debug(f"Writing success entry {success_entity}")
 
-
         for _ in range(completed_batch.error_queue.qsize()):
             error = completed_batch.error_queue.get()
             error_entity = error_entry.to_list_download(error)
@@ -52,7 +51,8 @@ def write_batch(
 
         logger.info(f"Completed collecting entries for {output_path}")
 
-        pd.DataFrame(successes_list, columns=success_dtype(720).names).to_parquet(f"{output_path}/successes.parquet", index=False)
+        pd.DataFrame(successes_list, columns=success_dtype(720).names).to_parquet(f"{output_path}/successes.parquet",
+                                                                                  index=False)
         pd.DataFrame(errors_list, columns=error_dtype.names).to_parquet(f"{output_path}/errors.parquet", index=False)
 
         logger.info(f"Completed writing to {output_path}")

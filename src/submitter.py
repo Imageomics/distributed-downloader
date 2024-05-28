@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 import pandas as pd
 
-NUM_DOWNLOADERS: int = 10
+NUM_DOWNLOADERS: int = 1
 RECHECK = False
 SCHEDULES: List[str] = []
 
@@ -16,9 +16,9 @@ SUBMITTED_JOBS_FILE = "_jobs_ids.csv"
 
 
 def get_env_vars(env_path):
-    '''
+    """
     Fetch path information from .env for download and schedule directories.
-    Also paths to slurm scripts and bash python-slurm coordination script.
+    Also, paths to slurm scripts and bash python-slurm coordination script.
 
     Parameters:
     env_path - String. Path to .env file. Ex: 'path/to/hpc.env'.
@@ -28,15 +28,14 @@ def get_env_vars(env_path):
     mpi_submitter_script - String. Path to bash script to coordinate Python and slurm scripts.
     downloading_script - String. Path to slurm script to run download.
     verifying_script - String. Path to slurm script to run verifier.
-    
-    '''
+    """
     load_dotenv(env_path)
     download_path = f"{os.getenv('PROCESSED_DATA_ROOT')}/{os.getenv('TIME_STAMP')}/{os.getenv('DOWNLOAD_DIR')}"
     schedules_path = f"{download_path}/{os.getenv('DOWNLOADER_SCHEDULES_FOLDER')}"
     mpi_submitter_script = os.getenv("MPI_SUBMITTER_SCRIPT")
     downloading_script = os.getenv("DOWNLOADING_SCRIPT")
     verifying_script = os.getenv("VERIFYING_SCRIPT")
-    
+
     return schedules_path, mpi_submitter_script, downloading_script, verifying_script
 
 
@@ -56,7 +55,8 @@ def get_id(output: bytes) -> int:
     return int(output.decode().strip().split(" ")[-1])
 
 
-def submit_downloader(_schedule: str, iteration_id: int, dep_id: int, mpi_submitter_script: str, downloading_script: str) -> int:
+def submit_downloader(_schedule: str, iteration_id: int, dep_id: int, mpi_submitter_script: str,
+                      downloading_script: str) -> int:
     iteration = str(iteration_id).zfill(4)
     output = subprocess.check_output(f"{mpi_submitter_script} "
                                      f"{downloading_script} "
@@ -68,7 +68,8 @@ def submit_downloader(_schedule: str, iteration_id: int, dep_id: int, mpi_submit
     return idx
 
 
-def submit_verifier(_schedule: str, iteration_id: int, mpi_submitter_script: str, verifying_script: str, dep_id: int = None) -> int:
+def submit_verifier(_schedule: str, iteration_id: int, mpi_submitter_script: str, verifying_script: str,
+                    dep_id: int = None) -> int:
     iteration = str(iteration_id).zfill(4)
 
     command_str = f"{mpi_submitter_script} {verifying_script} {_schedule} {iteration}"
@@ -85,7 +86,7 @@ def submit_verifier(_schedule: str, iteration_id: int, mpi_submitter_script: str
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env-path", required = True, help = "Path to .env file. Ex: 'path/to/hpc.env'.", nargs = "?")
+    parser.add_argument("--env-path", required=True, help="Path to .env file. Ex: 'path/to/hpc.env'.", nargs="?")
     args = parser.parse_args()
     schedules_path, mpi_submitter_script, downloading_script, verifying_script = get_env_vars(args.env_path)
 
@@ -109,7 +110,10 @@ def main():
         offset = math.ceil(len(prev_jobs) / 2)
 
         if offset == 0 or not prev_jobs[-1]["is_verification"] or RECHECK:
-            verifier_id = submit_verifier(schedule, offset)
+            verifier_id = submit_verifier(schedule,
+                                          offset,
+                                          mpi_submitter_script,
+                                          verifying_script)
             prev_jobs.append({
                 "job_id": verifier_id,
                 "is_verification": True
@@ -117,13 +121,21 @@ def main():
             offset += 1
 
         for _ in range(NUM_DOWNLOADERS):
-            download_id = submit_downloader(schedule, offset, prev_jobs[-1]["job_id"], mpi_submitter_script, downloading_script)
+            download_id = submit_downloader(schedule,
+                                            offset,
+                                            prev_jobs[-1]["job_id"],
+                                            mpi_submitter_script,
+                                            downloading_script)
             prev_jobs.append({
                 "job_id": download_id,
                 "is_verification": False
             })
 
-            verifier_id = submit_verifier(schedule, offset, mpi_submitter_script, verifying_script, download_id)
+            verifier_id = submit_verifier(schedule,
+                                          offset,
+                                          mpi_submitter_script,
+                                          verifying_script,
+                                          download_id)
             prev_jobs.append({
                 "job_id": verifier_id,
                 "is_verification": True

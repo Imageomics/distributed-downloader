@@ -1,18 +1,18 @@
 #!/bin/bash
 #SBATCH --job-name resize_mpi
-#SBATCH --nodes=20
-#SBATCH --ntasks-per-node=5
-#SBATCH --cpus-per-task=8
-#SBATCH --time=10:00:00
+#SBATCH --nodes=10
+#SBATCH --ntasks-per-node=3
+#SBATCH --cpus-per-task=13
+#SBATCH --time=02:00:00
 #SBATCH --mem=0
 #SBATCH --account=pas2136
 
-source "${REPO_ROOT}/config/osc.env"
+source "${REPO_ROOT}/config/hpc.env"
 
 module load intel/2021.10.0
 module load intelmpi/2021.10
 module load miniconda3/23.3.1-py310
-source .venv/gbif_venv/bin/activate
+source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 
 export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
@@ -20,9 +20,9 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
 
 srun \
   --mpi=pmi2 \
-  --nodes=20 \
-  --ntasks-per-node=5 \
-  --cpus-per-task=8 \
+  --nodes=10 \
+  --ntasks-per-node=3 \
+  --cpus-per-task=13 \
   --mem=0 \
   --output="${REPO_ROOT}/logs/resize/resize-%2t.log" \
   python \
