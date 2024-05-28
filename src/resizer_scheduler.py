@@ -1,7 +1,7 @@
 import os
 import re
 
-import pandas as pd
+from pandas import DataFrame
 
 schedule_path = "/users/PAS2119/andreykopanev/gbif/data/schedule_full.csv"
 base_path = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
@@ -11,11 +11,11 @@ number_of_workers = 5
 number_of_ranks = number_of_nodes * number_of_workers
 
 
-def concat_ids(partition: pd.DataFrame) -> pd.DataFrame:
+def concat_ids(partition: DataFrame) -> DataFrame:
     ids = partition["Id"].str.cat(sep=" ")
     rank = int(partition["Rank"].iloc[0])
     server = partition["ServerName"].iloc[0]
-    result = pd.DataFrame([[rank, server, ids]], columns=["Rank", "ServerName", "Ids"])
+    result = DataFrame([[rank, server, ids]], columns=["Rank", "ServerName", "Ids"])
     return result
 
 
@@ -43,7 +43,7 @@ for folder in os.listdir(base_path):
             continue
         all_schedules.append([server_name, partition.split("=")[1]])
 
-schedule_df = pd.DataFrame(all_schedules, columns=["ServerName", "Id"])
+schedule_df = DataFrame(all_schedules, columns=["ServerName", "Id"])
 print(schedule_df.count())
 print(corrupted_count)
 print(not_that_corrupted)

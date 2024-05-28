@@ -29,7 +29,7 @@ def download_batch(
 
 parser = argparse.ArgumentParser(description='Server downloader')
 
-parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder of work')
+parser.add_argument('input_path', metavar='input_path', type=str, help='the path to with download components (e.g., image folder and server batches)')
 parser.add_argument("schedule_path", metavar="schedule_path", type=str, help="the path to the schedule")
 parser.add_argument("--header", required=True, type=str, help="the requests header")
 parser.add_argument("--img-size", required = True, type=int, help="the max side-length of an image in pixels")

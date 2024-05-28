@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Convert TSV to Parquet')
 
     parser.add_argument('path', metavar='path', type=str, help='the path to the tsv file')
-    parser.add_argument('output_path', metavar='output_path', type=str, help='the path to the output folder')
+    parser.add_argument('output_path', metavar='output_path', type=str, help='the path to the output folder (folder for download components (e.g., server batches and image folder))')
 
     # parse the arguments
     args = parser.parse_args()

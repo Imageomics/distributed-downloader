@@ -30,10 +30,10 @@ def small_rule(total_batches: int) -> int:
 
 parser = argparse.ArgumentParser(description='Server downloader prep')
 
-parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder of work')
-parser.add_argument('max_nodes', metavar='max_nodes', type=int, help='the path to folder of work')
+parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder with download components (e.g., image folder, server profiles, and schedule)')
+parser.add_argument('max_nodes', metavar='max_nodes', type=int, help='the max number of nodes to use for download')
 parser.add_argument('max_workers_per_nodes', metavar='max_workers_per_nodes', type=int,
-                    help='the path to folder of work')
+                    help='the max number of workers per node to use for download')
 
 # parse the arguments
 _args = parser.parse_args()

@@ -12,11 +12,11 @@ _DEFAULT_RATE_LIMIT = 10
 
 parser = argparse.ArgumentParser(description='Server profiler')
 
-parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder of work')
-parser.add_argument('max_nodes', metavar='max_nodes', type=int, help='the path to folder of work')
+parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder with download components (e.g., server batches, profiles, and errors)')
+parser.add_argument('max_nodes', metavar='max_nodes', type=int, help='the max number of nodes to use for download')
 parser.add_argument('max_workers_per_nodes', metavar='max_workers_per_nodes', type=int,
-                    help='the path to folder of work')
-parser.add_argument('batch_size', metavar='batch_size', type=int, help='the path to folder of work')
+                    help='the max number of workers per node')
+parser.add_argument('batch_size', metavar='batch_size', type=int, help='size of the batch to download')
 
 # parse the arguments
 _args = parser.parse_args()

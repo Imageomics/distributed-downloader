@@ -7,7 +7,7 @@ from mpi_downloader.utils import get_latest_schedule, verify_downloaded_batches
 
 parser = argparse.ArgumentParser(description='Server downloader controller')
 
-parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder of work')
+parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder with download components (e.g., image folder and server profiles)')
 parser.add_argument("schedule_path", metavar="schedule_path", type=str, help="the path to the schedule")
 
 parser.add_argument('--recheck', action='store_true', help='recheck the downloaded batches')
