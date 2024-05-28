@@ -30,3 +30,32 @@ The provided `slurm` scripts for running steps 1 and 2 (`scripts/server_download
 ## Note on files
 
 `resize_mpi` (`py` and `slurm`) and `resizer_scheduler.py` are scripts intended to resize the images after download. For instance, in the case that the initial download size is set higher than intended, these can be used to adjust the size within the given structure and repackage it. They have not been generalized to fit in with the remaining package infrastructure and are simply extra tools that we used; they may be generalized in the future.
+
+## Installation Instructions
+1. Install Python 3.10 or higher
+2. Install MPI, any MPI should work, tested with OpenMPI and IntelMPI.
+3. Install Parallel HDF5, tested with version 1.12.2
+4. Install/Update pip, setuptools, and wheel
+    ```
+    pip install -U wheel setuptools pip
+    pip install Cython
+    ```
+5. Install Cython:
+    ```
+    pip install Cython
+    ```
+6. Install mpi4py:
+    ```
+    env MPICC=/path/to/mpicc python -m pip install mpi4py
+    ```
+7. Install h5py:
+    ```
+    export CC=mpicc
+    export HDF5_MPI="ON" 
+    export HDF5_DIR=/path/to/hdf5
+    pip install --no-cache-dir --no-binary=h5py h5py
+    ```
+8. Install required packages:
+    ```
+    pip install -r requirements.txt
+    ```

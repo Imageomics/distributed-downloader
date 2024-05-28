@@ -25,14 +25,14 @@ def get_uuid():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Convert TSV to Parquet')
+    parser = argparse.ArgumentParser(description='Convert multimedia data to server batches')
 
-    parser.add_argument('path', metavar='path', type=str, help='the path to the tsv file')
+    parser.add_argument('input_path', metavar='input_path', type=str, help='the path to the file with multimedia data, can be either a TSV file or a TXT file')
     parser.add_argument('output_path', metavar='output_path', type=str, help='the path to the output folder (folder for download components (e.g., server batches and image folder))')
 
     # parse the arguments
     args = parser.parse_args()
-    input_path: str = args.path
+    input_path: str = args.input_path
     output_path: str = args.output_path
     servers_batched_folder: str = os.getenv("DOWNLOADER_URLS_FOLDER", "servers_batched")
 
