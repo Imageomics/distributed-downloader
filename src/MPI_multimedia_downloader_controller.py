@@ -9,7 +9,7 @@ from mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, 
 
 parser = argparse.ArgumentParser(description='Server downloader controller')
 
-parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder of work')
+parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder with download components (e.g., image folder and server profiles)')
 parser.add_argument("schedule_path", metavar="schedule_path", type=str, help="the path to the schedule")
 parser.add_argument('max_nodes', metavar='max_nodes', type=int, help='max number of nodes')
 parser.add_argument('max_workers_per_nodes', metavar='max_workers_per_nodes', type=int,

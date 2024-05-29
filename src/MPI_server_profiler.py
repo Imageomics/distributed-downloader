@@ -19,7 +19,7 @@ Time_to_profile = 2
 
 parser = argparse.ArgumentParser(description='Server profiler')
 
-parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder of work')
+parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder with download components (e.g., server batches, profiles, and errors)')
 parser.add_argument('batch_size', metavar='batch_size', type=int, help='size of the batch to download')
 parser.add_argument("--header", required=True, type=str, help="the requests header")
 parser.add_argument("--img-size", required = True, type=int, help="the max side-length of an image in pixels")

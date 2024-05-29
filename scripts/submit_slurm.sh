@@ -2,6 +2,7 @@
 
 SCRIPTS_DIR=$(dirname "$(realpath "$0")")
 REPO_ROOT=$(dirname "$(realpath "${SCRIPTS_DIR}")")
+source "${REPO_ROOT}/config/hpc.env"
 export REPO_ROOT
 logs_dir="${REPO_ROOT}/${DOWNLOADER_LOGS_FOLDER}"
 mkdir -p "${logs_dir}"
