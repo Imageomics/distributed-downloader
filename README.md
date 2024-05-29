@@ -38,7 +38,6 @@ The provided `slurm` scripts for running steps 1 and 2 (`scripts/server_download
 4. Install/Update pip, setuptools, and wheel
     ```
     pip install -U wheel setuptools pip
-    pip install Cython
     ```
 5. Install Cython:
     ```
