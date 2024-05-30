@@ -18,7 +18,7 @@ SUBMITTED_JOBS_FILE = "_jobs_ids.csv"
 def get_env_vars(env_path):
     """
     Fetch path information from .env for download and schedule directories.
-    Also, paths to slurm scripts and bash a python-slurm coordination script.
+    Also, paths to slurm scripts and a bash python-slurm coordination script.
 
     Parameters:
     env_path - String. Path to .env file. Ex: 'path/to/hpc.env'.

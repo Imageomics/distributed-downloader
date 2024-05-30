@@ -27,7 +27,7 @@ def get_uuid():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Convert multimedia data to server batches')
 
-    parser.add_argument('input_path', metavar='input_path', type=str, help='the path to the file with multimedia data, can be either a TSV file or a TXT file')
+    parser.add_argument('input_path', metavar='input_path', type=str, help='the path to the file with multimedia data, must be a tab-delimited text file')
     parser.add_argument('output_path', metavar='output_path', type=str, help='the path to the output folder (folder for download components (e.g., server batches and image folder))')
 
     # parse the arguments
