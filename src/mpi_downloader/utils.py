@@ -92,6 +92,21 @@ def generate_ids_to_download(schedule_row: pd.Series, verifier_df: pd.DataFrame)
     return pd.Series([server_name, list(server_batches)], index=["ServerName", "Batches"])
 
 
+def verify_batches_for_prep(schedule_row: pd.DataFrame, input_path: str) -> pd.DataFrame:
+    schedule_row["ServerName"] = schedule_row["server_name"]
+    schedule_row["StartIndex"] = 0
+    schedule_row["EndIndex"] = schedule_row["total_batches"]
+
+    verification_df = pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
+
+    for idx, row in schedule_row.iterrows():
+        new_verification_df = verify_downloaded_batches(row, input_path)
+        verification_df = pd.concat([verification_df, pd.DataFrame(new_verification_df)],
+                                    ignore_index=True).drop_duplicates()
+
+    return verification_df
+
+
 def verify_downloaded_batches(schedule_row: pd.Series, input_path: str) -> List[Dict[str, Any]]:
     server_name = schedule_row["ServerName"]
     server_start_idx = schedule_row["StartIndex"]

@@ -3,8 +3,10 @@ import os
 import shutil
 
 import pandas as pd
+from pandas._libs.missing import NAType
 
 from mpi_downloader.dataclasses import profile_dtype
+from mpi_downloader.utils import verify_downloaded_batches, verify_batches_for_prep
 from utils.utils import ensure_created, create_schedule_configs
 
 _DEFAULT_RATE_LIMIT = 10
@@ -16,7 +18,7 @@ _DOWNLOADER_SCHEDULES_FOLDER = os.getenv("DOWNLOADER_SCHEDULES_FOLDER", "schedul
 _DOWNLOADER_PROFILES_PATH = os.getenv("DOWNLOADER_PROFILES_PATH", "servers_profiles.csv")
 
 
-def small_rule(total_batches: int) -> int:
+def small_rule(total_batches: int) -> int | NAType:
     if total_batches >= 5000:
         return 40
     elif total_batches >= 1000:
@@ -29,8 +31,10 @@ def small_rule(total_batches: int) -> int:
         return 4
     elif total_batches >= 50:
         return 2
+    elif total_batches >= 1:
+        return 1
 
-    return 1
+    return pd.NA
 
 
 parser = argparse.ArgumentParser(description='Server downloader prep')
@@ -71,9 +75,18 @@ for i, server in enumerate(server_list):
 profiles_df = pd.DataFrame(profile_csv, columns=profile_dtype.names)
 profiles_df.to_csv(Server_profiler_csv, index=False, header=True)
 
-profiles_df["Nodes"] = profiles_df["total_batches"].apply(small_rule)
+if len(os.listdir(f"{Input_path}/{_DOWNLOADER_IMAGES_FOLDER}")) > 0:
+    downloaded_batches: pd.DataFrame = verify_batches_for_prep(profiles_df, f"{Input_path}/{_DOWNLOADER_IMAGES_FOLDER}")
+    downloaded_batches = downloaded_batches.groupby("ServerName").count().reset_index().dropna()
+    downloaded_batches = downloaded_batches.rename(columns={"ServerName": "server_name", "Status": "already_downloaded"})
+    profiles_df = profiles_df.merge(downloaded_batches, on="server_name", how="left").fillna(0)
+    profiles_df["left_to_download"] = profiles_df["total_batches"] - profiles_df["already_downloaded"]
+else:
+    profiles_df["left_to_download"] = profiles_df["total_batches"]
+
+profiles_df["Nodes"] = profiles_df["left_to_download"].apply(small_rule)
 profiles_df["ProcessPerNode"] = 1
-profiles_df = profiles_df.rename(columns={"server_name": "ServerName", "total_batches": "TotalBatches"})
+profiles_df = profiles_df.rename(columns={"total_batches": "TotalBatches"}).dropna().reset_index(drop=True)
 profiles_df = profiles_df[["ServerName", "TotalBatches", "ProcessPerNode", "Nodes"]]
 profiles_df = profiles_df[~profiles_df["ServerName"].str.contains("|".join(_SERVERS_TO_EXCLUDE))]
 
