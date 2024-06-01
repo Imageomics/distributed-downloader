@@ -186,7 +186,7 @@ class Downloader:
 
             self._exit = True
             self._condition.notify()
-            raise False
+            return False
         elif isinstance(error, requests.HTTPError):
             self.logger.warning(f"HTTP error: {error.response.status_code} for {return_entry.identifier}")
 

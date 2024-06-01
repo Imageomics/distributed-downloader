@@ -10,12 +10,13 @@ from mpi_downloader.utils import verify_downloaded_batches, verify_batches_for_p
 from utils.utils import ensure_created, create_schedule_configs
 
 _DEFAULT_RATE_LIMIT = 10
-_SERVERS_TO_EXCLUDE = ["observation.org", "quod.lib.umich.edu"]
+_CREATE_PROFILES = False
 _DOWNLOADER_URLS_FOLDER = os.getenv("DOWNLOADER_URLS_FOLDER", "servers_batched")
 _DOWNLOADER_LOGS_FOLDER = os.getenv("DOWNLOADER_LOGS_FOLDER", "logs")
 _DOWNLOADER_IMAGES_FOLDER = os.getenv("DOWNLOADER_IMAGES_FOLDER", "downloaded_images")
 _DOWNLOADER_SCHEDULES_FOLDER = os.getenv("DOWNLOADER_SCHEDULES_FOLDER", "schedules")
 _DOWNLOADER_PROFILES_PATH = os.getenv("DOWNLOADER_PROFILES_PATH", "servers_profiles.csv")
+_DOWNLOADER_IGNORED_PATH = os.getenv("DOWNLOADER_IGNORED_PATH", "ignored_servers.csv")
 
 
 def small_rule(total_batches: int) -> int | NAType:
@@ -51,6 +52,7 @@ Number_of_workers: int = _args.max_nodes * _args.max_workers_per_nodes
 
 Server_urls_batched = f"{Input_path}/{_DOWNLOADER_URLS_FOLDER}"
 Server_profiler_csv = f"{Input_path}/{_DOWNLOADER_PROFILES_PATH}"
+Server_ignored_csv = f"{Input_path}/{_DOWNLOADER_IGNORED_PATH}"
 Server_schedules_path = f"{Input_path}/{_DOWNLOADER_SCHEDULES_FOLDER}"
 
 ensure_created([
@@ -73,7 +75,13 @@ for i, server in enumerate(server_list):
     profile_csv.append([server_name, server_total_partitions, 0, 0, _DEFAULT_RATE_LIMIT])
 
 profiles_df = pd.DataFrame(profile_csv, columns=profile_dtype.names)
-profiles_df.to_csv(Server_profiler_csv, index=False, header=True)
+if _CREATE_PROFILES:
+    profiles_df.to_csv(Server_profiler_csv, index=False, header=True)
+
+if os.path.exists(Server_ignored_csv):
+    ignored_servers_df = pd.read_csv(Server_ignored_csv)
+else:
+    ignored_servers_df = pd.DataFrame(columns=["ServerName"])
 
 if len(os.listdir(f"{Input_path}/{_DOWNLOADER_IMAGES_FOLDER}")) > 0:
     downloaded_batches: pd.DataFrame = verify_batches_for_prep(profiles_df, f"{Input_path}/{_DOWNLOADER_IMAGES_FOLDER}")
@@ -88,7 +96,7 @@ profiles_df["Nodes"] = profiles_df["left_to_download"].apply(small_rule)
 profiles_df["ProcessPerNode"] = 1
 profiles_df = profiles_df.rename(columns={"total_batches": "TotalBatches"}).dropna().reset_index(drop=True)
 profiles_df = profiles_df[["ServerName", "TotalBatches", "ProcessPerNode", "Nodes"]]
-profiles_df = profiles_df[~profiles_df["ServerName"].str.contains("|".join(_SERVERS_TO_EXCLUDE))]
+profiles_df = profiles_df[~profiles_df["ServerName"].isin(ignored_servers_df["ServerName"])]
 
 shutil.rmtree(Server_schedules_path, ignore_errors=True)
 os.makedirs(Server_schedules_path, exist_ok=True)
