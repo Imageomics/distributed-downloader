@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser(description='Server downloader')
 parser.add_argument('input_path', metavar='input_path', type=str, help='the path to with download components (e.g., image folder and server batches)')
 parser.add_argument("schedule_path", metavar="schedule_path", type=str, help="the path to the schedule")
 parser.add_argument("--header", required=True, type=str, help="the requests header")
-parser.add_argument("--img-size", required = True, type=int, help="the max side-length of an image in pixels")
+parser.add_argument("--img-size", required=True, type=int, help="the max side-length of an image in pixels")
 parser.add_argument("--rate-multiplier", required=False, type=float, help="the rate multiplier", default=0.5)
 parser.add_argument("--logging-level", required=False, type=str, help="the logging level", default="INFO")
 

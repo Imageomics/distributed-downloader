@@ -76,7 +76,7 @@ def submit_verifier(_schedule: str, iteration_id: int, mpi_submitter_script: str
     if dep_id is not None:
         command_str += f" {dep_id}"
     if RECHECK:
-        command_str += f" --recheck"
+        command_str += " --recheck"
 
     output = subprocess.check_output(command_str, shell=True)
     idx = get_id(output)

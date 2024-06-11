@@ -11,6 +11,8 @@ import numpy as np
 from attr import define, field
 from pandas import DataFrame
 
+_NOT_PROVIDED = "Not provided"
+
 
 @define
 class DownloadedImage:
@@ -18,7 +20,7 @@ class DownloadedImage:
     error_code: int
     error_msg: str
 
-    UUID: str
+    unique_name: str
     gbifID: int
     identifier: str
     is_license_full: bool
@@ -42,13 +44,13 @@ class DownloadedImage:
             retry_count=0,
             error_code=0,
             error_msg="",
-            UUID=row.get("UUID", uuid.uuid4().hex),
+            unique_name=row.get("UUID", uuid.uuid4().hex),
             gbifID=row.get("gbifID", 0),
             identifier=row.get("identifier", ""),
             is_license_full=all([row.get("license", None), row.get("source", None), row.get("title", None)]),
-            license=row.get("license", "Not provided") or "Not provided",
-            source=row.get("source", "Not provided") or "Not provided",
-            title=row.get("title", "Not provided") or "Not provided",
+            license=row.get("license", _NOT_PROVIDED) or _NOT_PROVIDED,
+            source=row.get("source", _NOT_PROVIDED) or _NOT_PROVIDED,
+            title=row.get("title", _NOT_PROVIDED) or _NOT_PROVIDED,
         )
 
 
@@ -61,9 +63,9 @@ def init_downloaded_image_entry(image_entry: np.ndarray, row: Dict[str, Any]) ->
     image_entry["gbif_id"] = row.get("gbifID", 0)
     image_entry["identifier"] = row.get("identifier", "")
     image_entry["is_license_full"] = all([row.get("license", None), row.get("source", None), row.get("title", None)])
-    image_entry["license"] = row.get("license", "Not provided") or "Not provided"
-    image_entry["source"] = row.get("source", "Not provided") or "Not provided"
-    image_entry["title"] = row.get("title", "Not provided") or "Not provided"
+    image_entry["license"] = row.get("license", _NOT_PROVIDED) or _NOT_PROVIDED
+    image_entry["source"] = row.get("source", _NOT_PROVIDED) or _NOT_PROVIDED
+    image_entry["title"] = row.get("title", _NOT_PROVIDED) or _NOT_PROVIDED
 
     return image_entry
 
@@ -88,7 +90,7 @@ class success_entry:
     @classmethod
     def from_downloaded(cls, downloaded: DownloadedImage) -> success_entry:
         return cls(
-            uuid=downloaded.UUID,
+            uuid=downloaded.unique_name,
             gbif_id=downloaded.gbifID,
             identifier=downloaded.identifier,
             is_license_full=downloaded.is_license_full,
@@ -105,7 +107,7 @@ class success_entry:
     @staticmethod
     def to_list_download(downloaded: DownloadedImage) -> List:
         return [
-            downloaded.UUID,
+            downloaded.unique_name,
             downloaded.gbifID,
             downloaded.identifier,
             downloaded.is_license_full,
@@ -167,7 +169,7 @@ class error_entry:
     @classmethod
     def from_downloaded(cls, downloaded: DownloadedImage) -> error_entry:
         return cls(
-            uuid=downloaded.UUID,
+            uuid=downloaded.unique_name,
             identifier=downloaded.identifier,
             retry_count=downloaded.retry_count,
             error_code=downloaded.error_code,
@@ -177,7 +179,7 @@ class error_entry:
     @staticmethod
     def to_list_download(downloaded: DownloadedImage) -> List:
         return [
-            downloaded.UUID,
+            downloaded.unique_name,
             downloaded.identifier,
             downloaded.retry_count,
             downloaded.error_code,

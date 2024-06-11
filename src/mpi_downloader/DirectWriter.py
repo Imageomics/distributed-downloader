@@ -9,8 +9,6 @@ from mpi_downloader import CompletedBatch
 from mpi_downloader.dataclasses import error_entry, success_entry, success_dtype, error_dtype
 
 
-# Batch_size = 1000
-
 def write_batch(
         completed_batch: CompletedBatch,
         output_path: str,

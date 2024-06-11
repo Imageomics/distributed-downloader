@@ -155,7 +155,6 @@ class Downloader:
 
         np_image = np.asarray(bytearray(raw_image_bytes), dtype="uint8")
         original_image = cv2.imdecode(np_image, cv2.IMREAD_COLOR)
-        # original_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 
         if original_image is None:
             raise ValueError("Corrupted Image")
@@ -182,7 +181,7 @@ class Downloader:
 
     def process_error(self, return_entry: DownloadedImage, error: Exception) -> bool:
         if isinstance(error, TimeoutError):
-            self.logger.info(f"Timout, trying to exit")
+            self.logger.info("Timout, trying to exit")
 
             self._exit = True
             self._condition.notify()

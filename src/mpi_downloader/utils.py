@@ -63,7 +63,7 @@ def get_or_init_downloader(header: dict,
                            job_end_time: int,
                            logger: logging.Logger) -> Tuple[Downloader, requests.Session, RateLimit]:
     if schedule_dict["ServerName"] not in downloader_schedule.keys():
-        server_name = re.sub('%3A', ':', schedule_dict["ServerName"])
+        server_name = schedule_dict["ServerName"].replace("%3A", ":")
         rate_limit = RateLimit(schedule_dict["RateLimit"], rate_multiplier)
         session = create_new_session(server_name, rate_limit.upper_bound)
         downloader = Downloader(header, session, rate_limit, img_size, job_end_time=job_end_time, logger=logger)
