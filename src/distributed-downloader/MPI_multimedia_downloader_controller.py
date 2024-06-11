@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Deque
 
 import pandas as pd
 
-from mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, separate_to_blocks, \
+from .mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, separate_to_blocks, \
     get_largest_nonempty_bucket, get_schedule_count
 
 parser = argparse.ArgumentParser(description='Server downloader controller')

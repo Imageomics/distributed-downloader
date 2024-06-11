@@ -6,11 +6,11 @@ from typing import Dict, Tuple
 
 import mpi4py.MPI as MPI
 
-from mpi_downloader import DirectWriter, CompletedBatch
-from mpi_downloader.dataclasses import CompletedBatch
-from mpi_downloader.Downloader import Downloader
-from mpi_downloader.PreLoader import load_one_batch
-from mpi_downloader.utils import get_latest_schedule, \
+from .mpi_downloader import DirectWriter
+from .mpi_downloader.dataclasses import CompletedBatch
+from .mpi_downloader.Downloader import Downloader
+from .mpi_downloader.PreLoader import load_one_batch
+from .mpi_downloader.utils import get_latest_schedule, \
     get_or_init_downloader, is_enough_time
 
 

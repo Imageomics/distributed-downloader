@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 import shutil
 import time
 from typing import Dict, Tuple, Union, List, Any, Deque, Set
