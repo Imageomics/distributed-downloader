@@ -11,7 +11,7 @@ def load_batch(
 ) -> Iterator[List[Dict[str, Any]]]:
     for batch_id in batches_to_download:
         server_df = pd.read_parquet(
-            f"{path_to_parquet}/ServerName={re.sub(':', '%3A', server_name)}/partition_id={batch_id}")
+            f"{path_to_parquet}/ServerName={server_name.replace(':', '%3A')}/partition_id={batch_id}")
         yield server_df.to_dict("records")
 
 

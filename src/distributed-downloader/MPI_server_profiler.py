@@ -62,7 +62,7 @@ def download_batch(
 
 for idx, schedule_dict in enumerate(scheduler_dicts):
     if schedule_dict["ServerName"] not in downloader_schedule.keys():
-        server_name = re.sub(':', '%3A', schedule_dict["ServerName"])
+        server_name = schedule_dict["ServerName"].replace(":", "%3A")
         rate_limit = RateLimit(Initial_rate, Rate_multiplier)
         session = create_new_session(server_name, rate_limit.upper_bound)
         downloader = Downloader(header, session, rate_limit, img_size, False)

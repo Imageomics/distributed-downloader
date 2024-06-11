@@ -30,7 +30,11 @@ Server_config_df = pd.read_csv(f"{Server_schedule}/_config.csv")
 Server_config_df["StartIndex"] = 0
 Server_config_df["EndIndex"] = 0
 server_config_columns = Server_config_df.columns.to_list()
-Server_config_df = Server_config_df.merge(Server_profiler_df, left_on="ServerName", right_on="server_name", how="left")
+Server_config_df = Server_config_df.merge(Server_profiler_df,
+                                          left_on="ServerName",
+                                          right_on="server_name",
+                                          how="left",
+                                          validate="1:1")
 Server_config_df["EndIndex"] = Server_config_df["total_batches"] - 1
 Server_config_df = Server_config_df[server_config_columns]
 
