@@ -5,8 +5,7 @@ from typing import List, Any
 
 import pandas as pd
 
-from mpi_downloader import CompletedBatch
-from mpi_downloader.dataclasses import error_entry, success_entry, success_dtype, error_dtype
+from .dataclasses import error_entry, success_entry, success_dtype, error_dtype, CompletedBatch
 
 
 def write_batch(

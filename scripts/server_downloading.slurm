@@ -34,7 +34,7 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
 {
   srun --mpi=pmi2 --nodes=1 --ntasks-per-node=1 --cpus-per-task=1 --output="${logs_dir}/MPI_multimedia_downloader.log" \
     python \
-    "${REPO_ROOT}/src/MPI_multimedia_downloader_controller.py" \
+    "${REPO_ROOT}/src/distributed-downloader/MPI_multimedia_downloader_controller.py" \
     "$input_path" \
     "$schedule_path" \
     "$DOWNLOADER_MAX_NODES" \
@@ -47,7 +47,7 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
   --cpus-per-task="$DOWNLOADER_CPU_PER_TASK" \
   --mem=0 \
   --output="${logs_dir}/MPI_multimedia_downloader-%2t.log" \
-  python "${REPO_ROOT}/src/MPI_multimedia_downloader.py" \
+  python "${REPO_ROOT}/src/distributed-downloader/MPI_multimedia_downloader.py" \
   "$input_path" \
   "$schedule_path" \
   --header "$HEADER" \

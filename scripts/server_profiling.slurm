@@ -32,7 +32,7 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
 # memory limit per node: 177G
 srun --mpi=pmi2 --nodes=1 --ntasks-per-node=1 --cpus-per-task=3 \
     python \
-    "${REPO_ROOT}/src/MPI_server_profiler_controller.py" \
+    "${REPO_ROOT}/src/distributed-downloader/MPI_server_profiler_controller.py" \
     "$input_path" \
     "$max_nodes" \
     "$max_worker_per_node" \

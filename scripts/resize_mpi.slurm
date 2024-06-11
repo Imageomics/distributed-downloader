@@ -26,4 +26,4 @@ srun \
   --mem=0 \
   --output="${REPO_ROOT}/logs/resize/resize-%2t.log" \
   python \
-  "${REPO_ROOT}/src/resize_mpi.py"
+  "${REPO_ROOT}/tools/resize_mpi.py"

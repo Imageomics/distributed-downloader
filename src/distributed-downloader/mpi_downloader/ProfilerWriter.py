@@ -2,8 +2,7 @@ import cv2
 import h5py
 import numpy as np
 
-from mpi_downloader import CompletedBatch
-from mpi_downloader.dataclasses import error_entry, error_dtype, profile_dtype
+from .dataclasses import error_entry, error_dtype, profile_dtype, CompletedBatch
 
 sample_length = 5
 

@@ -36,7 +36,7 @@ if [ "$recheck_flag" = "--recheck" ]; then
       --cpus-per-task=1 \
       --output="${logs_dir}/MPI_downloader_verifier.log" \
       python \
-      "${REPO_ROOT}/src/MPI_downloader_verifier.py" \
+      "${REPO_ROOT}/src/distributed-downloader/MPI_downloader_verifier.py" \
       "$input_path" \
       "$schedule_path" \
       "$recheck_flag"
@@ -48,7 +48,7 @@ else
       --cpus-per-task=1 \
       --output="${logs_dir}/MPI_downloader_verifier.log" \
       python \
-      "${REPO_ROOT}/src/MPI_downloader_verifier.py" \
+      "${REPO_ROOT}/src/distributed-downloader/MPI_downloader_verifier.py" \
       "$input_path" \
       "$schedule_path"
 fi

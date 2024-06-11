@@ -11,8 +11,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
-from mpi_downloader.Downloader import Downloader
-from mpi_downloader.dataclasses import RateLimit
+from .Downloader import Downloader
+from .dataclasses import RateLimit
 
 
 def create_new_session(url: str, max_rate: int) -> requests.Session:

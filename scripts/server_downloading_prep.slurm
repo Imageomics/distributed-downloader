@@ -24,7 +24,7 @@ srun \
   --cpus-per-task=1 \
   --output="${logs_dir}/MPI_downloader_prep.log" \
   python \
-  "${REPO_ROOT}/src/MPI_download_prep.py" \
+  "${REPO_ROOT}/src/distributed-downloader/MPI_download_prep.py" \
   "$input_path" \
   "$DOWNLOADER_MAX_NODES" \
   "$DOWNLOADER_WORKERS_PER_NODE"

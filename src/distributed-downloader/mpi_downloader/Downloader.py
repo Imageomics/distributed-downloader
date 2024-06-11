@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 import requests
 
-from mpi_downloader.dataclasses import DownloadedImage, CompletedBatch, RateLimit
+from .dataclasses import DownloadedImage, CompletedBatch, RateLimit
 
 _MAX_RETRIES = 5
 _TIMEOUT = 5
