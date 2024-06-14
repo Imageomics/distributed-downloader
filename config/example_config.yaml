@@ -1,0 +1,48 @@
+account: "pas2136"
+path_to_urls: "/fs/scratch/PAS2136/gbif/data/file.csv"
+path_to_output_folder: "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep"
+
+scripts:
+  # Wrapper scripts to submit jobs to the cluster
+  general_submitter: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/submit_slurm.sh"
+  mpi_submitter: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/submit_mpi_download.sh"
+  # Cluster job's scripts
+  download_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_downloading.slurm"
+  verify_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/verify_downloading.slurm"
+  resize_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/resize_mpi.slurm"
+  server_prep_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_prep.slurm"
+  schedule_creation_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/schedule_creation.slurm"
+
+# Rules for the schedule creation
+# They determine how many simultaneous downloader instances can be run on the same server
+# Rules are based on the number of batches required to be downloaded from the server
+# Rule is: key - number of batches, value - number of instances; if server has more than key batches, value instances can be run
+# Server with 0 batches is considered to be downloaded and are ignored
+# Default value is 1
+# Order of the rules does not matter
+schedule_rules:
+  5000: 40
+  1000: 20
+  500: 10
+  200: 8
+  100: 4
+  50: 2
+  1: 1
+
+# Structure of the output folder that will be created automatically
+output_structure:
+  urls_folder: "servers_batched"
+  logs_folder: "logs"
+  images_folder: "downloaded_images"
+  schedules_folder: "schedules"
+  profiles_table: "servers_profiles.csv"
+  ignored_table: "ignored_servers.csv"
+
+# Parameters for the downloader
+downloader_parameters:
+  max_nodes: 7
+  workers_per_node: 6
+  cpu_per_worker: 6
+  header: "User-Agent: Imageomics Institute (https://imageomics.org; imageomics-it@osu.edu)"
+  image_size: 720
+  logger_level: "INFO"

@@ -58,3 +58,7 @@ The provided `slurm` scripts for running steps 1 and 2 (`scripts/server_download
     ```
     pip install -r requirements.txt
     ```
+
+## Rules for scripts:
+1. All scripts can expect to have the following custom environment variables:
+    - `DOWNLOAD_DIR`: Directory where the downloaded files will be stored.
