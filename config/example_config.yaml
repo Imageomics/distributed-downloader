@@ -1,6 +1,7 @@
 account: "pas2136"
 path_to_urls: "/fs/scratch/PAS2136/gbif/data/file.csv"
-path_to_output_folder: "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep"
+#path_to_output_folder: "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep"
+path_to_output_folder: "/mnt/d/Projects/Python/ImUn/gbif"
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster
@@ -37,9 +38,11 @@ output_structure:
   schedules_folder: "schedules"
   profiles_table: "servers_profiles.csv"
   ignored_table: "ignored_servers.csv"
+  inner_checkpoint_file: "inner_checkpoint.txt"
 
 # Parameters for the downloader
 downloader_parameters:
+  num_downloads: 10
   max_nodes: 7
   workers_per_node: 6
   cpu_per_worker: 6

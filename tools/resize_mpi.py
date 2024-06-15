@@ -14,8 +14,8 @@ from py7zr import FILTER_ZSTD
 
 comm = MPI.COMM_WORLD
 rank = comm.rank
-output_path = "/users/PAS2119/andreykopanev/distributed-downloader/data/verification_stat"
-schedule_path = "/users/PAS2119/andreykopanev/distributed-downloader/data/schedule_full.csv"
+output_path = "/users/PAS2119/andreykopanev/distributed_downloader/data/verification_stat"
+schedule_path = "/users/PAS2119/andreykopanev/distributed_downloader/data/schedule_full.csv"
 base_path = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
 _new_size = 720
 read_time = 150

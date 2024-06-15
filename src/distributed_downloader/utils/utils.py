@@ -5,6 +5,7 @@ from collections import deque
 from typing import List, Deque, Any, Dict
 
 import pandas as pd
+import yaml
 from pyspark.sql import DataFrame, SparkSession
 
 
@@ -181,3 +182,8 @@ def load_env(env: str) -> Dict[str, Any]:
 
     load_dotenv(env)
     return dotenv_values(env)
+
+
+def update_checkpoint(path: str, checkpoint: Dict[str, bool]) -> None:
+    with open(path, "w") as file:
+        yaml.dump(checkpoint, file)

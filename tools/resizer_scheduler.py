@@ -3,7 +3,7 @@ import re
 
 from pandas import DataFrame
 
-schedule_path = "/users/PAS2119/andreykopanev/distributed-downloader/data/schedule_full.csv"
+schedule_path = "/users/PAS2119/andreykopanev/distributed_downloader/data/schedule_full.csv"
 base_path = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
 number_of_nodes = 10
 number_of_workers = 3
