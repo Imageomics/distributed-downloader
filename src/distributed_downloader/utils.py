@@ -1,12 +1,15 @@
 import os
 import shutil
+import subprocess
 import sys
+import logging
 from collections import deque
-from typing import List, Deque, Any, Dict
+from typing import List, Deque, Any, Dict, LiteralString, Optional, Sequence
 
 import pandas as pd
 import yaml
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.types import StructType
 
 
 def print_progress(iteration, total, prefix='', suffix='', decimals=2, bar_length=100):
@@ -66,19 +69,19 @@ def write_to_parquet(path: str, result_df: DataFrame, num_parquet: int = 100) ->
     result_df.write.mode('overwrite').parquet(path)
 
 
-def load_dataframe(spark: SparkSession, input_path: str) -> DataFrame:
+def load_dataframe(spark: SparkSession, input_path: str, scheme: Optional[StructType | str] = None) -> DataFrame:
     file_extension = input_path.split('.')[-1].lower()
 
-    def infer_delimiter(first_line):
-        if '\t' in first_line:
+    def infer_delimiter(_first_line):
+        if '\t' in _first_line:
             return '\t'
-        elif ',' in first_line:
+        elif ',' in _first_line:
             return ','
-        elif ' ' in first_line:
+        elif ' ' in _first_line:
             return ' '
-        elif '|' in first_line:
+        elif '|' in _first_line:
             return '|'
-        elif ';' in first_line:
+        elif ';' in _first_line:
             return ';'
         else:
             return None
@@ -93,13 +96,13 @@ def load_dataframe(spark: SparkSession, input_path: str) -> DataFrame:
                 first_line = file.readline()
                 sep = infer_delimiter(first_line)
             if sep is None:
-                raise Exception(f"Could not infer delimiter for file {input_path}")
-        df = spark.read.csv(input_path, sep=sep, header=True)
+                raise ValueError(f"Could not infer delimiter for file {input_path}")
+        df = spark.read.csv(input_path, sep=sep, header=True, schema=scheme)
     else:
         try:
-            df = spark.read.load(input_path)
-        except:
-            raise Exception(f"File not supported")
+            df = spark.read.load(input_path, scheme=scheme)
+        except Exception as e:
+            raise FileNotFoundError(f"File not supported: {e}")
 
     return df
 
@@ -109,9 +112,15 @@ def ensure_created(list_of_path: List[str]) -> None:
         os.makedirs(path, exist_ok=True)
 
 
-def truncate_folder(path: str):
-    shutil.rmtree(path, ignore_errors=True)
-    os.makedirs(path, exist_ok=True)
+def truncate_paths(paths: Sequence[str]) -> None:
+    for path in paths:
+        is_dir = "." in path.split("/")[-1]
+        if is_dir:
+            if os.path.exists(path):
+                shutil.rmtree(path)
+            os.makedirs(path)
+        else:
+            open(path, "w").close()
 
 
 def split_dataframe(df: pd.DataFrame, by_column: str = "Nodes", chunk_size=20) -> List[pd.DataFrame]:
@@ -184,6 +193,29 @@ def load_env(env: str) -> Dict[str, Any]:
     return dotenv_values(env)
 
 
-def update_checkpoint(path: str, checkpoint: Dict[str, bool]) -> None:
+def update_checkpoint(path: LiteralString | str | bytes, checkpoint: Dict[str, bool]) -> None:
     with open(path, "w") as file:
         yaml.dump(checkpoint, file)
+
+
+def get_id(output: bytes) -> int:
+    return int(output.decode().strip().split(" ")[-1])
+
+
+def load_config(path: LiteralString | str | bytes) -> Dict[str, str | int | bool | Dict[str, Any]]:
+    with open(path, "r") as file:
+        return yaml.full_load(file)
+
+
+def init_logger(logger_name: str, output_path: str = None, logging_level: str = "INFO") -> logging.Logger:
+    logging.basicConfig(
+        filename=output_path,
+        level=logging.getLevelName(logging_level),
+        format="%(asctime)s - %(levelname)s - %(process)d - %(message)s")
+    return logging.getLogger(logger_name)
+
+
+def submit_job(submitter_script: str, script: str, *args) -> int:
+    output = subprocess.check_output(f"{submitter_script} {script} {' '.join(args)}", shell=True)
+    idx = get_id(output)
+    return idx

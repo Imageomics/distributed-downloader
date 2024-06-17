@@ -1,5 +1,5 @@
 account: "pas2136"
-path_to_urls: "/fs/scratch/PAS2136/gbif/data/file.csv"
+path_to_input: "/fs/scratch/PAS2136/gbif/data/file.csv"
 #path_to_output_folder: "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep"
 path_to_output_folder: "/mnt/d/Projects/Python/ImUn/gbif"
 
@@ -8,11 +8,13 @@ scripts:
   general_submitter: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/submit_slurm.sh"
   mpi_submitter: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/submit_mpi_download.sh"
   # Cluster job's scripts
-  download_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_downloading.slurm"
-  verify_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/verify_downloading.slurm"
-  resize_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/resize_mpi.slurm"
-  server_prep_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_prep.slurm"
+  initialization_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/initialization.slurm"
+  profiling_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/profiling.slurm"
   schedule_creation_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/schedule_creation.slurm"
+  verify_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/verify_downloading.slurm"
+  download_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_downloading.slurm"
+  # tools scripts
+  resize_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/resize_mpi.slurm"
 
 # Rules for the schedule creation
 # They determine how many simultaneous downloader instances can be run on the same server
@@ -49,3 +51,4 @@ downloader_parameters:
   header: "User-Agent: Imageomics Institute (https://imageomics.org; imageomics-it@osu.edu)"
   image_size: 720
   logger_level: "INFO"
+  batch_size: 10000

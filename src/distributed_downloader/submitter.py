@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 
 import pandas as pd
 
+from distributed_downloader.utils import get_id
+
 NUM_DOWNLOADERS: int = 1
 RECHECK = False
 SCHEDULES: List[str] = []
@@ -51,24 +53,27 @@ def get_logs_offset(path: str) -> int:
     return dirs[0]
 
 
-def get_id(output: bytes) -> int:
-    return int(output.decode().strip().split(" ")[-1])
-
-
-def submit_downloader(_schedule: str, iteration_id: int, dep_id: int, mpi_submitter_script: str,
+def submit_downloader(_schedule: str,
+                      iteration_id: int,
+                      dep_id: int,
+                      mpi_submitter_script: str,
                       downloading_script: str) -> int:
     iteration = str(iteration_id).zfill(4)
     output = subprocess.check_output(f"{mpi_submitter_script} "
                                      f"{downloading_script} "
                                      f"{_schedule} "
                                      f"{iteration} "
-                                     f"{dep_id}", shell=True)
+                                     f"{dep_id}",
+                                     shell=True)
     idx = get_id(output)
     print(f"Submitted downloader {idx} for {_schedule}")
     return idx
 
 
-def submit_verifier(_schedule: str, iteration_id: int, mpi_submitter_script: str, verifying_script: str,
+def submit_verifier(_schedule: str,
+                    iteration_id: int,
+                    mpi_submitter_script: str,
+                    verifying_script: str,
                     dep_id: int = None) -> int:
     iteration = str(iteration_id).zfill(4)
 

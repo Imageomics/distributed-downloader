@@ -1,17 +1,14 @@
-import argparse
 import os.path
 import uuid
 from urllib.parse import urlparse
 
-import pyspark.sql.functions as F
+import pyspark.sql.functions as func
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
+from distributed_downloader.utils import load_config, load_dataframe, truncate_paths, init_logger
 from schemes import multimedia_scheme
-from utils.utils import truncate_folder
-
-BATCH_SIZE = 10_000
 
 
 @udf(returnType=StringType())
@@ -25,35 +22,26 @@ def get_uuid():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Convert multimedia data to server batches')
+    config_path = os.environ.get("CONFIG_PATH")
+    if config_path is None:
+        raise ValueError("CONFIG_PATH not set")
 
-    parser.add_argument('input_path', metavar='input_path', type=str, help='the path to the file with multimedia data, must be a tab-delimited text file')
-    parser.add_argument('output_path', metavar='output_path', type=str, help='the path to the output folder (folder for download components (e.g., server batches and image folder))')
+    config = load_config(config_path)
 
-    # parse the arguments
-    args = parser.parse_args()
-    input_path: str = args.input_path
-    output_path: str = args.output_path
-    servers_batched_folder: str = os.getenv("DOWNLOADER_URLS_FOLDER", "servers_batched")
+    # Initialize filestructure
+    input_path = config["path_to_input"]
+    output_folder = config["path_to_output_folder"]
+    truncate_paths([output_folder, *[f"{output_folder}/{folder}" for folder in config["output_structure"].values()]])
+    output_path = f"{output_folder}/{config['output_structure']['urls_folder']}"
+    logger = init_logger(__name__,
+                         output_path="{output_folder}/{config['output_structure']['logs_folder']}/initialization.log")
 
     # Initialize SparkSession
     spark = SparkSession.builder.appName("Multimedia prep").getOrCreate()
     spark.conf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "CORRECTED")
     spark.conf.set("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
 
-    truncate_folder(output_path)
-
-    if os.path.isfile(input_path):
-        multimedia_df = spark.read.csv(
-            input_path,
-            sep="\t",
-            header=True,
-            schema=multimedia_scheme.schema
-        )
-    else:
-        multimedia_df = spark.read.load(
-            input_path
-        )
+    multimedia_df = load_dataframe(spark, input_path, multimedia_scheme.schema)
 
     multimedia_df_prep = (multimedia_df
                           .filter((multimedia_df["gbifID"].isNotNull())
@@ -73,24 +61,27 @@ if __name__ == "__main__":
 
     columns = multimedia_df_prep.columns
 
-    servers_batched_dir = os.path.join(output_path, servers_batched_folder)
-    os.makedirs(servers_batched_dir, exist_ok=True)
-
-    print("Starting batching")
+    logger.info("Starting batching")
 
     servers_grouped = (multimedia_df_prep
                        .select("ServerName")
                        .groupBy("ServerName")
                        .count()
-                       .withColumn("batch_count", F.floor(F.col("count") / BATCH_SIZE)))
+                       .withColumn("batch_count",
+                                   func.floor(func.col("count") / config["downloader_parameters"]["batch_size"])))
 
     window_part = Window.partitionBy("ServerName").orderBy("ServerName")
     master_df_filtered = (multimedia_df_prep
-                          .withColumn("row_number", F.row_number().over(window_part))
+                          .withColumn("row_number", func.row_number().over(window_part))
                           .join(servers_grouped, ["ServerName"])
-                          .withColumn("partition_id", F.col("row_number") % F.col("batch_count"))
-                          .withColumn("partition_id", F.when(F.col("partition_id").isNull(), 0).otherwise(F.col("partition_id")))
+                          .withColumn("partition_id", func.col("row_number") % func.col("batch_count"))
+                          .withColumn("partition_id",
+                                      (func
+                                       .when(func.col("partition_id").isNull(), 0)
+                                       .otherwise(func.col("partition_id"))))
                           .select(*columns, "partition_id"))
+
+    logger.info("Writing to parquet")
 
     (master_df_filtered
      .repartition("ServerName", "partition_id")
@@ -98,6 +89,8 @@ if __name__ == "__main__":
      .partitionBy("ServerName", "partition_id")
      .mode("overwrite")
      .format("parquet")
-     .save(servers_batched_dir))
+     .save(output_path))
+
+    logger.info("Finished batching")
 
     spark.stop()

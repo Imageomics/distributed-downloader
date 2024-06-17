@@ -7,7 +7,7 @@ from pandas._libs.missing import NAType
 
 from mpi_downloader.dataclasses import profile_dtype
 from mpi_downloader.utils import verify_batches_for_prep
-from utils.utils import ensure_created, create_schedule_configs
+from distributed_downloader.utils import ensure_created, create_schedule_configs
 
 _DEFAULT_RATE_LIMIT = 10
 _CREATE_PROFILES = False
