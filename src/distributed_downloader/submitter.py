@@ -33,7 +33,7 @@ def get_env_vars(env_path):
     """
     load_dotenv(env_path)
     download_path = f"{os.getenv('PROCESSED_DATA_ROOT')}/{os.getenv('TIME_STAMP')}/{os.getenv('DOWNLOAD_DIR')}"
-    schedules_path = f"{download_path}/{os.getenv('DOWNLOADER_SCHEDULES_FOLDER')}"
+    schedules_path = f"{download_path}/{os.getenv('DOWNLOADER_SCHEDULES_FOLDER')}/current"
     mpi_submitter_script = os.getenv("MPI_SUBMITTER_SCRIPT")
     downloading_script = os.getenv("DOWNLOADING_SCRIPT")
     verifying_script = os.getenv("VERIFYING_SCRIPT")
