@@ -1,27 +1,20 @@
 #!/bin/bash
 #SBATCH --job-name schedule_creation
-#
 #SBATCH --time=00:05:00
 
-source "${REPO_ROOT}/config/hpc.env"
+set -e
 
-input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/${DOWNLOAD_DIR}"
-
-logs_dir="${input_path}/${DOWNLOADER_LOGS_FOLDER}"
+logs_dir="${OUTPUT_LOGS_FOLDER}"
 mkdir -p "${logs_dir}"
 
-module load intel/2021.10.0
-module load intelmpi/2021.10
 module load miniconda3/23.3.1-py310
 source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 
-# memory limit per node: 177G
-srun \
-  --mpi=pmi2 \
-  --nodes=1 \
-  --ntasks-per-node=1 \
-  --cpus-per-task=1 \
-  --output="${logs_dir}/MPI_downloader_prep.log" \
-  python \
+python \
   "${REPO_ROOT}/src/distributed_downloader/MPI_download_prep.py" \
+  > "${logs_dir}/MPI_downloader_prep.log"
+
+mv "${logs_dir}/${LOGS_BASE_FILENAME}.out" "${logs_dir}/current"
+mv "${logs_dir}/${LOGS_BASE_FILENAME}.err" "${logs_dir}/current"
+mv "${logs_dir}/MPI_downloader_prep.log" "${logs_dir}/current"

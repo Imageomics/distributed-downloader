@@ -7,7 +7,6 @@
 #SBATCH --mem=0
 #SBATCH --account=pas2136
 
-source "${REPO_ROOT}/config/hpc.env"
 
 module load intel/2021.10.0
 module load intelmpi/2021.10

@@ -4,9 +4,8 @@ set -e
 
 SCRIPTS_DIR=$(dirname "$(realpath "$0")")
 REPO_ROOT=$(dirname "$(realpath "${SCRIPTS_DIR}")")
-#source "${REPO_ROOT}/config/hpc.env"
 export REPO_ROOT
-logs_dir="${REPO_ROOT}/${OUTPUT_LOGS_FOLDER}"
+logs_dir="${OUTPUT_LOGS_FOLDER}"
 mkdir -p "${logs_dir}"
 
 if [ "$#" -eq 0 ]; then
@@ -15,7 +14,6 @@ if [ "$#" -eq 0 ]; then
 fi
 
 script=$1
-script=$1
 if [ ! -f "$script" ]; then
   echo "Error: File '$script' not found"
 fi
@@ -23,6 +21,7 @@ fi
 filename=$(basename "$script")
 ext="${filename##*.}"
 base_filename=$(basename "${filename}" ."${ext}")
+export LOGS_BASE_FILENAME=$base_filename
 dependencies=$(IFS=,; echo "${*:2}")
 
 # Submit the script to Slurm

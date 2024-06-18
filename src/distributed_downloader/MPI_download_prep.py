@@ -7,7 +7,7 @@ import yaml
 from pandas._libs.missing import NAType
 
 from distributed_downloader.utils import create_schedule_configs, load_config, update_checkpoint, submit_job, \
-    init_logger
+    init_logger, preprocess_dep_ids
 from mpi_downloader.utils import verify_batches_for_prep
 
 
@@ -19,9 +19,11 @@ def schedule_rule(total_batches: int, rule: List[Tuple[int, int]]) -> int | NATy
 
 
 def init_new_current_folder(old_folder: str) -> None:
-    number_of_folders = len([folder for folder in os.listdir(old_folder) if os.path.isdir(f"{old_folder}/{folder}")])
-    new_name = str(number_of_folders).zfill(4)
-    os.rename(f"{old_folder}/current", f"{old_folder}/{new_name}")
+    if os.path.exists(f"{old_folder}/current"):
+        number_of_folders = len(
+            [folder for folder in os.listdir(old_folder) if os.path.isdir(f"{old_folder}/{folder}")])
+        new_name = str(number_of_folders).zfill(4)
+        os.rename(f"{old_folder}/current", f"{old_folder}/{new_name}")
     os.mkdir(f"{old_folder}/current")
 
 
@@ -44,7 +46,7 @@ def submit_downloader(_schedule: str,
                      downloading_script,
                      _schedule,
                      iteration,
-                     str(dep_id))
+                     *preprocess_dep_ids([dep_id]))
 
     return idx
 
@@ -60,7 +62,7 @@ def submit_verifier(_schedule: str,
                      verifying_script,
                      _schedule,
                      iteration,
-                     str(dep_id))
+                     *preprocess_dep_ids([dep_id]))
 
     return idx
 
@@ -77,17 +79,17 @@ def create_schedules(config: Dict[str, str | int | bool | Dict[str, int | str]],
                                             config['output_structure']['profiles_table'])
     number_of_workers: int = (config['downloader_parameters']['max_nodes']
                               * config['downloader_parameters']['workers_per_node'])
-    schedule_rule_dict: List[Tuple[int, int]] = fix_rule(config['schedule_rule'])
+    schedule_rule_dict: List[Tuple[int, int]] = fix_rule(config['schedule_rules'])
 
     # Get list to download
     profiles_df = pd.read_csv(server_profiler_csv)
 
-    if os.path.exists(server_ignored_csv):
+    if os.path.exists(server_ignored_csv) and os.stat(server_ignored_csv).st_size != 0:
         ignored_servers_df = pd.read_csv(server_ignored_csv)
     else:
         ignored_servers_df = pd.DataFrame(columns=["ServerName"])
 
-    if len(os.listdir(schedules_path)) > 0:
+    if os.path.exists(schedules_path) and len(os.listdir(schedules_path)) > 0:
         downloaded_batches: pd.DataFrame = verify_batches_for_prep(profiles_df, schedules_path)
         downloaded_batches = downloaded_batches.groupby("ServerName").count().reset_index().dropna()
         downloaded_batches = downloaded_batches.rename(
@@ -99,8 +101,12 @@ def create_schedules(config: Dict[str, str | int | bool | Dict[str, int | str]],
 
     profiles_df["Nodes"] = profiles_df["left_to_download"].apply(lambda x: schedule_rule(x, schedule_rule_dict))
     profiles_df["ProcessPerNode"] = 1
-    profiles_df = profiles_df.rename(columns={"total_batches": "TotalBatches"}).dropna().reset_index(drop=True)
+    profiles_df = (profiles_df
+                   .dropna()
+                   .reset_index(drop=True)
+                   .rename(columns={"total_batches": "TotalBatches", "server_name": "ServerName"}))
     profiles_df = profiles_df[["ServerName", "TotalBatches", "ProcessPerNode", "Nodes"]]
+    profiles_df = profiles_df.loc[:, ~profiles_df.columns.duplicated()].copy()
     profiles_df = profiles_df[~profiles_df["ServerName"].isin(ignored_servers_df["ServerName"])]
 
     # Rename old schedule and logs
@@ -138,7 +144,7 @@ def submit_downloaders(config: Dict[str, str | int | bool | Dict[str, int | str]
         })
         offset += 1
 
-        for _ in range(config["downloader_parameters"]["num_downloaders"]):
+        for _ in range(config["downloader_parameters"]["num_downloads"]):
             download_id = submit_downloader(schedule,
                                             offset,
                                             submission_records[-1]["job_id"],

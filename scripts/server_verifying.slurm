@@ -11,12 +11,8 @@ schedule=$1
 iteration_number=$2
 recheck_flag=$3
 
-#source "${REPO_ROOT}/config/hpc.env"
-
-input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/${DOWNLOAD_DIR}"
-
-schedule_path="${input_path}/${DOWNLOADER_SCHEDULES_FOLDER}/current/${schedule}"
-logs_dir="${input_path}/${DOWNLOADER_LOGS_FOLDER}/current/${schedule}/${iteration_number}"
+schedule_path="${OUTPUT_SCHEDULES_FOLDER}/current/${schedule}"
+logs_dir="${OUTPUT_LOGS_FOLDER}/current/${schedule}/${iteration_number}"
 mkdir -p "${logs_dir}"
 
 module load intel/2021.10.0
@@ -36,8 +32,8 @@ if [ "$recheck_flag" = "--recheck" ]; then
       --cpus-per-task=1 \
       --output="${logs_dir}/MPI_downloader_verifier.log" \
       python \
-      "${REPO_ROOT}/src/distributed-downloader/MPI_downloader_verifier.py" \
-      "$input_path" \
+      "${REPO_ROOT}/src/distributed_downloader/MPI_downloader_verifier.py" \
+      "$PATH_TO_OUTPUT" \
       "$schedule_path" \
       "$recheck_flag"
 else
@@ -48,7 +44,7 @@ else
       --cpus-per-task=1 \
       --output="${logs_dir}/MPI_downloader_verifier.log" \
       python \
-      "${REPO_ROOT}/src/distributed-downloader/MPI_downloader_verifier.py" \
-      "$input_path" \
+      "${REPO_ROOT}/src/distributed_downloader/MPI_downloader_verifier.py" \
+      "$PATH_TO_OUTPUT" \
       "$schedule_path"
 fi

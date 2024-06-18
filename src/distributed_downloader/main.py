@@ -1,13 +1,18 @@
 import csv
 import os.path
+import pprint
 from logging import Logger
-from typing import Any, Dict, LiteralString, Optional
+from typing import Any, Dict, Optional
+try:
+    from typing import LiteralString
+except ImportError:
+    from typing_extensions import LiteralString
 
 import yaml
 from attr import define, field, Factory
 
 from distributed_downloader.initialization import init_filestructure
-from distributed_downloader.utils import update_checkpoint, load_config, submit_job
+from distributed_downloader.utils import update_checkpoint, load_config, submit_job, preprocess_dep_ids, init_logger
 
 
 @define
@@ -15,7 +20,7 @@ class DistributedDownloader:
     config_path: LiteralString | str
     config: Dict[str, str | int | bool | Dict[str, Any]]
 
-    logger: Logger = field(default=Factory(Logger))
+    logger: Logger = field(default=Factory(lambda: init_logger(__name__)))
 
     urls_path: LiteralString | str = None
     inner_checkpoint_path: LiteralString | str = None
@@ -75,7 +80,7 @@ class DistributedDownloader:
         self.logger.info("Scheduling profiling script")
         idx = submit_job(self.config['scripts']['general_submitter'],
                          self.config['scripts']['profiling_script'],
-                         str(prev_job_id))
+                         *preprocess_dep_ids([prev_job_id]))
         self.logger.info(f"Submitted profiling script {idx}")
         self.inner_checkpoint["profiled"] = True
         update_checkpoint(self.inner_checkpoint_path, self.inner_checkpoint)
@@ -83,15 +88,16 @@ class DistributedDownloader:
 
     def __schedule_downloading(self, prev_job_id: int = None) -> None:
         self.logger.info("Scheduling downloading scripts")
-        all_prev_ids = [prev_job_id] if prev_job_id is not None else []
+        all_prev_ids = [prev_job_id]
 
-        for schedule in os.listdir(self.schedules_folder):
-            with open(os.path.join(self.schedules_folder, schedule, "_jobs_ids.csv"), "r") as file:
-                all_prev_ids.append(int(list(csv.DictReader(file))[-1]["job_id"]))
+        if os.path.exists(self.schedules_folder):
+            for schedule in os.listdir(self.schedules_folder):
+                with open(os.path.join(self.schedules_folder, schedule, "_jobs_ids.csv"), "r") as file:
+                    all_prev_ids.append(int(list(csv.DictReader(file))[-1]["job_id"]))
 
         schedule_creation_id = submit_job(self.config['scripts']['schedule_creator_submitter'],
                                           self.config['scripts']['schedule_creation_script'],
-                                          *all_prev_ids)
+                                          *preprocess_dep_ids(all_prev_ids))
         self.logger.info(f"Submitted schedule creation script {schedule_creation_id}")
         self.inner_checkpoint["schedule_creation_scheduled"] = True
         update_checkpoint(self.inner_checkpoint_path, self.inner_checkpoint)
@@ -198,10 +204,12 @@ class DistributedDownloader:
 
 
 def main() -> None:
-    config_path = "/mnt/c/Users/24122/PycharmProjects/distributed_downloader/config/example_config.yaml"
+    config_path = "/users/PAS2119/andreykopanev/distributed-downloader/config/example_config.yaml"
 
     dd = DistributedDownloader.from_path(config_path)
     dd.download_images()
+
+    # pprint.pp(dict(os.environ))
 
 
 if __name__ == "__main__":

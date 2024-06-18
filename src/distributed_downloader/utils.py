@@ -4,7 +4,12 @@ import subprocess
 import sys
 import logging
 from collections import deque
-from typing import List, Deque, Any, Dict, LiteralString, Optional, Sequence
+from typing import List, Deque, Any, Dict, Optional, Sequence
+try:
+    from typing import LiteralString
+except ImportError:
+    from typing_extensions import LiteralString
+
 
 import pandas as pd
 import yaml
@@ -114,7 +119,7 @@ def ensure_created(list_of_path: List[str]) -> None:
 
 def truncate_paths(paths: Sequence[str]) -> None:
     for path in paths:
-        is_dir = "." in path.split("/")[-1]
+        is_dir = "." not in path.split("/")[-1]
         if is_dir:
             if os.path.exists(path):
                 shutil.rmtree(path)
@@ -219,3 +224,7 @@ def submit_job(submitter_script: str, script: str, *args) -> int:
     output = subprocess.check_output(f"{submitter_script} {script} {' '.join(args)}", shell=True)
     idx = get_id(output)
     return idx
+
+
+def preprocess_dep_ids(ids: List[int | None]) -> List[str]:
+    return [str(_id) for _id in ids if _id is not None]

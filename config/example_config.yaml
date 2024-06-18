@@ -1,7 +1,6 @@
 account: "pas2136"
-path_to_input: "/fs/scratch/PAS2136/gbif/data/file.csv"
-#path_to_output_folder: "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep"
-path_to_output_folder: "/mnt/d/Projects/Python/ImUn/gbif"
+path_to_input: "/fs/scratch/PAS2136/gbif/data/2024-05-01/multimedia.txt"
+path_to_output_folder: "/fs/scratch/PAS2136/gbif/processed/test/multimedia"
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster
@@ -12,7 +11,7 @@ scripts:
   initialization_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/initialization.slurm"
   profiling_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/profiling.slurm"
   schedule_creation_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/schedule_creation.slurm"
-  verify_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/verify_downloading.slurm"
+  verify_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_verifying.slurm"
   download_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_downloading.slurm"
   # tools scripts
   resize_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/resize_mpi.slurm"
@@ -41,7 +40,7 @@ output_structure:
   schedules_folder: "schedules"
   profiles_table: "servers_profiles.csv"
   ignored_table: "ignored_servers.csv"
-  inner_checkpoint_file: "inner_checkpoint.txt"
+  inner_checkpoint_file: "inner_checkpoint.yaml"
 
 # Parameters for the downloader
 downloader_parameters:
