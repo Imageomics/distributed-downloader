@@ -1,5 +1,6 @@
 import os.path
 import uuid
+from typing import Sequence, Optional, List
 from urllib.parse import urlparse
 
 import pyspark.sql.functions as func
@@ -21,6 +22,25 @@ def get_uuid():
     return str(uuid.uuid4())
 
 
+def get_folders_path(path: str, folders: Sequence[str], exclude_folder: Optional[str] = None) -> List[str]:
+    result = []
+    for folder in folders:
+        if folder != exclude_folder:
+            result.append(f"{path}/{folder}")
+    return result
+
+
+def init_filestructure(_config: dict):
+    _output_folder = _config["path_to_output_folder"]
+    truncate_paths(
+        [_output_folder,
+         *get_folders_path(
+             _output_folder,
+             list(_config["output_structure"].values()),
+             _config["output_structure"]["inner_checkpoint_file"]
+         )])
+
+
 if __name__ == "__main__":
     config_path = os.environ.get("CONFIG_PATH")
     if config_path is None:
@@ -28,13 +48,11 @@ if __name__ == "__main__":
 
     config = load_config(config_path)
 
-    # Initialize filestructure
+    # Initialize parameters
     input_path = config["path_to_input"]
-    output_folder = config["path_to_output_folder"]
-    truncate_paths([output_folder, *[f"{output_folder}/{folder}" for folder in config["output_structure"].values()]])
-    output_path = f"{output_folder}/{config['output_structure']['urls_folder']}"
-    logger = init_logger(__name__,
-                         output_path="{output_folder}/{config['output_structure']['logs_folder']}/initialization.log")
+    # init_filestructure(config)
+    output_path = f"{config['path_to_output_folder']}/{config['output_structure']['urls_folder']}"
+    logger = init_logger(__name__)
 
     # Initialize SparkSession
     spark = SparkSession.builder.appName("Multimedia prep").getOrCreate()

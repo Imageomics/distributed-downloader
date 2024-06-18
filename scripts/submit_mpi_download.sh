@@ -2,7 +2,7 @@
 
 SCRIPTS_DIR=$(dirname "$(realpath "$0")")
 REPO_ROOT=$(dirname "$(realpath "${SCRIPTS_DIR}")")
-source "${REPO_ROOT}/config/hpc.env"
+#source "${REPO_ROOT}/config/hpc.env"
 export REPO_ROOT
 
 if [ "$#" -eq 0 ]; then
@@ -14,7 +14,7 @@ script=$1
 schedule=$2
 iteration_number=$3
 
-logs_dir="${REPO_ROOT}/${DOWNLOADER_LOGS_FOLDER}/${schedule}/${iteration_number}"
+logs_dir="${REPO_ROOT}/${DOWNLOADER_LOGS_FOLDER}/current/${schedule}/${iteration_number}"
 mkdir -p "${logs_dir}"
 
 if [ "$4" != "" ] && [ "$4" != "--recheck" ]; then

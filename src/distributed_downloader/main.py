@@ -3,10 +3,10 @@ import os.path
 from logging import Logger
 from typing import Any, Dict, LiteralString, Optional
 
-import pandas as pd
 import yaml
 from attr import define, field, Factory
 
+from distributed_downloader.initialization import init_filestructure
 from distributed_downloader.utils import update_checkpoint, load_config, submit_job
 
 
@@ -60,8 +60,12 @@ class DistributedDownloader:
 
     def __schedule_initialization(self) -> int:
         self.logger.info("Scheduling initialization script")
+
+        init_filestructure(self.config)
+
         idx = submit_job(self.config['scripts']['general_submitter'],
                          self.config['scripts']['initialization_script'])
+
         self.logger.info(f"Submitted initialization script {idx}")
         self.inner_checkpoint["batched"] = True
         update_checkpoint(self.inner_checkpoint_path, self.inner_checkpoint)
@@ -85,79 +89,82 @@ class DistributedDownloader:
             with open(os.path.join(self.schedules_folder, schedule, "_jobs_ids.csv"), "r") as file:
                 all_prev_ids.append(int(list(csv.DictReader(file))[-1]["job_id"]))
 
-        schedule_creation_id = submit_job(self.config['scripts']['general_submitter'],
+        schedule_creation_id = submit_job(self.config['scripts']['schedule_creator_submitter'],
                                           self.config['scripts']['schedule_creation_script'],
                                           *all_prev_ids)
         self.logger.info(f"Submitted schedule creation script {schedule_creation_id}")
+        self.inner_checkpoint["schedule_creation_scheduled"] = True
+        update_checkpoint(self.inner_checkpoint_path, self.inner_checkpoint)
 
-        for schedule in os.listdir(self.schedules_folder):
-            submission_records = []
-            offset = 0
-            verifier_id = self.__submit_verifier(schedule,
-                                                 offset,
-                                                 schedule_creation_id)
-            submission_records.append({
-                "job_id": verifier_id,
-                "is_verification": True
-            })
-            offset += 1
-
-            for _ in range(self.config["downloader_parameters"]["num_downloaders"]):
-                download_id = self.__submit_downloader(schedule,
-                                                       offset,
-                                                       submission_records[-1]["job_id"], )
-                submission_records.append({
-                    "job_id": download_id,
-                    "is_verification": False
-                })
-
-                verifier_id = self.__submit_verifier(schedule,
-                                                     offset,
-                                                     download_id)
-                submission_records.append({
-                    "job_id": verifier_id,
-                    "is_verification": True
-                })
-
-                offset += 1
-
-            pd.DataFrame(submission_records).to_csv(os.path.join(self.schedules_folder, schedule, "_jobs_ids.csv"),
-                                                    index=False,
-                                                    header=True)
-
-        self.logger.info("All downloading scripts submitted")
-
-    def __submit_downloader(self,
-                            _schedule: str,
-                            iteration_id: int,
-                            dep_id: int) -> int:
-        iteration = str(iteration_id).zfill(4)
-        idx = submit_job(self.config['scripts']['mpi_submitter'],
-                         self.config['scripts']['downloading_script'],
-                         _schedule,
-                         iteration,
-                         str(dep_id))
-        self.logger.info(f"Submitted downloader {idx} for {_schedule}")
-        return idx
-
-    def __submit_verifier(self,
-                          _schedule: str,
-                          iteration_id: int,
-                          dep_id: int) -> int:
-        iteration = str(iteration_id).zfill(4)
-        idx = submit_job(self.config['scripts']['mpi_submitter'],
-                         self.config['scripts']['verifying_script'],
-                         _schedule,
-                         iteration,
-                         str(dep_id))
-        self.logger.info(f"Submitted verifier {idx} for {_schedule}")
-        return idx
+    #     for schedule in os.listdir(self.schedules_folder):
+    #         submission_records = []
+    #         offset = 0
+    #         verifier_id = self.__submit_verifier(schedule,
+    #                                              offset,
+    #                                              schedule_creation_id)
+    #         submission_records.append({
+    #             "job_id": verifier_id,
+    #             "is_verification": True
+    #         })
+    #         offset += 1
+    #
+    #         for _ in range(self.config["downloader_parameters"]["num_downloaders"]):
+    #             download_id = self.__submit_downloader(schedule,
+    #                                                    offset,
+    #                                                    submission_records[-1]["job_id"], )
+    #             submission_records.append({
+    #                 "job_id": download_id,
+    #                 "is_verification": False
+    #             })
+    #
+    #             verifier_id = self.__submit_verifier(schedule,
+    #                                                  offset,
+    #                                                  download_id)
+    #             submission_records.append({
+    #                 "job_id": verifier_id,
+    #                 "is_verification": True
+    #             })
+    #
+    #             offset += 1
+    #
+    #         pd.DataFrame(submission_records).to_csv(os.path.join(self.schedules_folder, schedule, "_jobs_ids.csv"),
+    #                                                 index=False,
+    #                                                 header=True)
+    #
+    #     self.logger.info("All downloading scripts submitted")
+    #
+    # def __submit_downloader(self,
+    #                         _schedule: str,
+    #                         iteration_id: int,
+    #                         dep_id: int) -> int:
+    #     iteration = str(iteration_id).zfill(4)
+    #     idx = submit_job(self.config['scripts']['mpi_submitter'],
+    #                      self.config['scripts']['downloading_script'],
+    #                      _schedule,
+    #                      iteration,
+    #                      str(dep_id))
+    #     self.logger.info(f"Submitted downloader {idx} for {_schedule}")
+    #     return idx
+    #
+    # def __submit_verifier(self,
+    #                       _schedule: str,
+    #                       iteration_id: int,
+    #                       dep_id: int) -> int:
+    #     iteration = str(iteration_id).zfill(4)
+    #     idx = submit_job(self.config['scripts']['mpi_submitter'],
+    #                      self.config['scripts']['verifying_script'],
+    #                      _schedule,
+    #                      iteration,
+    #                      str(dep_id))
+    #     self.logger.info(f"Submitted verifier {idx} for {_schedule}")
+    #     return idx
 
     def __load_checkpoint(self) -> Dict[str, bool]:
         if not os.path.exists(self.inner_checkpoint_path):
             return {
                 "batched": False,
-                "profiled": False
+                "profiled": False,
+                "schedule_creation_scheduled": False,
             }
 
         with open(self.inner_checkpoint_path, "r") as file:
@@ -184,7 +191,10 @@ class DistributedDownloader:
         else:
             self.logger.info("Skipping profiling script: already profiled")
 
-        self.__schedule_downloading(profiling_job_id)
+        if not self.inner_checkpoint["schedule_creation_scheduled"]:
+            self.__schedule_downloading(profiling_job_id)
+        else:
+            self.logger.error("Schedule creation already scheduled")
 
 
 def main() -> None:

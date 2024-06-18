@@ -3,8 +3,6 @@
 #SBATCH --mem=0
 #SBATCH --time=02:00:00
 
-# ============================ PARAMETERS ======================================
-
 if [ "$#" -eq 0 ]; then
     echo "Usage: $0 schedule# iteration_number"
     exit 1
@@ -13,13 +11,12 @@ fi
 schedule=$1
 iteration_number=$2
 
-# ================== DO NOT TOUCH BELOW THIS LINE ==============================
-source "${REPO_ROOT}/config/hpc.env"
+#source "${REPO_ROOT}/config/hpc.env"
 
 input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/${DOWNLOAD_DIR}"
 
-schedule_path="${input_path}/${DOWNLOADER_SCHEDULES_FOLDER}/${schedule}"
-logs_dir="${input_path}/${DOWNLOADER_LOGS_FOLDER}/${schedule}/${iteration_number}"
+schedule_path="${input_path}/${DOWNLOADER_SCHEDULES_FOLDER}/current/${schedule}"
+logs_dir="${input_path}/${DOWNLOADER_LOGS_FOLDER}/current/${schedule}/${iteration_number}"
 mkdir -p "${logs_dir}"
 
 module load intel/2021.10.0

@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name download_prep
+#SBATCH --job-name schedule_creation
+#
 #SBATCH --time=00:05:00
-#SBATCH --account=pas2136
 
 source "${REPO_ROOT}/config/hpc.env"
 
@@ -24,7 +24,4 @@ srun \
   --cpus-per-task=1 \
   --output="${logs_dir}/MPI_downloader_prep.log" \
   python \
-  "${REPO_ROOT}/src/distributed-downloader/MPI_download_prep.py" \
-  "$input_path" \
-  "$DOWNLOADER_MAX_NODES" \
-  "$DOWNLOADER_WORKERS_PER_NODE"
+  "${REPO_ROOT}/src/distributed_downloader/MPI_download_prep.py" \

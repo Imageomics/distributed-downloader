@@ -11,12 +11,12 @@ schedule=$1
 iteration_number=$2
 recheck_flag=$3
 
-source "${REPO_ROOT}/config/hpc.env"
+#source "${REPO_ROOT}/config/hpc.env"
 
 input_path="${PROCESSED_DATA_ROOT}/${TIME_STAMP}/${DOWNLOAD_DIR}"
 
-schedule_path="${input_path}/${DOWNLOADER_SCHEDULES_FOLDER}/${schedule}"
-logs_dir="${input_path}/${DOWNLOADER_LOGS_FOLDER}/${schedule}/${iteration_number}"
+schedule_path="${input_path}/${DOWNLOADER_SCHEDULES_FOLDER}/current/${schedule}"
+logs_dir="${input_path}/${DOWNLOADER_LOGS_FOLDER}/current/${schedule}/${iteration_number}"
 mkdir -p "${logs_dir}"
 
 module load intel/2021.10.0

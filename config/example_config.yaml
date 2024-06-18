@@ -5,8 +5,9 @@ path_to_output_folder: "/mnt/d/Projects/Python/ImUn/gbif"
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster
-  general_submitter: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/submit_slurm.sh"
+  general_submitter: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/general_submit.sh"
   mpi_submitter: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/submit_mpi_download.sh"
+  schedule_creator_submitter: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/submit_schedule_creator.sh"
   # Cluster job's scripts
   initialization_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/initialization.slurm"
   profiling_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/profiling.slurm"
