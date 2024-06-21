@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 
-from mpi_downloader.utils import get_latest_schedule, verify_downloaded_batches
+from distributed_downloader.mpi_downloader.utils import get_latest_schedule, verify_downloaded_batches
 
 parser = argparse.ArgumentParser(description='Server downloader verifier')
 

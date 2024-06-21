@@ -7,11 +7,11 @@ import h5py
 import mpi4py.MPI as MPI
 import pandas as pd
 
-from mpi_downloader import ProfilerWriter
-from mpi_downloader.Downloader import Downloader
-from mpi_downloader.PreLoader import load_one_batch
-from mpi_downloader.dataclasses import RateLimit, CompletedBatch
-from mpi_downloader.utils import create_new_session
+from distributed_downloader.mpi_downloader import ProfilerWriter
+from distributed_downloader.mpi_downloader.Downloader import Downloader
+from distributed_downloader.mpi_downloader.PreLoader import load_one_batch
+from distributed_downloader.mpi_downloader.dataclasses import RateLimit, CompletedBatch
+from distributed_downloader.mpi_downloader.utils import create_new_session
 
 Initial_rate = 20
 Rate_multiplier = 10

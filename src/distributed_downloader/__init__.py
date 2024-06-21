@@ -1,6 +1,6 @@
 from logging import Logger
 
-from main import DistributedDownloader
+from distributed_downloader.main import DistributedDownloader
 
 
 def download_images(config_path: str, logger: Logger = None) -> None:

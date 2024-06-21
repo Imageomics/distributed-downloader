@@ -8,7 +8,7 @@ from pandas._libs.missing import NAType
 
 from distributed_downloader.utils import create_schedule_configs, load_config, update_checkpoint, submit_job, \
     init_logger, preprocess_dep_ids
-from mpi_downloader.utils import verify_batches_for_prep
+from distributed_downloader.mpi_downloader.utils import verify_batches_for_prep
 
 
 def schedule_rule(total_batches: int, rule: List[Tuple[int, int]]) -> int | NAType:

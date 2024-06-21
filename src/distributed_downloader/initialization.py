@@ -9,7 +9,7 @@ from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
 from distributed_downloader.utils import load_config, load_dataframe, truncate_paths, init_logger
-from schemes import multimedia_scheme
+from distributed_downloader.schemes import multimedia_scheme
 
 
 @udf(returnType=StringType())

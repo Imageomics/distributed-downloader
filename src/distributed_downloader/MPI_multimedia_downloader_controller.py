@@ -4,12 +4,14 @@ from typing import Any, Dict, List, Deque
 
 import pandas as pd
 
-from mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, separate_to_blocks, \
+from distributed_downloader.mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, \
+    separate_to_blocks, \
     get_largest_nonempty_bucket, get_schedule_count
 
 parser = argparse.ArgumentParser(description='Server downloader controller')
 
-parser.add_argument('input_path', metavar='input_path', type=str, help='the path to folder with download components (e.g., image folder and server profiles)')
+parser.add_argument('input_path', metavar='input_path', type=str,
+                    help='the path to folder with download components (e.g., image folder and server profiles)')
 parser.add_argument("schedule_path", metavar="schedule_path", type=str, help="the path to the schedule")
 parser.add_argument('max_nodes', metavar='max_nodes', type=int, help='max number of nodes')
 parser.add_argument('max_workers_per_nodes', metavar='max_workers_per_nodes', type=int,
@@ -48,7 +50,7 @@ if Latest_schedule is not None and len(Latest_schedule) > 0:
     Server_config_df = Server_config_df[server_config_columns]
 
 batches_to_download: pd.DataFrame = Server_config_df.apply(generate_ids_to_download, axis=1,
-                                                               args=(Server_verifier_df,))
+                                                           args=(Server_verifier_df,))
 batches_to_download = batches_to_download.merge(Server_config_df, on="ServerName", how="left").drop(
     columns=["StartIndex", "EndIndex"])
 batches_to_download["Batches"] = batches_to_download.apply(separate_to_blocks, axis=1)

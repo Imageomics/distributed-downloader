@@ -6,7 +6,7 @@ import h5py
 import mpi4py.MPI as MPI
 import pandas as pd
 
-from mpi_downloader.dataclasses import error_dtype, profile_dtype
+from distributed_downloader.mpi_downloader.dataclasses import error_dtype, profile_dtype
 
 _DEFAULT_RATE_LIMIT = 10
 
