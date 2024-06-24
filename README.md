@@ -32,8 +32,8 @@ The provided `slurm` scripts for running steps 1 and 2 (`scripts/server_download
 
 `resize_mpi` (`py` and `slurm`) and `resizer_scheduler.py` are scripts intended to resize the images after download. For instance, in the case that the initial download size is set higher than intended, these can be used to adjust the size within the given structure and repackage it. They have not been generalized to fit in with the remaining package infrastructure and are simply extra tools that we used; they may be generalized in the future.
 
-Downloader have two logging profiles:
-- "INFO" - logs only the most important information, for example when a batch is started and finished.
+Downloader has two logging profiles:
+- "INFO" - logs only the most important information, for example when a batch is started and finished. It also logs out any error that occurred during download, image decoding, or writing batch to the filesystem
 - "DEBUG" - logs all information, for example logging start and finish of each downloaded image.
 
 ## Installation Instructions
