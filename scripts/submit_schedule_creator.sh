@@ -40,7 +40,7 @@ fi
 sbatch \
   --output="${logs_dir}/${base_filename}.out" \
   --error="${logs_dir}/${base_filename}.err" \
-  --dependency=afterok:"${dependencies}" \
+  --dependency=afterany:"${dependencies}" \
   --nodes="${DOWNLOADER_MAX_NODES}" \
   --ntasks-per-node="${DOWNLOADER_WORKERS_PER_NODE}" \
   --cpus-per-task="${DOWNLOADER_CPU_PER_WORKER}" \
