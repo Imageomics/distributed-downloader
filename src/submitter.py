@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 import pandas as pd
 
-NUM_DOWNLOADERS: int = 10
+NUM_DOWNLOADERS: int = 1
 RECHECK = False
 SCHEDULES: List[str] = []
 
@@ -35,7 +35,7 @@ def get_env_vars(env_path):
     mpi_submitter_script = os.getenv("MPI_SUBMITTER_SCRIPT")
     downloading_script = os.getenv("DOWNLOADING_SCRIPT")
     verifying_script = os.getenv("VERIFYING_SCRIPT")
-    
+
     return schedules_path, mpi_submitter_script, downloading_script, verifying_script
 
 
@@ -55,7 +55,8 @@ def get_id(output: bytes) -> int:
     return int(output.decode().strip().split(" ")[-1])
 
 
-def submit_downloader(_schedule: str, iteration_id: int, dep_id: int, mpi_submitter_script: str, downloading_script: str) -> int:
+def submit_downloader(_schedule: str, iteration_id: int, dep_id: int, mpi_submitter_script: str,
+                      downloading_script: str) -> int:
     iteration = str(iteration_id).zfill(4)
     output = subprocess.check_output(f"{mpi_submitter_script} "
                                      f"{downloading_script} "
@@ -67,14 +68,15 @@ def submit_downloader(_schedule: str, iteration_id: int, dep_id: int, mpi_submit
     return idx
 
 
-def submit_verifier(_schedule: str, iteration_id: int, mpi_submitter_script: str, verifying_script: str, dep_id: int = None) -> int:
+def submit_verifier(_schedule: str, iteration_id: int, mpi_submitter_script: str, verifying_script: str,
+                    dep_id: int = None) -> int:
     iteration = str(iteration_id).zfill(4)
 
     command_str = f"{mpi_submitter_script} {verifying_script} {_schedule} {iteration}"
     if dep_id is not None:
         command_str += f" {dep_id}"
     if RECHECK:
-        command_str += f" --recheck"
+        command_str += " --recheck"
 
     output = subprocess.check_output(command_str, shell=True)
     idx = get_id(output)
@@ -84,7 +86,7 @@ def submit_verifier(_schedule: str, iteration_id: int, mpi_submitter_script: str
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env-path", required = True, help = "Path to .env file. Ex: 'path/to/hpc.env'.", nargs = "?")
+    parser.add_argument("--env-path", required=True, help="Path to .env file. Ex: 'path/to/hpc.env'.", nargs="?")
     args = parser.parse_args()
     schedules_path, mpi_submitter_script, downloading_script, verifying_script = get_env_vars(args.env_path)
 

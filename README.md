@@ -16,13 +16,14 @@ This MPI-based distributed downloader was initially designed for the purpose of 
 
 3. Finally, `submitter.py` is run with the path to the `.env` file for various download settings and paths. This can be run for set periods of time and will restart where it has left off on the next run. Timing for batches is set in the `slurm` scripts passed through the `.env`.
 
+If you want the downloader to ignore some of the servers, you can add them to the `ignored_servers.csv` file. Then you need to rerun the `MPI_download_prep.py` script to update the schedules for the changes to take effect.
 
 ### Running on other systems
 
 The parameters for step 3 can all be set in the configuration file. This includes information about your HPC account and paths to various files, as well as distribution of work and download settings; be sure to fill in your information. 
 The configuration file (`config/hpc.env`) should be in this location relative to the root of the directory from which these files are being run.
 
-Note that the current default is to download images such that the longest side is 1024 pixels. The original and resized sizes are recorded in the metadata; the aspect ratio is preserved when resizing images.
+Note that the current default is to download images such that the longest side is 720 pixels. The original and resized sizes are recorded in the metadata; the aspect ratio is preserved when resizing images.
 
 The provided `slurm` scripts for running steps 1 and 2 (`scripts/server_downloading_prep.slurm` and `scripts/server_profiling.slurm`) must have the account info changed at the top of their files (`#SBATCH --account=<your account here>`). These are each only run once at the start of the project
 
@@ -31,30 +32,26 @@ The provided `slurm` scripts for running steps 1 and 2 (`scripts/server_download
 
 `resize_mpi` (`py` and `slurm`) and `resizer_scheduler.py` are scripts intended to resize the images after download. For instance, in the case that the initial download size is set higher than intended, these can be used to adjust the size within the given structure and repackage it. They have not been generalized to fit in with the remaining package infrastructure and are simply extra tools that we used; they may be generalized in the future.
 
+Downloader has two logging profiles:
+- "INFO" - logs only the most important information, for example when a batch is started and finished. It also logs out any error that occurred during download, image decoding, or writing batch to the filesystem
+- "DEBUG" - logs all information, for example logging start and finish of each downloaded image.
+
 ## Installation Instructions
 1. Install Python 3.10 or higher
 2. Install MPI, any MPI should work, tested with OpenMPI and IntelMPI.
 3. Install Parallel HDF5, tested with version 1.12.2
 4. Install/Update pip, setuptools, and wheel
     ```
-    pip install -U wheel setuptools pip
+    pip install -U wheel setuptools pip Cython
     ```
-5. Install Cython:
+5. Install h5py:
     ```
-    pip install Cython
-    ```
-6. Install mpi4py:
-    ```
-    env MPICC=/path/to/mpicc python -m pip install mpi4py
-    ```
-7. Install h5py:
-    ```
-    export CC=mpicc
+    export CC=/path/to/mpicc
     export HDF5_MPI="ON" 
     export HDF5_DIR=/path/to/hdf5
     pip install --no-cache-dir --no-binary=h5py h5py
     ```
-8. Install required packages:
+6. Install required packages:
     ```
     pip install -r requirements.txt
     ```

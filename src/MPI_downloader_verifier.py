@@ -42,7 +42,11 @@ Server_config_df = pd.read_csv(config_file)
 Server_config_df["StartIndex"] = 0
 Server_config_df["EndIndex"] = 0
 server_config_columns = Server_config_df.columns.to_list()
-Server_config_df = Server_config_df.merge(Server_profiler_df, left_on="ServerName", right_on="server_name", how="left")
+Server_config_df = Server_config_df.merge(Server_profiler_df,
+                                          left_on="ServerName",
+                                          right_on="server_name",
+                                          how="left",
+                                          validate="1:1")
 
 Server_config_df["EndIndex"] = Server_config_df["total_batches"] - 1
 
@@ -86,7 +90,7 @@ downloaded_count = downloaded_count[["ServerName", "total_batches", "Downloaded"
 downloaded_count = downloaded_count[downloaded_count["Downloaded"] < downloaded_count["total_batches"]]
 
 if len(downloaded_count) > 0:
-    print(f"Need more jobs")
+    print("Need more jobs")
 else:
     print("All servers have downloaded all the batches")
     open(f"{Server_schedule}/_DONE", "w").close()

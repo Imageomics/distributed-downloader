@@ -7,6 +7,7 @@ from mpi_downloader.dataclasses import error_entry, error_dtype, profile_dtype
 
 sample_length = 5
 
+
 def write_batch(
         profiles_hdf: h5py.Dataset,
         errors_hdf: h5py.Dataset,
@@ -35,7 +36,6 @@ def write_batch(
         try:
             np_image = np.asarray(bytearray(success_download.image), dtype="uint8")
             original_image = cv2.imdecode(np_image, cv2.IMREAD_COLOR)
-            # original_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 
             if original_image is None:
                 raise ValueError("Corrupted Image")
@@ -47,7 +47,7 @@ def write_batch(
 
         except Exception as e:
             errors_list.append(error_entry(
-                uuid=success_download.UUID,
+                uuid=success_download.unique_name,
                 identifier=success_download.identifier,
                 retry_count=0,
                 error_code=-3,
@@ -61,16 +61,16 @@ def write_batch(
 
     errors_np = np.array(errors_list, dtype=error_dtype).reshape((-1,))
     server_profile_np = np.array(
-            [
-                (
-                    server_name,
-                    total_batches,
-                    successes_number,
-                    errors_number,
-                    rate_limit
-                )
-            ],
-            dtype=profile_dtype)
+        [
+            (
+                server_name,
+                total_batches,
+                successes_number,
+                errors_number,
+                rate_limit
+            )
+        ],
+        dtype=profile_dtype)
 
     profiles_hdf[offset] = server_profile_np
     errors_hdf[offset * batch_size:offset * batch_size + errors_number] = errors_np
