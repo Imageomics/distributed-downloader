@@ -49,8 +49,8 @@ def convert_time(total_seconds: float) -> Tuple[float, float, float]:
 if __name__ == "__main__":
     table = load_table(image_folder)
     table["rank"] = table.index % total_workers
-    save_table(table, tool_schedule_folder, filter_name)
+    # save_table(table, tool_schedule_folder, filter_name)
     table_gp = table.groupby(by=["rank"]).count()
-    total_eta = table_gp.mean("rows")["server_name"] * avg_completion_time
+    total_eta = table_gp.max("rows")["server_name"] * avg_completion_time
     hours, minutes, seconds = convert_time(total_eta)
     print(f"Expected time: {hours:0>2.0f}:{minutes:0>2.0f}:{seconds:0>5.2f}")

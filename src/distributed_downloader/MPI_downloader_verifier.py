@@ -33,7 +33,7 @@ else:
     else:
         Verification_df = pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
 
-Verification_original_df = Verification_df.copy()
+# Verification_original_df = Verification_df.copy()
 
 Server_profiler_df = pd.read_csv(f"{Input_path}/servers_profiles.csv")
 

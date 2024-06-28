@@ -11,7 +11,7 @@ from distributed_downloader.utils import init_logger
 
 csv_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out"
 schedule_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools"
-filter_name = "too_small"
+filter_name = "duplicated"
 images_folder = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
 parquet_name = "successes.parquet"
 verification_folder = f"{schedule_folder}/{filter_name}/verification"

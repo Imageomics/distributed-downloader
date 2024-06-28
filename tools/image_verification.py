@@ -15,13 +15,13 @@ from distributed_downloader.utils import init_logger
 
 schedule_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools"
 filter_name = "verification"
-images_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out/normal_images"
+images_folder = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
 parquet_name = "successes.parquet"
 verification_folder = f"{schedule_folder}/{filter_name}/verification"
 os.makedirs(verification_folder, exist_ok=True)
 corrupted_folder = f"{schedule_folder}/{filter_name}/corrupted"
 os.makedirs(corrupted_folder, exist_ok=True)
-logger = init_logger(__name__, logging_level="DEBUG")
+logger = init_logger(__name__)
 total_time = 150
 
 
@@ -35,7 +35,7 @@ def get_csv_writer(path: str, scheme: List[str]) -> TextIO:
 
 
 def is_enough_time() -> None:
-    if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 1819371681)) - total_time:
+    if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 0)) - total_time:
         raise TimeoutError("Not enough time")
 
 
