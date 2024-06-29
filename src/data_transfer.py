@@ -12,8 +12,8 @@ import pandas as pd
 
 from distributed_downloader.utils import ensure_created, init_logger
 
-src_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out/normal_images"
-dst_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out/normal_images_copy"
+src_folder = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
+dst_folder = "/fs/ess/PAS2136/TreeOfLife/source=gbif"
 tools_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools/hashsum"
 ensure_created([
     dst_folder,
@@ -48,28 +48,37 @@ def compute_hashsum(file_path: str, hashsum_alg) -> str:
 
 
 def get_all_paths(root_path: str, data_name: str, error_name: str) -> List[str]:
-    glob_wildcards = [
-        root_path + "/*/*/" + data_name,
-        root_path + "/*/*/" + error_name
-    ]
-
+    glob_wildcard = root_path + "/*/*"
     result = []
-    for wildcard in glob_wildcards:
-        result.extend(glob.glob(wildcard))
+
+    for path in glob.glob(glob_wildcard):
+        if not os.path.exists(os.path.join(path, "completed")):
+            continue
+        result.append(os.path.join(path, data_name))
+        result.append(os.path.join(path, error_name))
 
     return result
+
+
+def correct_server_name(server_names: List[str]) -> List[str]:
+    for i, server in enumerate(server_names):
+        server_names[i] = server.replace("%3A", "_")
+
+    return server_names
 
 
 def ensure_all_servers_exists(all_files: Sequence[str], dst_path: str) -> None:
     all_files_df = pd.DataFrame(all_files, columns=["src_path"])
     server_names_series: pd.Series = all_files_df["src_path"].str.extract(server_name_regex, expand=False)
     server_names = server_names_series.drop_duplicates().reset_index(drop=True).to_list()
+    server_names = correct_server_name(server_names)
     ensure_created([os.path.join(dst_path, f"server={server}") for server in server_names])
 
 
 def get_server_name(path: str) -> str:
     match = re.match(server_name_regex, path)
-    return match.group(1)
+    server_name = correct_server_name([match.group(1)])[0]
+    return server_name
 
 
 def get_basename(path: str) -> str:
@@ -117,6 +126,7 @@ if __name__ == "__main__":
     paths_to_copy = filter_already_done(paths_to_copy, verification_csv)
     ensure_all_servers_exists(paths_to_copy, dst_folder)
     logger.info("Started copying")
+    logger.info(f"{len(paths_to_copy)} files left to copy")
     with open(verification_csv, "a") as verification_file:
         with concurrent.futures.ProcessPoolExecutor() as executor:
             for is_error, src, dst, hs_src, hs_dest in executor.map(copy_file, paths_to_copy):
