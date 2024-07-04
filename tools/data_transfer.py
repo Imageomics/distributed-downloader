@@ -10,9 +10,9 @@ from mpi4py.futures import MPIPoolExecutor
 
 from distributed_downloader.utils import ensure_created, init_logger
 
-src_folder = "/fs/scratch/PAS2136/gbif/processed/leftovers/multimedia/downloaded_images"
-dst_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out/normal_images_copy"
-tools_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools/hashsum_small"
+src_folder = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
+dst_folder = "/fs/ess/PAS2136/TreeOfLife/source=gbif"
+tools_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools/hashsum"
 verification_csv = f"{tools_folder}/verification.csv"
 name_table_path = f"{tools_folder}/name_table.csv"
 BUF_SIZE = 131_072
@@ -101,6 +101,9 @@ if __name__ == "__main__":
     name_table = get_all_paths(name_table_path)
     name_table = filter_already_done(name_table, verification_csv)
     ensure_all_servers_exists(name_table, dst_folder)
+
+    if len(name_table) == 0:
+        raise ValueError("Schedule is empty or doesn't exists")
 
     logger.info("Started copying")
     logger.info(f"{len(name_table)} files left to copy")
