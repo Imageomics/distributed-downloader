@@ -112,7 +112,7 @@ def verify_downloaded_batches(schedule_row: pd.Series, input_path: str) -> List[
     server_end_idx = schedule_row["EndIndex"]
     verified_batches: List[Dict[str, Any]] = []
 
-    if os.path.exists(f"{input_path}/ServerName={server_name}"):
+    if os.path.exists(f"{input_path}/ServerName={server_name}"): # TODO: Make "ServerName" changeable column from config
         server_batches_names = os.listdir(f"{input_path}/ServerName={server_name}")
         for batch_name in server_batches_names:
             if not os.path.isdir(f"{input_path}/ServerName={server_name}/{batch_name}"):

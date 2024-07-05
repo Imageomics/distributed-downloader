@@ -77,6 +77,8 @@ def create_schedules(config: Dict[str, str | int | bool | Dict[str, int | str]],
                                        "current")
     server_profiler_csv: str = os.path.join(config['path_to_output_folder'],
                                             config['output_structure']['profiles_table'])
+    downloaded_images_path: str = os.path.join(config['path_to_output_folder'],
+                                                  config['output_structure']['images_folder'])
     number_of_workers: int = (config['downloader_parameters']['max_nodes']
                               * config['downloader_parameters']['workers_per_node'])
     schedule_rule_dict: List[Tuple[int, int]] = fix_rule(config['schedule_rules'])
@@ -90,11 +92,11 @@ def create_schedules(config: Dict[str, str | int | bool | Dict[str, int | str]],
         ignored_servers_df = pd.DataFrame(columns=["ServerName"])
 
     if os.path.exists(schedules_path) and len(os.listdir(schedules_path)) > 0:
-        downloaded_batches: pd.DataFrame = verify_batches_for_prep(profiles_df, schedules_path)
+        downloaded_batches: pd.DataFrame = verify_batches_for_prep(profiles_df, downloaded_images_path)
         downloaded_batches = downloaded_batches.groupby("ServerName").count().reset_index().dropna()
         downloaded_batches = downloaded_batches.rename(
             columns={"ServerName": "server_name", "Status": "already_downloaded"})
-        profiles_df = profiles_df.merge(downloaded_batches, on="server_name", how="left").fillna(0)
+        profiles_df = profiles_df.merge(downloaded_batches, on="server_name", how="left", validate="1:1").fillna(0)
         profiles_df["left_to_download"] = profiles_df["total_batches"] - profiles_df["already_downloaded"]
     else:
         profiles_df["left_to_download"] = profiles_df["total_batches"]
