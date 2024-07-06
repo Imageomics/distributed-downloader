@@ -140,7 +140,7 @@ class DistributedDownloader:
 
 
 def main() -> None:
-    config_path = "/users/PAS2119/andreykopanev/distributed-downloader/config/example_config.yaml"
+    config_path = "/mnt/c/Users/24122/PycharmProjects/distributed-downloader/config/local_config.yaml"
 
     dd = DistributedDownloader.from_path(config_path)
     dd.download_images()

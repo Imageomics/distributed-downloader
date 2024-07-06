@@ -78,7 +78,7 @@ def create_schedules(config: Dict[str, str | int | bool | Dict[str, int | str]],
     server_profiler_csv: str = os.path.join(config['path_to_output_folder'],
                                             config['output_structure']['profiles_table'])
     downloaded_images_path: str = os.path.join(config['path_to_output_folder'],
-                                                  config['output_structure']['images_folder'])
+                                               config['output_structure']['images_folder'])
     number_of_workers: int = (config['downloader_parameters']['max_nodes']
                               * config['downloader_parameters']['workers_per_node'])
     schedule_rule_dict: List[Tuple[int, int]] = fix_rule(config['schedule_rules'])
@@ -136,20 +136,12 @@ def submit_downloaders(config: Dict[str, str | int | bool | Dict[str, int | str]
     for schedule in os.listdir(schedules_path):
         submission_records = []
         offset = 0
-        verifier_id = submit_verifier(schedule,
-                                      offset,
-                                      mpi_submitter_script,
-                                      verifying_script)
-        submission_records.append({
-            "job_id": verifier_id,
-            "is_verification": True
-        })
-        offset += 1
+        download_id = 0
 
         for _ in range(config["downloader_parameters"]["num_downloads"]):
             download_id = submit_downloader(schedule,
                                             offset,
-                                            submission_records[-1]["job_id"],
+                                            download_id,
                                             mpi_submitter_script,
                                             downloading_script)
             submission_records.append({
@@ -158,18 +150,19 @@ def submit_downloaders(config: Dict[str, str | int | bool | Dict[str, int | str]
             })
             logger.info(f"Submitted downloader {download_id} for {schedule}")
 
-            verifier_id = submit_verifier(schedule,
-                                          offset,
-                                          mpi_submitter_script,
-                                          verifying_script,
-                                          download_id)
-            submission_records.append({
-                "job_id": verifier_id,
-                "is_verification": True
-            })
-            logger.info(f"Submitted verifier {verifier_id} for {schedule}")
-
             offset += 1
+
+        verifier_id = submit_verifier(schedule,
+                                      offset,
+                                      mpi_submitter_script,
+                                      verifying_script,
+                                      download_id)
+        submission_records.append({
+            "job_id": verifier_id,
+            "is_verification": True
+        })
+        logger.info(f"Submitted verifier {verifier_id} for {schedule}")
+        offset += 1
 
         pd.DataFrame(submission_records).to_csv(os.path.join(schedules_path, schedule, "_jobs_ids.csv"),
                                                 index=False,
@@ -190,8 +183,7 @@ def main():
                                               config['output_structure']['inner_checkpoint_file'])
     if not os.path.exists(inner_checkpoint_path):
         raise FileNotFoundError(f"Inner checkpoint file {inner_checkpoint_path} not found")
-    with open(inner_checkpoint_path, "r") as file:
-        inner_checkpoint = yaml.full_load(file)
+    inner_checkpoint = load_config(inner_checkpoint_path)
 
     create_schedules(config, logger)
     submit_downloaders(config, logger)

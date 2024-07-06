@@ -23,7 +23,18 @@ export PYARROW_IGNORE_TIMEZONE=1
 export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
 
 # memory limit per node: 177G
+
 {
+  srun \
+    --mpi=pmi2 \
+    --nodes=1 \
+    --ntasks-per-node=1 \
+    --cpus-per-task=1 \
+    --output="${logs_dir}/MPI_downloader_verifier.log" \
+    python \
+    "${REPO_ROOT}/src/distributed_downloader/MPI_downloader_verifier.py" \
+    "$schedule_path"
+} && {
   srun \
     --mpi=pmi2 \
     --nodes=1 \
@@ -32,10 +43,7 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
     --output="${logs_dir}/MPI_multimedia_downloader.log" \
     python \
     "${REPO_ROOT}/src/distributed_downloader/MPI_multimedia_downloader_controller.py" \
-    "$PATH_TO_OUTPUT" \
-    "$schedule_path" \
-    "$DOWNLOADER_MAX_NODES" \
-    "$DOWNLOADER_WORKERS_PER_NODE"
+    "$schedule_path"
 } && {
   srun \
   --mpi=pmi2 \
@@ -45,9 +53,5 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
   --mem=0 \
   --output="${logs_dir}/MPI_multimedia_downloader-%2t.log" \
   python "${REPO_ROOT}/src/distributed_downloader/MPI_multimedia_downloader.py" \
-  "$PATH_TO_OUTPUT" \
-  "$schedule_path" \
-  --header "$DOWNLOADER_HEADER" \
-  --img-size "$DOWNLOADER_IMAGE_SIZE" \
-  --logging-level "$DOWNLOADER_LOGGER_LEVEL"
+  "$schedule_path"
 }
