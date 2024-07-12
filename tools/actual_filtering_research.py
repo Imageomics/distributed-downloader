@@ -9,12 +9,9 @@ import mpi4py.MPI as MPI
 
 from distributed_downloader.utils import init_logger
 
-base_path = "/fs/scratch/PAS2136/gbif/processed/leftovers/multimedia"
-csv_folder = f"{base_path}/filtered_out"
-schedule_folder = f"{base_path}/tools"
-filter_name = "merged_duplicated"
-images_folder = f"{base_path}/downloaded_images"
-parquet_name = "successes.parquet"
+csv_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out"
+schedule_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools"
+filter_name = "duplicated_check"
 verification_folder = f"{schedule_folder}/{filter_name}/verification"
 os.makedirs(verification_folder, exist_ok=True)
 logger = init_logger(__name__, logging_level="DEBUG")
@@ -33,31 +30,22 @@ def load_table(folder: str, columns: List[str] = None) -> pd.DataFrame:
 def get_schedule(path: str, _rank: int) -> pd.DataFrame:
     schedule_df = load_table(path)
     schedule_df = schedule_df.query(f"rank == {_rank}")
-    verification_df = load_table(verification_folder, ["server_name", "partition_id"])
-    outer_join = schedule_df.merge(verification_df, how='outer', indicator=True, on=["server_name", "partition_id"])
+    verification_df = load_table(verification_folder, ["input_file"])
+    outer_join = schedule_df.merge(verification_df, how='outer', indicator=True, on=["input_file"])
     return outer_join[(outer_join["_merge"] == 'left_only')].drop('_merge', axis=1)
 
 
 def filter_parquet(df_local: pd.DataFrame, verification_file: TextIO) -> int:
+    filtering_df = df_local.reset_index(drop=True)
+
+    parquet_path = filtering_df.iloc[0]["input_file"][5:]
     try:
         if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 0)) - total_time:
             logger.error("Not enough time")
             return 0
 
-        filtering_df = df_local.reset_index(drop=True)
-
-        server_name = filtering_df.iloc[0]["ServerName"]
-        partition_id = filtering_df.iloc[0]["partition_id"]
-
-        parquet_path = os.path.join(
-            images_folder,
-            f"ServerName={server_name}",
-            f"partition_id={partition_id}",
-            parquet_name
-        )
-
         if not os.path.exists(parquet_path):
-            logger.info(f"Path doesn't exists: {server_name}/{partition_id}")
+            logger.info(f"Path doesn't exists: {parquet_path}")
             return 1
 
         filtered_parquet = pd.read_parquet(parquet_path,
@@ -70,20 +58,15 @@ def filter_parquet(df_local: pd.DataFrame, verification_file: TextIO) -> int:
             return 0
 
         if len(filtered_parquet) == 0:
-            # shutil.rmtree(os.path.join(
-            #     images_folder,
-            #     f"ServerName={server_name}",
-            #     f"partition_id={partition_id}"
-            # ))
-            logger.info(f"Fully filtered out: {server_name}/{partition_id}")
+            logger.info(f"Fully filtered out: {parquet_path}")
 
         filtered_parquet.to_parquet(parquet_path, index=False, compression="zstd", compression_level=3)
     except Exception as e:
         logger.error(f"Error occurred: {e}")
         return 0
     else:
-        print(f"{server_name},{partition_id}", end="\n", file=verification_file)
-        logger.debug(f"Completed filtering: {server_name}/{partition_id} with {len(filtered_parquet)}")
+        print(parquet_path, end="\n", file=verification_file)
+        logger.debug(f"Completed filtering: {parquet_path} with {len(filtered_parquet)}")
         return 1
 
 
@@ -100,16 +83,15 @@ if __name__ == "__main__":
     df = load_table(f"{csv_folder}/{filter_name}")
     df = df.merge(schedule,
                   how="right",
-                  left_on=["ServerName", "partition_id"],
-                  right_on=["server_name", "partition_id"])
-    df = df[["uuid", "gbif_id", "ServerName", "partition_id"]]
+                  on=["input_file"])
+    df = df[["uuid", "gbif_id", "input_file"]]
 
-    df_grouped: pd.api.typing.DataFrameGroupBy = df.groupby(["ServerName", "partition_id"], group_keys=True)
+    df_grouped: pd.api.typing.DataFrameGroupBy = df.groupby(["input_file"], group_keys=True)
 
     verification_file_name = f"{schedule_folder}/{filter_name}/verification/{str(rank).zfill(4)}.csv"
     if not os.path.exists(verification_file_name):
         verification_file = open(verification_file_name, "w")
-        print("server_name,partition_id", file=verification_file)
+        print("input_file", file=verification_file)
     else:
         verification_file = open(verification_file_name, "a")
 

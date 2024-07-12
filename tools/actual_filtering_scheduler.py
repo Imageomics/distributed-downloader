@@ -5,11 +5,12 @@ from typing import Tuple
 
 import pandas as pd
 
-purge_table = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out"
-filter_name = "too_small"
-tool_schedule_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools"
+base_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy"
+purge_table = f"{base_path}/filtered_out"
+tool_schedule_folder = f"{base_path}/tools"
+filter_name = "duplicated"
 
-max_nodes = 12
+max_nodes = 6
 max_workers_per_node = 5
 total_workers = max_nodes * max_workers_per_node
 
@@ -22,6 +23,14 @@ def load_table(path: str) -> pd.DataFrame:
     df = df[["ServerName", "partition_id"]]
     df = df.drop_duplicates(subset=["ServerName", "partition_id"]).reset_index(drop=True)
     df = df.rename(columns={"ServerName": "server_name"})
+    return df
+
+
+def load_table_research(path: str) -> pd.DataFrame:
+    all_files = glob.glob(os.path.join(path, "*.csv"))
+    df: pd.DataFrame = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
+    df = df[["input_file"]]
+    df = df.drop_duplicates(subset=["input_file"]).reset_index(drop=True)
     return df
 
 
@@ -47,7 +56,7 @@ def convert_time(total_seconds: float) -> Tuple[float, float, float]:
 if __name__ == "__main__":
     table = load_table(f"{purge_table}/{filter_name}")
     table["rank"] = table.index % total_workers
-    # save_table(table, tool_schedule_folder, filter_name)
+    save_table(table, tool_schedule_folder, filter_name)
     table_gp = table.groupby(by=["rank"]).count()
     total_eta = table_gp.mean("rows")["server_name"] * avg_completion_time
     hours, minutes, seconds = convert_time(total_eta)

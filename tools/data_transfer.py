@@ -10,9 +10,9 @@ from mpi4py.futures import MPIPoolExecutor
 
 from distributed_downloader.utils import ensure_created, init_logger
 
-src_folder = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
-dst_folder = "/fs/ess/PAS2136/TreeOfLife/source=gbif"
-tools_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools/hashsum"
+src_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/downloaded_images_copy"
+dst_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/source=gbif"
+tools_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/tools/hashsum"
 verification_csv = f"{tools_folder}/verification.csv"
 name_table_path = f"{tools_folder}/name_table.csv"
 BUF_SIZE = 131_072

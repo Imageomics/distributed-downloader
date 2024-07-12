@@ -8,9 +8,9 @@ import pandas as pd
 
 from distributed_downloader.utils import init_logger, ensure_created
 
-src_folder = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
-dst_folder = "/fs/ess/PAS2136/TreeOfLife/source=gbif"
-tools_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools/hashsum"
+src_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/downloaded_images_copy"
+dst_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/source=gbif"
+tools_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/tools/hashsum"
 name_table_path = f"{tools_folder}/name_table.csv"
 src_data_name = "successes.parquet"
 src_error_name = "errors.parquet"

@@ -25,9 +25,8 @@ if __name__ == "__main__":
     logger = init_logger(__name__)
     threshold_size = 224
 
-    # downloaded_images = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
-    downloaded_images = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/downloaded_images"
-    filter_results = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out"
+    downloaded_images = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/downloaded_images_copy"
+    filter_results = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/filtered_out"
 
     spark = SparkSession.builder.appName("CopyPaste").getOrCreate()
     spark.conf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "CORRECTED")
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     (too_small_images
      .repartition(10)
      .write
-     .csv(filter_results + "/too_small_small",
+     .csv(filter_results + "/too_small",
           header=True,
           mode="overwrite"))
 

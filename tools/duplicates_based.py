@@ -25,9 +25,9 @@ if __name__ == "__main__":
     logger = init_logger(__name__)
     threshold_size = 224
 
-    # downloaded_images = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
-    downloaded_images = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/downloaded_images"
-    filter_results = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/filtered_out"
+    base_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy"
+    downloaded_images = f"{base_path}/downloaded_images_copy"
+    filter_results = f"{base_path}/filtered_out"
 
     spark = SparkSession.builder.appName("CopyPaste").getOrCreate()
     spark.conf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "CORRECTED")
@@ -66,14 +66,16 @@ if __name__ == "__main__":
     duplicate_records = (duplicate_records
                          .join(duplicate_records_top, on="hashsum_original", how="left")
                          .where("uuid != uuid_main")
-                         .drop("hashsum_original"))
-
-    logger.info(f"duplicated number: {duplicate_records.count()}")
+                         .drop("hashsum_original")
+                         )
 
     (duplicate_records
      .repartition(10)
      .write
-     .csv(filter_results + "/duplicated_small",
+     .csv(filter_results + "/duplicated",
           header=True,
           mode="overwrite"))
+
+    logger.info(f"duplicated number: {duplicate_records.count()}")
+
     spark.stop()
