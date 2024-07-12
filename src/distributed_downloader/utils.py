@@ -17,63 +17,6 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType
 
 
-def print_progress(iteration, total, prefix='', suffix='', decimals=2, bar_length=100):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        bar_length  - Optional  : character length of bar (Int)
-    """
-    str_format = "{0:." + str(decimals) + "f}"
-    percents = str_format.format(100 * (iteration / float(total)))
-    filled_length = int(round(bar_length * iteration / float(total)))
-    bar = '@' * filled_length + '-' * (bar_length - filled_length)
-
-    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
-
-    if iteration == total:
-        sys.stdout.write('\n')
-    sys.stdout.flush()
-
-
-def generate_analyzer_sheet(columns: list[tuple[str, str]]) -> list:
-    return [
-        {
-            "name": name,
-            "type": column_type,
-            "is_null": False,
-            "is_nullable": False,
-            "sparsity": 0,
-            "is_unique": False,
-            "is_atomic": False,
-            "atomic_likelihood": False,
-            "description": ""
-        }
-        for name, column_type in columns
-    ]
-
-
-def write_to_csv(path: str, result_df: DataFrame) -> None:
-    result_df.coalesce(1).write.csv(path,
-                                    header=True,
-                                    mode="overwrite",
-                                    sep="\t",
-                                    quote="\"",
-                                    quoteAll=True)
-
-
-def write_to_parquet(path: str, result_df: DataFrame, num_parquet: int = 100) -> None:
-    if num_parquet > 0:
-        result_df = result_df.repartition(num_parquet)
-
-    # Write the DataFrame to Parquet
-    result_df.write.mode('overwrite').parquet(path)
-
-
 def load_dataframe(spark: SparkSession, input_path: str, scheme: Optional[StructType | str] = None) -> DataFrame:
     file_extension = input_path.split('.')[-1].lower()
 

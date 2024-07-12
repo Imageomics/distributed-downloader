@@ -87,6 +87,11 @@ class DistributedDownloader:
 
     def __schedule_downloading(self, prev_job_id: int = None) -> None:
         self.logger.info("Scheduling downloading scripts")
+
+        if self.__check_downloading():
+            self.logger.info("All images already downloaded")
+            return
+
         all_prev_ids = [prev_job_id]
 
         if os.path.exists(self.schedules_folder):
@@ -100,6 +105,21 @@ class DistributedDownloader:
         self.logger.info(f"Submitted schedule creation script {schedule_creation_id}")
         self.inner_checkpoint["schedule_creation_scheduled"] = True
         update_checkpoint(self.inner_checkpoint_path, self.inner_checkpoint)
+
+    def __check_downloading(self) -> bool:
+        if not os.path.exists(self.schedules_folder):
+            return False
+
+        done = True
+        for schedule in os.listdir(self.schedules_folder):
+            schedule_path = os.path.join(self.schedules_folder, schedule)
+            if os.path.exists(f"{schedule_path}/_UNCHANGED"):
+                self.logger.warning(f"Schedule {schedule} is unchanged")
+                if not self.config["suppress_unchanged_error"]:
+                    raise ValueError(f"Schedule {schedule} is unchanged, which can lead to infinite loop")
+            done = done and os.path.exists(f"{schedule_path}/_DONE")
+
+        return done
 
     def __load_checkpoint(self) -> Dict[str, bool]:
         if not os.path.exists(self.inner_checkpoint_path):
@@ -140,7 +160,7 @@ class DistributedDownloader:
 
 
 def main() -> None:
-    config_path = "/users/PAS2119/andreykopanev/distributed-downloader/config/example_config.yaml"
+    config_path = "/mnt/c/Users/24122/PycharmProjects/distributed-downloader/config/local_config.yaml"
 
     dd = DistributedDownloader.from_path(config_path)
     dd.download_images()

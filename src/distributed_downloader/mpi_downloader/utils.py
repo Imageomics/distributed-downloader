@@ -25,17 +25,6 @@ def create_new_session(url: str, max_rate: int) -> requests.Session:
     return session
 
 
-def truncate_folder(path: str):
-    shutil.rmtree(path, ignore_errors=True)
-    os.makedirs(path, exist_ok=True)
-
-
-def truncate_server_folders(path: str) -> None:
-    for file in os.listdir(path):
-        if os.path.isdir(f"{path}/{file}") and "ServerName" in file:
-            shutil.rmtree(f"{path}/{file}", ignore_errors=True)
-
-
 def get_latest_schedule(path_to_dir: str, rank: int = None) -> Union[pd.DataFrame, None]:
     if not os.path.exists(path_to_dir) or not os.path.isdir(path_to_dir):
         return None
@@ -78,7 +67,6 @@ def generate_ids_to_download(schedule_row: pd.Series, verifier_df: pd.DataFrame)
     server_end_idx = schedule_row["EndIndex"]
 
     server_batches: Set[int] = set(range(server_start_idx, server_end_idx + 1))
-    # max_batch_idx = 0
 
     verifier_df = verifier_df[
         (verifier_df["ServerName"] == server_name) & (verifier_df["PartitionId"] >= server_start_idx) & (
@@ -112,7 +100,7 @@ def verify_downloaded_batches(schedule_row: pd.Series, input_path: str) -> List[
     server_end_idx = schedule_row["EndIndex"]
     verified_batches: List[Dict[str, Any]] = []
 
-    if os.path.exists(f"{input_path}/ServerName={server_name}"):
+    if os.path.exists(f"{input_path}/ServerName={server_name}"): # TODO: Make "ServerName" changeable column from config
         server_batches_names = os.listdir(f"{input_path}/ServerName={server_name}")
         for batch_name in server_batches_names:
             if not os.path.isdir(f"{input_path}/ServerName={server_name}/{batch_name}"):

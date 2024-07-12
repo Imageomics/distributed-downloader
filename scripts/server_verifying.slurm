@@ -9,7 +9,6 @@ fi
 
 schedule=$1
 iteration_number=$2
-recheck_flag=$3
 
 schedule_path="${OUTPUT_SCHEDULES_FOLDER}/current/${schedule}"
 logs_dir="${OUTPUT_LOGS_FOLDER}/current/${schedule}/${iteration_number}"
@@ -20,31 +19,14 @@ module load intelmpi/2021.10
 module load miniconda3/23.3.1-py310
 source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
-
 export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
 
-if [ "$recheck_flag" = "--recheck" ]; then
-# memory limit per node: 177G
-  srun \
-      --mpi=pmi2 \
-      --nodes=1 \
-      --ntasks-per-node=1 \
-      --cpus-per-task=1 \
-      --output="${logs_dir}/MPI_downloader_verifier.log" \
-      python \
-      "${REPO_ROOT}/src/distributed_downloader/MPI_downloader_verifier.py" \
-      "$PATH_TO_OUTPUT" \
-      "$schedule_path" \
-      "$recheck_flag"
-else
-    srun \
-      --mpi=pmi2 \
-      --nodes=1 \
-      --ntasks-per-node=1 \
-      --cpus-per-task=1 \
-      --output="${logs_dir}/MPI_downloader_verifier.log" \
-      python \
-      "${REPO_ROOT}/src/distributed_downloader/MPI_downloader_verifier.py" \
-      "$PATH_TO_OUTPUT" \
-      "$schedule_path"
-fi
+srun \
+  --mpi=pmi2 \
+  --nodes=1 \
+  --ntasks-per-node=1 \
+  --cpus-per-task=1 \
+  --output="${logs_dir}/MPI_downloader_verifier.log" \
+  python \
+  "${REPO_ROOT}/src/distributed_downloader/MPI_downloader_verifier.py" \
+  "$schedule_path"
