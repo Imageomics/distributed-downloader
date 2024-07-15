@@ -2,15 +2,15 @@ from typing import Tuple
 
 import pandas as pd
 
-base_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy"
-filter_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/tools/hashsum_merging/"
+# base_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy"
+filter_folder = "/fs/scratch/PAS2136/gbif/processed/leftovers/multimedia/tools/hashsum"
 name_table = f"{filter_folder}/name_table.csv"
 
-max_nodes = 6
+max_nodes = 10
 max_workers_per_node = 5
 total_workers = max_nodes * max_workers_per_node
 
-avg_completion_time = 120
+avg_completion_time = 180
 
 
 def load_table(path: str) -> pd.DataFrame:

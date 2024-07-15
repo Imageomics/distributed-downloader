@@ -7,16 +7,16 @@ import pandas as pd
 
 from distributed_downloader.utils import init_logger
 
-src_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/downloaded_images_copy"
-dst_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/source=gbif"
-prev_src_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/downloaded_images_copy"
-dst_name_table_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/tools/hashsum/name_table.csv"
-src_name_table_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/tools/hashsum_merging/name_table.csv"
-# src_folder = "/fs/scratch/PAS2136/gbif/processed/leftovers/multimedia/downloaded_images"
-# dst_folder = "/fs/ess/PAS2136/TreeOfLife/source=gbif"
-# prev_src_folder = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
-# dst_name_table_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools/hashsum/name_table.csv"
-# src_name_table_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools/hashsum_merging/name_table.csv"
+# src_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/downloaded_images_copy"
+# dst_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/source=gbif"
+# prev_src_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/downloaded_images_copy"
+# dst_name_table_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/tools/hashsum/name_table.csv"
+# src_name_table_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/tools/hashsum_merging/name_table.csv"
+src_folder = "/fs/scratch/PAS2136/gbif/processed/leftovers/multimedia/downloaded_images"
+dst_folder = "/fs/ess/PAS2136/TreeOfLife/source=gbif/data"
+prev_src_folder = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
+dst_name_table_path = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia/tools/hashsum/name_table.csv"
+src_name_table_path = "/fs/scratch/PAS2136/gbif/processed/leftovers/multimedia/tools/hashsum/name_table.csv"
 src_data_name = "successes.parquet"
 src_error_name = "errors.parquet"
 dst_data_basename = "data_"
@@ -71,5 +71,8 @@ if __name__ == "__main__":
 
     paths_to_copy = get_all_paths_to_merge(src_folder, src_data_name, src_error_name)
     prev_name_table = pd.read_csv(dst_name_table_path)
+    prev_name_table["dst_path"] = (prev_name_table["dst_path"]
+                                   .str.replace("/fs/ess/PAS2136/TreeOfLife/source=gbif",
+                                                "/fs/ess/PAS2136/TreeOfLife/source=gbif/data"))
     name_table = generate_dst_paths(paths_to_copy, prev_name_table)
     name_table.to_csv(src_name_table_path, index=False, header=True)

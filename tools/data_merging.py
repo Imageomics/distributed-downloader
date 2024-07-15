@@ -9,14 +9,14 @@ import mpi4py.MPI as MPI
 
 from distributed_downloader.utils import init_logger, ensure_created
 
-src_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/downloaded_images_copy"
-dst_folder = "/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/source=gbif"
-merge_table_folder = f"/fs/scratch/PAS2136/gbif/processed/verification_test/multimedia_copy/tools/hashsum_merging"
+src_folder = "/fs/scratch/PAS2136/gbif/processed/leftovers/multimedia/downloaded_images"
+dst_folder = "/fs/ess/PAS2136/TreeOfLife/source=gbif/data"
+merge_table_folder = "/fs/scratch/PAS2136/gbif/processed/leftovers/multimedia/tools/hashsum"
 verification_folder = f"{merge_table_folder}/verification"
 os.makedirs(verification_folder, exist_ok=True)
 schedule_path = f"{merge_table_folder}/schedule.csv"
 logger = init_logger(__name__, logging_level="DEBUG")
-total_time = 150
+total_time = 200
 server_name_regex = rf'{src_folder}/ServerName=(.*)/partition_id=.*'
 
 
@@ -51,31 +51,43 @@ def get_schedule(path: str, _rank: int) -> pd.DataFrame:
     return outer_join[(outer_join["_merge"] == 'left_only')].drop('_merge', axis=1)
 
 
+def transfer_data(row: pd.Series):
+    if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 0)) - total_time:
+        raise TimeoutError("Not enough time")
+
+    if not os.path.exists(row["dst_path"]):
+        logger.debug(f"Fully copping file {row['src_path']} to {row['dst_path']}")
+        shutil.copy(row["src_path"], row["dst_path"])
+        return
+
+    src_df = pd.read_parquet(row["src_path"],
+                             # columns=["uuid"],
+                             )
+    if len(src_df) == 0:
+        logger.debug(f"Empty src file {row['src_path']} skipping")
+        return
+
+    dst_df = pd.read_parquet(row["dst_path"],
+                             # columns=["uuid"],
+                             )
+
+    if len(dst_df) == 0:
+        logger.debug(f"Empty dst file {row['dst_path']}, replacing with {row['src_path']}")
+        shutil.copy(row["src_path"], row["dst_path"])
+        return
+
+    merged_df = pd.concat([src_df, dst_df]).reset_index(drop=True)
+
+    if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 0)) - total_time:
+        raise TimeoutError("Not enough time")
+
+    # logger.debug(f"{len(src_df)},{len(dst_df)},{len(merged_df)}")
+    merged_df.to_parquet(row["dst_path"], index=False, compression="zstd", compression_level=3)
+
+
 def filter_parquet(row: pd.Series, verification_file: TextIO) -> int:
     try:
-        if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 0)) - total_time:
-            logger.error("Not enough time")
-            return 0
-
-        if not os.path.exists(row["dst_path"]):
-            logger.debug(f"Fully copping file {row['src_path']} to {row['dst_path']}")
-            shutil.copy(row["src_path"], row["dst_path"])
-        else:
-            src_df = pd.read_parquet(row["src_path"],
-                                     # columns=["uuid"],
-                                     )
-            dst_df = pd.read_parquet(row["dst_path"],
-                                     # columns=["uuid"],
-                                     )
-
-            merged_df = pd.concat([src_df, dst_df]).reset_index(drop=True)
-
-            if time.time() > int(os.getenv("SLURM_JOB_END_TIME", 0)) - total_time:
-                logger.error("Not enough time")
-                return 0
-
-            # logger.debug(f"{len(src_df)},{len(dst_df)},{len(merged_df)}")
-            merged_df.to_parquet(row["dst_path"], index=False, compression="zstd", compression_level=3)
+        transfer_data(row)
     except Exception as e:
         logger.error(f"Error occurred: {e}")
         return 0
