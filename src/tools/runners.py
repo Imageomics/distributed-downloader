@@ -8,42 +8,36 @@ import cv2
 import numpy as np
 import pandas as pd
 from PIL import UnidentifiedImageError, Image
-from attr import define
 import mpi4py.MPI as MPI
 
 from tools.config import Config
-from tools.tools_base import ToolsBase
+from tools.registry import ToolsBase, ToolsRegistryBase
 
 
-@define
 class RunnerToolBase(ToolsBase):
-    def __attrs_pre_init__(self, cfg: Config):
+
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
-    def perform_filtering(self):
-        raise NotImplementedError()
+        self.filter_family = "runner"
 
 
-@define
 class MPIRunnerTool(RunnerToolBase):
-    filter_folder: str = None
-    filter_table_folder: str = None
-    verification_folder: str = None
-    verification_IO: TextIO = None
 
-    data_scheme: List[str] = None
-    verification_scheme: List[str] = None
-
-    mpi_rank: int = None
-    mpi_comm: MPI.Intracomm = None
-    total_time: int = None
-
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
-    def __attrs_post_init__(self):
-        self.mpi_comm = MPI.COMM_WORLD
-        self.mpi_rank = self.mpi_comm.rank
+        self.filter_folder: str = None
+        self.filter_table_folder: str = None
+        self.verification_folder: str = None
+        self.verification_IO: TextIO = None
+
+        self.data_scheme: List[str] = None
+        self.verification_scheme: List[str] = None
+
+        self.mpi_comm: MPI.Intracomm = MPI.COMM_WORLD
+        self.mpi_rank: int = self.mpi_comm.rank
+        self.total_time: int = None
 
     def is_enough_time(self):
         assert self.total_time is not None, ValueError("total_time is not set")
@@ -118,7 +112,7 @@ class MPIRunnerTool(RunnerToolBase):
             self.logger.debug(f"Completed filtering: {server_name}/{partition_id} with {filtered_parquet_length}")
             return 1
 
-    def main(self):
+    def run(self):
         self.ensure_folders_created()
 
         schedule = self.get_schedule()
@@ -135,14 +129,13 @@ class MPIRunnerTool(RunnerToolBase):
         self.verification_IO.close()
 
 
-@define
 class FilterRunnerTool(MPIRunnerTool):
-    data_scheme: List[str] = ["uuid", "gbif_id", "server_name", "partition_id"]
-    verification_scheme: List[str] = ["server_name", "partition_id"]
-    total_time = 150
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
+        self.data_scheme: List[str] = ["uuid", "gbif_id", "server_name", "partition_id"]
+        self.verification_scheme: List[str] = ["server_name", "partition_id"]
+        self.total_time = 150
 
     def apply_filter(self, filtering_df: pd.DataFrame, server_name: str, partition_id: str) -> int:
         self.is_enough_time()
@@ -172,35 +165,38 @@ class FilterRunnerTool(MPIRunnerTool):
         return len(filtered_parquet)
 
 
-@define
+@ToolsRegistryBase.register("runner", "duplication_based")
 class DuplicationFilterRunnerTool(FilterRunnerTool):
-    filter_name = "duplication_based"
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
+        self.filter_name = "duplication_based"
 
-@define
+
+@ToolsRegistryBase.register("runner", "size_based")
 class SizeBasedFilterRunnerTool(FilterRunnerTool):
-    filter_name: str = "size_based"
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
+        self.filter_name: str = "size_based"
 
-@define
+
+@ToolsRegistryBase.register("runner", "image_verification")
 class ImageVerificationRunnerTool(MPIRunnerTool):
-    filter_name: str = "image_verification"
 
-    data_scheme: List[str] = ["server_name", "partition_id"]
-    verification_scheme: List[str] = ["server_name", "partition_id"]
-    corrupted_folder: str = None
-    corrupted_scheme: List[str] = ["uuid", "gbif_id", "server_name", "partition_id"]
-    corrupted_IO: TextIO = None
-    total_time = 150
-
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
+
+        self.filter_name: str = "image_verification"
+
+        self.data_scheme: List[str] = ["server_name", "partition_id"]
+        self.verification_scheme: List[str] = ["server_name", "partition_id"]
+        self.corrupted_folder: str = None
+        self.corrupted_scheme: List[str] = ["uuid", "gbif_id", "server_name", "partition_id"]
+        self.corrupted_IO: TextIO = None
+        self.total_time = 150
 
     def ensure_folders_created(self):
         assert self.filter_name is not None, ValueError("filter name is not set")
@@ -290,21 +286,18 @@ class ImageVerificationRunnerTool(MPIRunnerTool):
         return verified_image
 
 
-@define
+@ToolsRegistryBase.register("runner", "resize")
 class ResizeRunnerTool(MPIRunnerTool):
-    filter_name: str = "resize"
 
-    data_scheme: List[str] = ["server_name", "partition_id"]
-    verification_scheme: List[str] = ["server_name", "partition_id"]
-    total_time = 300
-    new_size: int = None
-
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
-
-    def __attrs_post_init__(self):
         assert isinstance(self.config["tools_parameters"]["new_resize_size"], int), (
             ValueError("new size have to be Integer"))
+
+        self.filter_name: str = "resize"
+        self.data_scheme: List[str] = ["server_name", "partition_id"]
+        self.verification_scheme: List[str] = ["server_name", "partition_id"]
+        self.total_time = 300
         self.new_size = self.config["tools_parameters"]["new_resize_size"]
 
     def apply_filter(self, filtering_df: pd.DataFrame, server_name: str, partition_id: str) -> int:

@@ -2,27 +2,25 @@ import glob
 import os
 
 import pandas as pd
-from attr import define
 
 from tools.config import Config
-from tools.tools_base import ToolsBase
+from tools.registry import ToolsBase, ToolsRegistryBase
 
 
-@define
 class SchedulerToolBase(ToolsBase):
-    def __attrs_pre_init__(self, cfg: Config):
+
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
-    def create_schedule(self):
-        raise NotImplementedError()
+        self.filter_family = "scheduler"
 
 
-@define
 class DefaultScheduler(SchedulerToolBase):
-    def __attrs_pre_init__(self, cfg: Config):
+
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
-    def create_schedule(self):
+    def run(self):
         assert self.filter_name is not None, ValueError("filter name is not set")
 
         filter_folder = os.path.join(self.tools_path, self.filter_name)
@@ -37,33 +35,37 @@ class DefaultScheduler(SchedulerToolBase):
         df.to_csv(os.path.join(filter_folder, "schedule.csv"), header=True, index=False)
 
 
-@define
+@ToolsRegistryBase.register("scheduler", "size_based")
 class SizeBasedScheduler(DefaultScheduler):
-    filter_name: str = "size_based"
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
+        self.filter_name: str = "size_based"
 
-@define
+
+@ToolsRegistryBase.register("scheduler", "duplication_based")
 class DuplicatesBasedScheduler(DefaultScheduler):
-    filter_name: str = "duplication_based"
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
+        self.filter_name: str = "duplication_based"
 
-@define
+
+@ToolsRegistryBase.register("scheduler", "resize")
 class ResizeToolScheduler(DefaultScheduler):
-    filter_name: str = "resize"
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
+        self.filter_name: str = "resize"
 
-@define
+
+@ToolsRegistryBase.register("scheduler", "image_verification")
 class ImageVerificationBasedScheduler(DefaultScheduler):
-    filter_name: str = "image_verification"
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
+
+        self.filter_name: str = "image_verification"

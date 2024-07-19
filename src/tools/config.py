@@ -1,4 +1,4 @@
-from typing import Any, Dict, LiteralString
+from typing import Any, Dict
 
 from attr import define
 

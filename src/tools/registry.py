@@ -1,44 +1,29 @@
+import os
+from typing import Dict, Type
+
+from distributed_downloader.utils import init_logger
+from tools.config import Config
+
+
 class ToolsRegistryBase(type):
-    """
-    A metaclass for registering model classes.
-
-    This metaclass automatically registers any class that uses it in a
-    dictionary, making it easy to look up model classes by their name.
-
-    Attributes:
-        TOOLS_REGISTRY (dict): A class-level dictionary that maps model class names
-                               (in lowercase) to the model classes themselves.
-    """
-    TOOLS_REGISTRY = {}
-
-    def __new__(cls, name, bases, attrs):
-        """
-        Creates a new class instance and registers it in the MODEL_REGISTRY.
-
-        Args:
-            name (str): The name of the new class.
-            bases (tuple): The base classes of the new class.
-            attrs (dict): The attributes of the new class.
-
-        Returns:
-            type: The newly created class, now registered in MODEL_REGISTRY.
-        """
-        new_cls = super().__new__(cls, name, bases, attrs)
-        if "filter_name" in attrs.keys():
-            if attrs["filter_name"] is not None:
-                cls.TOOLS_REGISTRY[new_cls.__name__.lower()] = new_cls
-        else:
-            cls.TOOLS_REGISTRY[new_cls.__name__.lower()] = new_cls
-        return new_cls
+    TOOLS_REGISTRY: Dict[str, Dict[str, Type["ToolsBase"]]] = {}
 
     @classmethod
     def get(cls, name):
         return cls.TOOLS_REGISTRY.get(name.lower())
 
     @classmethod
-    def register(cls, name):
+    def register(cls, filter_family: str, filter_name: str):
         def wrapper(model_cls):
-            cls.TOOLS_REGISTRY[name] = model_cls
+            assert issubclass(model_cls, ToolsBase)
+            assert (filter_name not in cls.TOOLS_REGISTRY.keys()
+                    or filter_family not in cls.TOOLS_REGISTRY[filter_name].keys()), (
+                ValueError(f"tool with the name {filter_name} already have family {filter_family}"))
+
+            if filter_name not in cls.TOOLS_REGISTRY.keys():
+                cls.TOOLS_REGISTRY[filter_name] = dict()
+
+            cls.TOOLS_REGISTRY[filter_name][filter_family] = model_cls
             return model_cls
         return wrapper
 
@@ -52,3 +37,45 @@ class ToolsRegistryBase(type):
         return f"{self.__class__.__name__}({self.TOOLS_REGISTRY})"
 
     __str__ = __repr__
+
+
+class ToolsBase(metaclass=ToolsRegistryBase):
+
+    # noinspection PyTypeChecker
+    def __init__(self, cfg: Config):
+        self.config = cfg
+
+        self.filter_name: str = None
+        self.filter_family: str = None
+
+        self.logger = init_logger(__name__)
+
+        self.urls_path = os.path.join(self.config['path_to_output_folder'],
+                                      self.config['output_structure']['urls_folder'])
+        self.downloaded_images_path = os.path.join(self.config['path_to_output_folder'],
+                                                   self.config['output_structure']['images_folder'])
+        self.tools_path = os.path.join(self.config['path_to_output_folder'],
+                                       self.config['output_structure']['tools_folder'])
+        self.total_workers = (self.config["tools_parameters"]["max_nodes"]
+                              * self.config["tools_parameters"]["workers_per_node"])
+
+        self.__init_environment()
+
+    def __init_environment(self) -> None:
+        os.environ["CONFIG_PATH"] = self.config.config_path
+
+        os.environ["ACCOUNT"] = self.config["account"]
+        os.environ["PATH_TO_INPUT"] = self.config["path_to_input"]
+
+        os.environ["PATH_TO_OUTPUT"] = self.config["path_to_output_folder"]
+        for output_folder, output_path in self.config["output_structure"].items():
+            os.environ["OUTPUT_" + output_folder.upper()] = os.path.join(self.config["path_to_output_folder"],
+                                                                         output_path)
+
+        for downloader_var, downloader_value in self.config["tools_parameters"].items():
+            os.environ["TOOLS_" + downloader_var.upper()] = str(downloader_value)
+
+        self.logger.info("Environment initialized")
+
+    def run(self):
+        raise NotImplementedError()

@@ -14,7 +14,9 @@ scripts:
   verify_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_verifying.slurm"
   download_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/server_downloading.slurm"
   # tools scripts
-  resize_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/resize_mpi.slurm"
+  tools_filter_script: ""
+  tools_scheduling_script: ""
+  tools_worker_script: ""
 
 # Rules for the schedule creation
 # They determine how many simultaneous downloader instances can be run on the same server
@@ -41,14 +43,22 @@ output_structure:
   profiles_table: "servers_profiles.csv"
   ignored_table: "ignored_servers.csv"
   inner_checkpoint_file: "inner_checkpoint.yaml"
+  tools_folder: "tools"
 
 # Parameters for the downloader
 downloader_parameters:
-  num_downloads: 10
-  max_nodes: 7
+  num_downloads: 5
+  max_nodes: 1
   workers_per_node: 6
   cpu_per_worker: 6
   header: "User-Agent: Imageomics Institute (https://imageomics.org; imageomics-it@osu.edu)"
   image_size: 720
   logger_level: "INFO"
   batch_size: 10000
+
+tools_parameters:
+  max_nodes: 1
+  workers_per_node: 6
+  cpu_per_worker: 6
+  threshold_size: 224
+  new_resize_size: 720

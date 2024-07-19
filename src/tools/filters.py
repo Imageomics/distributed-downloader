@@ -1,31 +1,25 @@
-import glob
 import os.path
 
 import pandas as pd
-from attr import define
 import pyspark.sql as ps
 import pyspark.sql.functions as func
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructField, StringType, StructType, LongType, BooleanType, ArrayType, \
+    BinaryType
 
 from tools.config import Config
-from tools.tools_base import ToolsBase
+from tools.registry import ToolsRegistryBase
+from tools.registry import ToolsBase
 
 
-@define
 class FilterToolBase(ToolsBase):
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
-    def create_filter_table(self):
-        raise NotImplementedError()
+        self.filter_family = "filter"
 
 
-@define
 class SparkFilterToolBase(FilterToolBase):
-    from pyspark.sql.types import StructField, StringType, StructType, LongType, BooleanType, ArrayType, \
-        BinaryType
-
-    spark: SparkSession = None
     success_scheme = StructType([
         StructField("uuid", StringType(), False),
         StructField("gbif_id", LongType(), False),
@@ -41,17 +35,14 @@ class SparkFilterToolBase(FilterToolBase):
         StructField("image", BinaryType(), False)
     ])
 
-    def __attrs_pre_init__(self, cfg: Config, spark: SparkSession):
+    def __init__(self, cfg: Config, spark: SparkSession = None):
         super().__init__(cfg)
-        self.spark = spark
-
-    def __attrs_post_init__(self):
-        if self.spark is None:
-            ValueError("Requires spark session")
+        self.spark: SparkSession = spark if spark is not None else SparkSession.builder.appName(
+            "Filtering").getOrCreate()
         self.spark.conf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "CORRECTED")
         self.spark.conf.set("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
 
-    def create_filter_table(self):
+    def run(self):
         raise NotImplementedError()
 
     def load_data_parquet(self):
@@ -72,23 +63,31 @@ class SparkFilterToolBase(FilterToolBase):
               mode="overwrite"))
 
     def __del__(self):
-        self.spark.stop()
+        if self.spark is not None:
+            self.spark.stop()
 
 
-@define
+@ToolsRegistryBase.register("filter", "size_based")
 class SizeBasedFiltering(SparkFilterToolBase):
-    filter_name: str = "size_based"
 
-    def __attrs_pre_init__(self, cfg: Config, spark: SparkSession):
+    def __init__(self, cfg: Config, spark: SparkSession = None):
         super().__init__(cfg, spark)
+        self.filter_name: str = "size_based"
 
-    def create_filter_table(self):
+        assert "threshold_size" in self.config["tools_parameters"], (
+            ValueError("threshold_size have to be defined"))
+        assert isinstance(self.config["tools_parameters"]["threshold_size"], int), (
+            ValueError("threshold_size have to be Integer"))
+
+        self.threshold_size = self.config["tools_parameters"]["threshold_size"]
+
+    def run(self):
         successes_df: ps.DataFrame = self.load_data_parquet()
 
         successes_df = (successes_df
                         .withColumn("is_big",
                                     func.array_min(func.col("original_size")) >=
-                                    self.config["tools_parameters"]["threshold_size"])
+                                    self.threshold_size)
                         .withColumnRenamed("ServerName", "server_name"))
 
         too_small_images = successes_df.filter(~successes_df["is_big"]).select("uuid",
@@ -101,14 +100,14 @@ class SizeBasedFiltering(SparkFilterToolBase):
         self.logger.info(f"Too small images number: {too_small_images.count()}")
 
 
-@define
+@ToolsRegistryBase.register("filter", "duplication_based")
 class DuplicatesBasedFiltering(SparkFilterToolBase):
-    filter_name: str = "duplication_based"
 
-    def __attrs_pre_init__(self, cfg: Config, spark: SparkSession):
+    def __init__(self, cfg: Config, spark: SparkSession = None):
         super().__init__(cfg, spark)
+        self.filter_name: str = "duplication_based"
 
-    def create_filter_table(self):
+    def run(self):
         successes_df: ps.DataFrame = self.load_data_parquet()
 
         not_duplicate_records = (successes_df
@@ -146,9 +145,9 @@ class DuplicatesBasedFiltering(SparkFilterToolBase):
         self.logger.info(f"duplicated number: {duplicate_records.count()}")
 
 
-@define
 class PythonFilterToolBase(FilterToolBase):
-    def __attrs_pre_init__(self, cfg: Config):
+
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
 
     def get_all_paths_to_merge(self) -> pd.DataFrame:
@@ -164,7 +163,7 @@ class PythonFilterToolBase(FilterToolBase):
                 all_schedules.append([server_name, partition.split("=")[1]])
         return pd.DataFrame(all_schedules, columns=["server_name", "partition_id"])
 
-    def create_filter_table(self):
+    def run(self):
         filter_table = self.get_all_paths_to_merge()
 
         filter_table_folder = os.path.join(self.tools_path, self.filter_name, "filter_table")
@@ -173,17 +172,17 @@ class PythonFilterToolBase(FilterToolBase):
         filter_table.to_csv(filter_table_folder + "/table.csv", header=True, index=False)
 
 
-@define
+@ToolsRegistryBase.register("filter", "resize")
 class ResizeToolFilter(PythonFilterToolBase):
-    filter_name = "resize"
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
+        self.filter_name = "resize"
 
 
-@define
+@ToolsRegistryBase.register("filter", "image_verification")
 class ImageVerificationToolFilter(PythonFilterToolBase):
-    filter_name = "image_verification"
 
-    def __attrs_pre_init__(self, cfg: Config):
+    def __init__(self, cfg: Config):
         super().__init__(cfg)
+        self.filter_name = "image_verification"
