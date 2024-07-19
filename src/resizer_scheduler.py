@@ -3,10 +3,10 @@ import re
 
 from pandas import DataFrame
 
-schedule_path = "/users/PAS2119/andreykopanev/gbif/data/schedule_full.csv"
+schedule_path = "/users/PAS2119/andreykopanev/distributed-downloader/data/schedule_full.csv"
 base_path = "/fs/scratch/PAS2136/gbif/processed/2024-05-01/multimedia_prep/downloaded_images"
-number_of_nodes = 20
-number_of_workers = 5
+number_of_nodes = 10
+number_of_workers = 3
 
 number_of_ranks = number_of_nodes * number_of_workers
 
@@ -37,7 +37,8 @@ for folder in os.listdir(base_path):
             else:
                 # os.remove(f"{partition_path}/_corrupted.txt")
                 not_that_corrupted += 1
-        if (os.path.exists(f"{partition_path}/verification.parquet") or
+        if (not os.path.exists(f"{partition_path}/images.7z") or
+                not os.path.exists(f"{partition_path}/verification.parquet") or
                 not os.path.exists(f"{partition_path}/successes.parquet") or
                 not os.path.exists(f"{partition_path}/completed")):
             continue

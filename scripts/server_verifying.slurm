@@ -21,9 +21,8 @@ mkdir -p "${logs_dir}"
 
 module load intel/2021.10.0
 module load intelmpi/2021.10
-module load hdf5/1.12.2
 module load miniconda3/23.3.1-py310
-source .venv/gbif_venv/bin/activate
+source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 
 export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
