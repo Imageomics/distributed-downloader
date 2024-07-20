@@ -59,23 +59,6 @@ class ToolsBase(metaclass=ToolsRegistryBase):
         self.total_workers = (self.config["tools_parameters"]["max_nodes"]
                               * self.config["tools_parameters"]["workers_per_node"])
 
-        self.__init_environment()
-
-    def __init_environment(self) -> None:
-        os.environ["CONFIG_PATH"] = self.config.config_path
-
-        os.environ["ACCOUNT"] = self.config["account"]
-        os.environ["PATH_TO_INPUT"] = self.config["path_to_input"]
-
-        os.environ["PATH_TO_OUTPUT"] = self.config["path_to_output_folder"]
-        for output_folder, output_path in self.config["output_structure"].items():
-            os.environ["OUTPUT_" + output_folder.upper()] = os.path.join(self.config["path_to_output_folder"],
-                                                                         output_path)
-
-        for downloader_var, downloader_value in self.config["tools_parameters"].items():
-            os.environ["TOOLS_" + downloader_var.upper()] = str(downloader_value)
-
-        self.logger.info("Environment initialized")
 
     def run(self):
         raise NotImplementedError()

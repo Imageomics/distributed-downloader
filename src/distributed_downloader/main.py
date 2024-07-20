@@ -115,7 +115,7 @@ class DistributedDownloader:
             schedule_path = os.path.join(self.schedules_folder, schedule)
             if os.path.exists(f"{schedule_path}/_UNCHANGED"):
                 self.logger.warning(f"Schedule {schedule} is unchanged")
-                if not self.config["suppress_unchanged_error"]:
+                if not self.config.get("suppress_unchanged_error", False):
                     raise ValueError(f"Schedule {schedule} is unchanged, which can lead to infinite loop")
             done = done and os.path.exists(f"{schedule_path}/_DONE")
 

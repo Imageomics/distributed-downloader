@@ -16,11 +16,12 @@ iteration_number=$3
 logs_dir="${OUTPUT_LOGS_FOLDER}/current/${schedule}/${iteration_number}"
 mkdir -p "${logs_dir}"
 
+filename=$(basename "$script")
+ext="${filename##*.}"
+base_filename=$(basename "${filename}" ."${ext}")
+
 if [ "$4" != "" ] && [ "$4" != "--recheck" ]; then
     dependency=$4
-    filename=$(basename "$script")
-    ext="${filename##*.}"
-    base_filename=$(basename "${filename}" ."${ext}")
 
     # Submit the script to Slurm
     sbatch \
@@ -34,10 +35,6 @@ if [ "$4" != "" ] && [ "$4" != "--recheck" ]; then
         "${script}" "${schedule}" "${iteration_number}" "$5"
     exit 0
 else
-    filename=$(basename "$script")
-    ext="${filename##*.}"
-    base_filename=$(basename "${filename}" ."${ext}")
-
     # Submit the script to Slurm
     sbatch \
         --output="${logs_dir}/${base_filename}.out" \
