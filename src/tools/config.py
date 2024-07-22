@@ -12,8 +12,10 @@ class Config:
 
     @classmethod
     def from_path(cls, path: str) -> "Config":
+        cfg = load_config(path)
+        # print(cfg)
         return cls(config_path=path,
-                   config=load_config(path))
+                   config=cfg)
 
     def __getitem__(self, item):
         return self.config[item]

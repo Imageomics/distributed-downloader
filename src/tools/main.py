@@ -1,12 +1,13 @@
 import os
 from logging import Logger
+from pprint import pprint
 from typing import Literal, List, Dict, Optional, Any, TextIO, Tuple
 
 import pandas as pd
 import yaml
 from attr import define, field, Factory
 
-from distributed_downloader.utils import submit_job, init_logger, ensure_created, update_checkpoint
+from distributed_downloader.utils import submit_job, init_logger, ensure_created, update_checkpoint, preprocess_dep_ids
 from tools.config import Config
 from tools.registry import ToolsRegistryBase
 
@@ -107,7 +108,7 @@ class Tools:
             with open(self.tool_job_history_path, "w") as f:
                 print("job_ids", file=f)
 
-        job_io = open(self.tool_job_history_path, "w")
+        job_io = open(self.tool_job_history_path, "a")
 
         return job_ids, job_io
 
@@ -120,7 +121,8 @@ class Tools:
         job_id = submit_job(self.config['scripts']['tools_submitter'],
                             self.config['scripts']['tools_filter_script'],
                             self.tool_name,
-                            self.tool_job_history[-1] if len(self.tool_job_history) != 0 else None)
+                            *preprocess_dep_ids([self.tool_job_history[-1] if len(self.tool_job_history) != 0 else None]),
+                            "--spark")
         self.__update_job_history(job_id)
         self.tool_checkpoint["filtered"] = True
         update_checkpoint(self.tool_checkpoint_path, self.tool_checkpoint)
@@ -131,7 +133,7 @@ class Tools:
         job_id = submit_job(self.config['scripts']['tools_submitter'],
                             self.config['scripts']['tools_scheduling_script'],
                             self.tool_name,
-                            self.tool_job_history[-1])
+                            *preprocess_dep_ids([self.tool_job_history[-1]]))
         self.__update_job_history(job_id)
         self.tool_checkpoint["schedule_created"] = True
         update_checkpoint(self.tool_checkpoint_path, self.tool_checkpoint)
@@ -144,29 +146,29 @@ class Tools:
             job_id = submit_job(self.config['scripts']['tools_submitter'],
                                 self.config['scripts']['tools_worker_script'],
                                 self.tool_name,
-                                self.tool_job_history[-1])
+                                *preprocess_dep_ids([self.tool_job_history[-1]]))
             self.__update_job_history(job_id)
 
         job_id = submit_job(self.config['scripts']['tools_submitter'],
                             self.config['scripts']['tools_verification_script'],
                             self.tool_name,
-                            self.tool_job_history[-1])
+                            *preprocess_dep_ids([self.tool_job_history[-1]]))
         self.__update_job_history(job_id)
 
         self.logger.info("Scheduled workers script")
 
     def apply_tool(self):
-        if self.tool_checkpoint.get("filtered", False):
+        if not self.tool_checkpoint.get("filtered", False):
             self.__schedule_filtering()
         else:
             self.logger.info("Skipping filtering script: table already created")
 
-        if self.tool_checkpoint.get("schedule_created", False):
+        if not self.tool_checkpoint.get("schedule_created", False):
             self.__schedule_schedule_creation()
         else:
             self.logger.info("Skipping schedule creation script: schedule already created")
 
-        if self.tool_checkpoint.get("completed", False):
+        if not self.tool_checkpoint.get("completed", False):
             self.__schedule_workers()
         else:
             self.logger.error("Tool completed its job")
@@ -177,8 +179,8 @@ class Tools:
 
 
 def main():
-    config_path = "/mnt/c/Users/24122/PycharmProjects/distributed-downloader/config/local_config.yaml"
-    tool_name = "resize"
+    config_path = "/users/PAS2119/andreykopanev/distributed-downloader/config/local_config.yaml"
+    tool_name = "duplication_based"
 
     dd = Tools.from_path(config_path, tool_name)
     dd.apply_tool()

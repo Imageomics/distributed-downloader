@@ -105,6 +105,7 @@ class MPIRunnerTool(RunnerToolBase):
         except NotImplementedError as not_impl:
             raise NotImplementedError("Filter function wasn't implemented")
         except Exception as e:
+            self.logger.exception(e)
             self.logger.error(f"Error occurred: {e}")
             return 0
         else:
@@ -338,8 +339,14 @@ class ResizeRunnerTool(MPIRunnerTool):
         if image_shape[0] > self.new_size or image_shape[1] > self.new_size:
             image_original_np, image_shape = self.image_resize(image_original_np)
 
-        return pd.Series({"uuid": row["uuid"], "resized_size": image_shape, "image": image_original_np},
-                         index=["uuid", "resized_size", "image"])
+        image_original_np_bytes = image_original_np.tobytes()
+        new_check_sum = hashlib.md5(image_original_np_bytes).hexdigest()
+
+        return pd.Series({"uuid": row["uuid"],
+                          "resized_size": image_shape,
+                          "hashsum_resized": new_check_sum,
+                          "image": image_original_np_bytes},
+                         index=["uuid", "resized_size", "hashsum_resized", "image"])
 
     def image_resize(self, image: np.ndarray) \
             -> Tuple[np.ndarray[int, np.dtype[np.uint8]], np.ndarray[int, np.dtype[np.uint32]]]:

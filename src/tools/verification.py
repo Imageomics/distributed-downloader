@@ -29,7 +29,7 @@ if __name__ == "__main__":
     with open(os.path.join(tool_folder, "tool_checkpoint.yaml"), "r") as file:
         checkpoint = yaml.full_load(file)
     schedule_df = pd.read_csv(os.path.join(tool_folder, "schedule.csv"))
-    verification_df = MPIRunnerTool.load_table(os.path.join(tool_folder, "verification"))
+    verification_df = MPIRunnerTool.load_table(os.path.join(tool_folder, "verification"), ["server_name", "partition_id"])
 
     outer_join = schedule_df.merge(verification_df, how='outer', indicator=True, on=["server_name", "partition_id"])
     left = outer_join[(outer_join["_merge"] == 'left_only')].drop('_merge', axis=1)
