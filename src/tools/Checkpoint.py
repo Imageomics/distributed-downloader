@@ -32,6 +32,9 @@ class Checkpoint:
     def __getitem__(self, item):
         return self.inner_checkpoint[item]
 
+    def get(self, item, default=None):
+        return self.inner_checkpoint.get(item, default)
+
     def __setitem__(self, key, value):
         self.inner_checkpoint[key] = value
         self.__save_checkpoint()

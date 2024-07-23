@@ -36,23 +36,22 @@ def verify_batches(config: Config,
 
     latest_schedule = get_latest_schedule(server_schedule)
     server_config_df = pd.read_csv(config_file)
-    server_config_df["StartIndex"] = 0
-    server_config_df["EndIndex"] = 0
+    server_config_df["start_index"] = 0
+    server_config_df["end_index"] = 0
     server_config_columns = server_config_df.columns.to_list()
     server_config_df = server_config_df.merge(server_profiler_df,
-                                              left_on="ServerName",
-                                              right_on="server_name",
+                                              on="server_name",
                                               how="left",
                                               validate="1:1")
 
-    server_config_df["EndIndex"] = server_config_df["total_batches"] - 1
+    server_config_df["end_index"] = server_config_df["total_batches"] - 1
     server_config_df = server_config_df[server_config_columns]
 
     if latest_schedule is not None and len(latest_schedule) > 0:
-        latest_schedule_aggr = latest_schedule.groupby("ServerName").agg(
-            {"PartitionIdFrom": "min", "PartitionIdTo": "max"}).reset_index()
-        server_config_df = server_config_df.merge(latest_schedule_aggr, on="ServerName", how="left")
-        server_config_df["StartIndex"] = server_config_df["PartitionIdFrom"]
+        latest_schedule_aggr = latest_schedule.groupby("server_name").agg(
+            {"partition_id_from": "min", "partition_id_to": "max"}).reset_index()
+        server_config_df = server_config_df.merge(latest_schedule_aggr, on="server_name", how="left")
+        server_config_df["start_index"] = server_config_df["partition_id_from"]
         server_config_df = server_config_df[server_config_columns]
 
     for idx, row in server_config_df.iterrows():
@@ -70,17 +69,16 @@ def verify_batches(config: Config,
         logger.debug(f"Verification unchanged for {server_schedule}")
         open(f"{server_schedule}/_UNCHANGED", "w").close()
 
-    downloaded_count = verification_df.groupby("ServerName").agg({"Status": "count"}).reset_index()
-    downloaded_count = downloaded_count.rename(columns={"Status": "Downloaded"})
-    downloaded_count = downloaded_count.merge(server_config_df, on="ServerName", how="outer")
-    downloaded_count["Downloaded"] = downloaded_count["Downloaded"].fillna(0)
-    downloaded_count = downloaded_count[["ServerName", "Downloaded"]]
+    downloaded_count = verification_df.groupby("server_name").agg({"status": "count"}).reset_index()
+    downloaded_count = downloaded_count.rename(columns={"status": "downloaded"})
+    downloaded_count = downloaded_count.merge(server_config_df, on="server_name", how="outer")
+    downloaded_count["downloaded"] = downloaded_count["downloaded"].fillna(0)
+    downloaded_count = downloaded_count[["server_name", "downloaded"]]
     downloaded_count = downloaded_count.merge(server_profiler_df,
-                                              left_on="ServerName",
-                                              right_on="server_name",
+                                              on="server_name",
                                               how="left")
-    downloaded_count = downloaded_count[["ServerName", "total_batches", "Downloaded"]]
-    downloaded_count = downloaded_count[downloaded_count["Downloaded"] < downloaded_count["total_batches"]]
+    downloaded_count = downloaded_count[["server_name", "total_batches", "downloaded"]]
+    downloaded_count = downloaded_count[downloaded_count["downloaded"] < downloaded_count["total_batches"]]
 
     if len(downloaded_count) > 0:
         logger.info(f"Still {len(downloaded_count)} servers have not downloaded all the batches")

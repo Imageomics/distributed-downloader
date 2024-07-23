@@ -7,15 +7,12 @@ import pandas as pd
 import yaml
 from attr import define, field, Factory
 
-from distributed_downloader.utils import submit_job, init_logger, ensure_created, update_checkpoint, preprocess_dep_ids
+from tools.Checkpoint import Checkpoint
+from tools.utils import submit_job, init_logger, ensure_created, preprocess_dep_ids
 from tools.config import Config
 from tools.registry import ToolsRegistryBase
 
-checkpoint_scheme = {
-    "filtered": False,
-    "schedule_created": False,
-    "completed": False
-}
+
 
 
 @define
@@ -25,28 +22,30 @@ class Tools:
 
     logger: Logger = field(default=Factory(lambda: init_logger(__name__)))
 
-    config_path: str = None
     tool_folder: str = None
     tool_job_history_path: str = None
     tool_checkpoint_path: str = None
+    checkpoint_scheme = {
+        "filtered": False,
+        "schedule_created": False,
+        "completed": False
+    }
 
-    tool_checkpoint: Dict[str, bool] = None
+    tool_checkpoint: Checkpoint = None
     tool_job_history: List[int] = None
-    tool_job_history_IO: TextIO = None
+    tool_job_history_io: TextIO = None
 
     @classmethod
     def from_path(cls, path: str, tool_name: str) -> "Tools":
         if tool_name not in ToolsRegistryBase.TOOLS_REGISTRY.keys():
-            ValueError("unknown tool name")
+            raise ValueError("unknown tool name")
 
         return cls(config=Config.from_path(path),
-                   tool_name=tool_name,
-                   config_path=path)
+                   tool_name=tool_name)
 
     def __attrs_post_init__(self):
         # noinspection PyTypeChecker
-        self.tool_folder: str = os.path.join(self.config['path_to_output_folder'],
-                                             self.config['output_structure']['tools_folder'],
+        self.tool_folder: str = os.path.join(self.config.get_folder("tools_folder"),
                                              self.tool_name)
         self.tool_job_history_path: str = os.path.join(self.tool_folder, "job_history.csv")
         self.tool_checkpoint_path: str = os.path.join(self.tool_folder, "tool_checkpoint.yaml")
@@ -61,12 +60,9 @@ class Tools:
         os.environ["PATH_TO_INPUT"] = self.config["path_to_input"]
 
         os.environ["PATH_TO_OUTPUT"] = self.config["path_to_output_folder"]
-        for output_folder, output_path in self.config["output_structure"].items():
-            os.environ["OUTPUT_" + output_folder.upper()] = os.path.join(self.config["path_to_output_folder"],
-                                                                         output_path)
-        os.environ["OUTPUT_TOOLS_LOGS_FOLDER"] = os.path.join(self.config["path_to_output_folder"],
-                                                              self.config["output_structure"]["tools_folder"],
-                                                              self.tool_name,
+        for output_folder, output_path in self.config.folder_structure.items():
+            os.environ["OUTPUT_" + output_folder.upper()] = output_path
+        os.environ["OUTPUT_TOOLS_LOGS_FOLDER"] = os.path.join(self.tool_folder,
                                                               "logs")
 
         for downloader_var, downloader_value in self.config["tools_parameters"].items():
@@ -82,21 +78,8 @@ class Tools:
             os.path.join(self.tool_folder, "logs")
         ])
 
-        self.tool_checkpoint = self.__load_checkpoint()
-        self.tool_job_history, self.tool_job_history_IO = self.__load_job_history()
-
-    def __load_checkpoint(self) -> Dict[str, bool]:
-        checkpoint = {}
-        if os.path.exists(self.tool_checkpoint_path):
-            with open(self.tool_checkpoint_path, "r") as file:
-                checkpoint = yaml.full_load(file)
-
-        for key, value in checkpoint_scheme.items():
-            if key not in checkpoint.keys():
-                checkpoint[key] = value
-
-        update_checkpoint(self.tool_checkpoint_path, checkpoint)
-        return checkpoint
+        self.tool_checkpoint = Checkpoint.from_path(self.tool_checkpoint_path, self.checkpoint_scheme)
+        self.tool_job_history, self.tool_job_history_io = self.__load_job_history()
 
     def __load_job_history(self) -> Tuple[List[int], TextIO]:
         job_ids = []
@@ -114,43 +97,41 @@ class Tools:
 
     def __update_job_history(self, new_id: int) -> None:
         self.tool_job_history.append(new_id)
-        print(new_id, file=self.tool_job_history_IO)
+        print(new_id, file=self.tool_job_history_io)
 
     def __schedule_filtering(self) -> None:
         self.logger.info("Scheduling filtering script")
-        job_id = submit_job(self.config['scripts']['tools_submitter'],
-                            self.config['scripts']['tools_filter_script'],
+        job_id = submit_job(self.config.get_script("tools_submitter"),
+                            self.config.get_script("tools_filter_script"),
                             self.tool_name,
                             *preprocess_dep_ids([self.tool_job_history[-1] if len(self.tool_job_history) != 0 else None]),
                             "--spark")
         self.__update_job_history(job_id)
         self.tool_checkpoint["filtered"] = True
-        update_checkpoint(self.tool_checkpoint_path, self.tool_checkpoint)
         self.logger.info("Scheduled filtering script")
 
     def __schedule_schedule_creation(self) -> None:
         self.logger.info("Scheduling schedule creation script")
-        job_id = submit_job(self.config['scripts']['tools_submitter'],
-                            self.config['scripts']['tools_scheduling_script'],
+        job_id = submit_job(self.config.get_script("tools_submitter"),
+                            self.config.get_script("tools_scheduling_script"),
                             self.tool_name,
                             *preprocess_dep_ids([self.tool_job_history[-1]]))
         self.__update_job_history(job_id)
         self.tool_checkpoint["schedule_created"] = True
-        update_checkpoint(self.tool_checkpoint_path, self.tool_checkpoint)
         self.logger.info("Scheduled schedule creation script")
 
     def __schedule_workers(self) -> None:
         self.logger.info("Scheduling workers script")
 
         for _ in range(self.config["tools_parameters"]["num_workers"]):
-            job_id = submit_job(self.config['scripts']['tools_submitter'],
-                                self.config['scripts']['tools_worker_script'],
+            job_id = submit_job(self.config.get_script("tools_submitter"),
+                                self.config.get_script("tools_worker_script"),
                                 self.tool_name,
                                 *preprocess_dep_ids([self.tool_job_history[-1]]))
             self.__update_job_history(job_id)
 
-        job_id = submit_job(self.config['scripts']['tools_submitter'],
-                            self.config['scripts']['tools_verification_script'],
+        job_id = submit_job(self.config.get_script("tools_submitter"),
+                            self.config.get_script("tools_verification_script"),
                             self.tool_name,
                             *preprocess_dep_ids([self.tool_job_history[-1]]))
         self.__update_job_history(job_id)
@@ -174,8 +155,8 @@ class Tools:
             self.logger.error("Tool completed its job")
 
     def __del__(self):
-        if self.tool_job_history_IO is not None:
-            self.tool_job_history_IO.close()
+        if self.tool_job_history_io is not None:
+            self.tool_job_history_io.close()
 
 
 def main():

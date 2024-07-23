@@ -39,7 +39,7 @@ def get_latest_schedule(path_to_dir: str, rank: int = None) -> Union[pd.DataFram
     latest_schedule_df = pd.read_csv(f"{path_to_dir}/{latest_schedule_file}")
 
     if rank is not None:
-        return latest_schedule_df[latest_schedule_df["Rank"] == rank]
+        return latest_schedule_df[latest_schedule_df["rank"] == rank]
     return latest_schedule_df
 
 
@@ -50,38 +50,38 @@ def get_or_init_downloader(header: dict,
                            rate_multiplier: float,
                            job_end_time: int,
                            logger: logging.Logger) -> Tuple[Downloader, requests.Session, RateLimit]:
-    if schedule_dict["ServerName"] not in downloader_schedule.keys():
-        server_name = schedule_dict["ServerName"].replace("%3A", ":")
-        rate_limit = RateLimit(schedule_dict["RateLimit"], rate_multiplier)
+    if schedule_dict["server_name"] not in downloader_schedule.keys():
+        server_name = schedule_dict["server_name"].replace("%3A", ":")
+        rate_limit = RateLimit(schedule_dict["rate_limit"], rate_multiplier)
         session = create_new_session(server_name, rate_limit.upper_bound)
         downloader = Downloader(header, session, rate_limit, img_size, job_end_time=job_end_time, logger=logger)
-        downloader_schedule[schedule_dict["ServerName"]] = (downloader, session, rate_limit)
+        downloader_schedule[schedule_dict["server_name"]] = (downloader, session, rate_limit)
 
-    downloader, session, rate_limit = downloader_schedule[schedule_dict["ServerName"]]
+    downloader, session, rate_limit = downloader_schedule[schedule_dict["server_name"]]
     return downloader, session, rate_limit
 
 
 def generate_ids_to_download(schedule_row: pd.Series, verifier_df: pd.DataFrame) -> pd.Series:
-    server_name = schedule_row["ServerName"]
-    server_start_idx = schedule_row["StartIndex"]
-    server_end_idx = schedule_row["EndIndex"]
+    server_name = schedule_row["server_name"]
+    server_start_idx = schedule_row["start_index"]
+    server_end_idx = schedule_row["end_index"]
 
     server_batches: Set[int] = set(range(server_start_idx, server_end_idx + 1))
 
     verifier_df = verifier_df[
-        (verifier_df["ServerName"] == server_name) & (verifier_df["PartitionId"] >= server_start_idx) & (
-                verifier_df["PartitionId"] <= server_end_idx)]
-    verifier_set = set(verifier_df["PartitionId"])
+        (verifier_df["server_name"] == server_name) & (verifier_df["partition_id"] >= server_start_idx) & (
+                verifier_df["partition_id"] <= server_end_idx)]
+    verifier_set = set(verifier_df["partition_id"])
 
     server_batches = server_batches - verifier_set
 
     # server_batches.extend(range(max_batch_idx, server_end_idx + 1))
-    return pd.Series([server_name, list(server_batches)], index=["ServerName", "Batches"])
+    return pd.Series([server_name, list(server_batches)], index=["server_name", "batches"])
 
 
 def separate_to_blocks(data_row: pd.Series) -> List[List[Tuple[int, int]]]:
-    batches: List[int] = data_row["Batches"]
-    num_of_blocks: int = data_row["ProcessPerNode"] * data_row["Nodes"]
+    batches: List[int] = data_row["batches"]
+    num_of_blocks: int = data_row["process_per_node"] * data_row["nodes"]
 
     blocks: List[List[Tuple[int, int]]] = []
     if len(batches) < 1:

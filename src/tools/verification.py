@@ -4,7 +4,8 @@ import os
 import pandas as pd
 import yaml
 
-from distributed_downloader.utils import init_logger, update_checkpoint
+from tools.Checkpoint import Checkpoint
+from tools.utils import init_logger
 from tools.config import Config
 from tools.registry import ToolsRegistryBase
 from tools.runners import MPIRunnerTool
@@ -25,9 +26,8 @@ if __name__ == "__main__":
 
     assert tool_name in ToolsRegistryBase.TOOLS_REGISTRY.keys(), ValueError("unknown runner")
 
-    tool_folder = os.path.join(config["path_to_output_folder"], config["output_structure"]["tools_folder"], tool_name)
-    with open(os.path.join(tool_folder, "tool_checkpoint.yaml"), "r") as file:
-        checkpoint = yaml.full_load(file)
+    tool_folder = os.path.join(config.get_folder("tools_folder"), tool_name)
+    checkpoint = Checkpoint.from_path(os.path.join(tool_folder, "tool_checkpoint.yaml"), {"completed": False})
     schedule_df = pd.read_csv(os.path.join(tool_folder, "schedule.csv"))
     verification_df = MPIRunnerTool.load_table(os.path.join(tool_folder, "verification"), ["server_name", "partition_id"])
 
@@ -36,7 +36,6 @@ if __name__ == "__main__":
 
     if len(left) == 0:
         checkpoint["completed"] = True
-        update_checkpoint(os.path.join(tool_folder, "tool_checkpoint.yaml"), checkpoint)
 
         logger.info("Tool completed its job")
     else:

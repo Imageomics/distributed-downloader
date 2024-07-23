@@ -4,12 +4,11 @@ import pandas as pd
 import pyspark.sql as ps
 import pyspark.sql.functions as func
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructField, StringType, StructType, LongType, BooleanType, ArrayType, \
-    BinaryType
 
+from distributed_downloader.mpi_downloader.dataclasses import SuccessEntry
 from tools.config import Config
-from tools.registry import ToolsRegistryBase
 from tools.registry import ToolsBase
+from tools.registry import ToolsRegistryBase
 
 
 class FilterToolBase(ToolsBase):
@@ -20,20 +19,7 @@ class FilterToolBase(ToolsBase):
 
 
 class SparkFilterToolBase(FilterToolBase):
-    success_scheme = StructType([
-        StructField("uuid", StringType(), False),
-        StructField("gbif_id", LongType(), False),
-        StructField("identifier", StringType(), False),
-        StructField("is_license_full", BooleanType(), False),
-        StructField("license", StringType(), True),
-        StructField("source", StringType(), True),
-        StructField("title", StringType(), True),
-        StructField("original_size", ArrayType(LongType(), False), False),
-        StructField("resized_size", ArrayType(LongType(), False), False),
-        StructField("hashsum_original", StringType(), False),
-        StructField("hashsum_resized", StringType(), False),
-        StructField("image", BinaryType(), False)
-    ])
+    success_scheme = SuccessEntry.get_success_spark_scheme()
 
     def __init__(self, cfg: Config, spark: SparkSession = None):
         super().__init__(cfg)
@@ -50,7 +36,7 @@ class SparkFilterToolBase(FilterToolBase):
                 .read
                 .schema(self.success_scheme)
                 .option("basePath", self.downloaded_images_path)
-                .parquet(self.downloaded_images_path + "/ServerName=*/partition_id=*/successes.parquet"))
+                .parquet(self.downloaded_images_path + "/server_name=*/partition_id=*/successes.parquet"))
 
     def save_filter(self, df: ps.DataFrame):
         if self.filter_name is None:
@@ -87,8 +73,7 @@ class SizeBasedFiltering(SparkFilterToolBase):
         successes_df = (successes_df
                         .withColumn("is_big",
                                     func.array_min(func.col("original_size")) >=
-                                    self.threshold_size)
-                        .withColumnRenamed("ServerName", "server_name"))
+                                    self.threshold_size))
 
         too_small_images = successes_df.filter(~successes_df["is_big"]).select("uuid",
                                                                                "gbif_id",
@@ -118,8 +103,7 @@ class DuplicatesBasedFiltering(SparkFilterToolBase):
 
         duplicate_records = (successes_df
                              .join(not_duplicate_records, on="hashsum_original", how='left_anti')
-                             .select("uuid", "gbif_id", "ServerName", "partition_id", "hashsum_original")
-                             .withColumnRenamed("ServerName", "server_name"))
+                             .select("uuid", "gbif_id", "ServerName", "partition_id", "hashsum_original"))
 
         window = ps.Window.partitionBy("hashsum_original").orderBy("partition_id", "server_name")
 

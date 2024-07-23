@@ -102,7 +102,7 @@ class MPIRunnerTool(RunnerToolBase):
         partition_id = filtering_df.iloc[0]["partition_id"]
         try:
             filtered_parquet_length = self.apply_filter(filtering_df, server_name, partition_id)
-        except NotImplementedError as not_impl:
+        except NotImplementedError:
             raise NotImplementedError("Filter function wasn't implemented")
         except Exception as e:
             self.logger.exception(e)
@@ -143,7 +143,7 @@ class FilterRunnerTool(MPIRunnerTool):
 
         parquet_path = os.path.join(
             self.downloaded_images_path,
-            f"ServerName={server_name}",
+            f"server_name={server_name}",
             f"partition_id={partition_id}",
             "successes.parquet"
         )
@@ -222,7 +222,7 @@ class ImageVerificationRunnerTool(MPIRunnerTool):
 
         parquet_path = os.path.join(
             self.downloaded_images_path,
-            f"ServerName={server_name}",
+            f"server_name={server_name}",
             f"partition_id={partition_id}",
             "successes.parquet"
         )
@@ -306,7 +306,7 @@ class ResizeRunnerTool(MPIRunnerTool):
 
         parquet_path = os.path.join(
             self.downloaded_images_path,
-            f"ServerName={server_name}",
+            f"server_name={server_name}",
             f"partition_id={partition_id}",
             "successes.parquet"
         )

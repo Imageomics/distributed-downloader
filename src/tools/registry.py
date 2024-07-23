@@ -1,7 +1,7 @@
 import os
 from typing import Dict, Type
 
-from distributed_downloader.utils import init_logger
+from tools.utils import init_logger
 from tools.config import Config
 
 
@@ -50,15 +50,11 @@ class ToolsBase(metaclass=ToolsRegistryBase):
 
         self.logger = init_logger(__name__)
 
-        self.urls_path = os.path.join(self.config['path_to_output_folder'],
-                                      self.config['output_structure']['urls_folder'])
-        self.downloaded_images_path = os.path.join(self.config['path_to_output_folder'],
-                                                   self.config['output_structure']['images_folder'])
-        self.tools_path = os.path.join(self.config['path_to_output_folder'],
-                                       self.config['output_structure']['tools_folder'])
+        self.urls_path = os.path.join(self.config.get_folder("urls_folder"))
+        self.downloaded_images_path = os.path.join(self.config.get_folder("images_folder"))
+        self.tools_path = os.path.join(self.config.get_folder("tools_folder"))
         self.total_workers = (self.config["tools_parameters"]["max_nodes"]
                               * self.config["tools_parameters"]["workers_per_node"])
-
 
     def run(self):
         raise NotImplementedError()

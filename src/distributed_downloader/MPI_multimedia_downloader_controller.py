@@ -30,39 +30,38 @@ def create_new_schedule(config: Config,
         logger.info(f"Schedule {server_schedule} already done")
         return
 
-    server_config_df["StartIndex"] = 0
-    server_config_df["EndIndex"] = 0
+    server_config_df["start_index"] = 0
+    server_config_df["end_index"] = 0
     server_config_columns = server_config_df.columns.to_list()
     server_config_df = server_config_df.merge(server_profiler_df,
-                                              left_on="ServerName",
-                                              right_on="server_name",
+                                              on="server_name",
                                               how="left",
                                               validate="1:1")
-    server_config_df["EndIndex"] = server_config_df["total_batches"] - 1
+    server_config_df["end_index"] = server_config_df["total_batches"] - 1
     server_config_df = server_config_df[server_config_columns]
 
     latest_schedule = get_latest_schedule(server_schedule)
     if latest_schedule is not None and len(latest_schedule) > 0:
-        latest_schedule_aggr = latest_schedule.groupby("ServerName").agg(
-            {"PartitionIdFrom": "min", "PartitionIdTo": "max"}).reset_index()
-        server_config_df = server_config_df.merge(latest_schedule_aggr, on="ServerName", how="left")
+        latest_schedule_aggr = latest_schedule.groupby("server_name").agg(
+            {"partition_id_from": "min", "partition_id_to": "max"}).reset_index()
+        server_config_df = server_config_df.merge(latest_schedule_aggr, on="server_name", how="left")
         server_config_df = server_config_df.fillna(0)
-        server_config_df["StartIndex"] = server_config_df["PartitionIdFrom"].astype(int)
+        server_config_df["start_index"] = server_config_df["partition_id_from"].astype(int)
         server_config_df = server_config_df[server_config_columns]
 
     batches_to_download: pd.DataFrame = server_config_df.apply(generate_ids_to_download, axis=1,
                                                                args=(server_verifier_df,))
-    batches_to_download = batches_to_download.merge(server_config_df, on="ServerName", how="left").drop(
-        columns=["StartIndex", "EndIndex"])
-    batches_to_download["Batches"] = batches_to_download.apply(separate_to_blocks, axis=1)
+    batches_to_download = batches_to_download.merge(server_config_df, on="server_name", how="left").drop(
+        columns=["start_index", "end_index"])
+    batches_to_download["batches"] = batches_to_download.apply(separate_to_blocks, axis=1)
 
-    batches_to_download.sort_values(by=["ProcessPerNode", "Nodes"], inplace=True, ascending=False)
+    batches_to_download.sort_values(by=["process_per_node", "nodes"], inplace=True, ascending=False)
 
     ids_to_schedule_in_buckets: Dict[int, Deque[Dict[str, Any]]] = {}
-    process_per_nodes = batches_to_download["ProcessPerNode"].unique()
+    process_per_nodes = batches_to_download["process_per_node"].unique()
     for process_per_node in process_per_nodes:
         ids_to_schedule_in_buckets[process_per_node] = deque(
-            batches_to_download[batches_to_download["ProcessPerNode"] == process_per_node].to_dict("records"))
+            batches_to_download[batches_to_download["process_per_node"] == process_per_node].to_dict("records"))
 
     logger.info("Filtered out already downloaded batches, creating schedule...")
     logger.debug(ids_to_schedule_in_buckets)
@@ -82,26 +81,26 @@ def create_new_schedule(config: Config,
             continue
 
         current_server = ids_to_schedule_in_buckets[largest_key].popleft()
-        current_server["Nodes"] -= 1
-        server_rate_limit = server_profiler_df[server_profiler_df["server_name"] == current_server["ServerName"]][
+        current_server["nodes"] -= 1
+        server_rate_limit = server_profiler_df[server_profiler_df["server_name"] == current_server["server_name"]][
             "rate_limit"].array[0]
 
-        if len(current_server["Batches"]) > 0:
-            batches_to_schedule = [current_server["Batches"].pop(0) for _ in range(current_server["ProcessPerNode"])]
+        if len(current_server["batches"]) > 0:
+            batches_to_schedule = [current_server["batches"].pop(0) for _ in range(current_server["process_per_node"])]
             main_worker_id = worker_id
             for batches in batches_to_schedule:
                 for batch in batches:
                     schedule_list.append({
-                        "Rank": worker_id,
-                        "ServerName": current_server["ServerName"],
-                        "PartitionIdFrom": batch[0],
-                        "PartitionIdTo": batch[1],
-                        "MainRank": main_worker_id,
-                        "RateLimit": server_rate_limit,
+                        "rank": worker_id,
+                        "server_name": current_server["server_name"],
+                        "partition_id_from": batch[0],
+                        "partition_id_to": batch[1],
+                        "main_rank": main_worker_id,
+                        "rate_limit": server_rate_limit,
                     })
                 worker_id += 1
 
-        if current_server["Nodes"] > 0:
+        if current_server["nodes"] > 0:
             ids_to_schedule_in_buckets[largest_key].append(current_server)
 
         if len(ids_to_schedule_in_buckets[largest_key]) == 0:

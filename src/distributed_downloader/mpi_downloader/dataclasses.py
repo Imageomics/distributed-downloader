@@ -21,7 +21,7 @@ class DownloadedImage:
     error_msg: str
 
     unique_name: str
-    gbifID: int
+    gbif_id: int
     identifier: str
     is_license_full: bool
     license: str
@@ -45,7 +45,7 @@ class DownloadedImage:
             error_code=0,
             error_msg="",
             unique_name=row.get("UUID", uuid.uuid4().hex),
-            gbifID=row.get("gbifID", 0),
+            gbif_id=row.get("gbifID", 0),
             identifier=row.get("identifier", ""),
             is_license_full=all([row.get("license", None), row.get("source", None), row.get("title", None)]),
             license=row.get("license", _NOT_PROVIDED) or _NOT_PROVIDED,
@@ -101,11 +101,36 @@ class SuccessEntry:
             ("image", f"({img_size},{img_size},3)uint8")
         ])
 
+    @staticmethod
+    def get_success_spark_scheme():
+        from pyspark.sql.types import StructType
+        from pyspark.sql.types import StringType
+        from pyspark.sql.types import LongType
+        from pyspark.sql.types import StructField
+        from pyspark.sql.types import BooleanType
+        from pyspark.sql.types import ArrayType
+        from pyspark.sql.types import BinaryType
+
+        return StructType([
+            StructField("uuid", StringType(), False),
+            StructField("gbif_id", LongType(), False),
+            StructField("identifier", StringType(), False),
+            StructField("is_license_full", BooleanType(), False),
+            StructField("license", StringType(), True),
+            StructField("source", StringType(), True),
+            StructField("title", StringType(), True),
+            StructField("original_size", ArrayType(LongType(), False), False),
+            StructField("resized_size", ArrayType(LongType(), False), False),
+            StructField("hashsum_original", StringType(), False),
+            StructField("hashsum_resized", StringType(), False),
+            StructField("image", BinaryType(), False)
+        ])
+
     @classmethod
     def from_downloaded(cls, downloaded: DownloadedImage) -> SuccessEntry:
         return cls(
             uuid=downloaded.unique_name,
-            gbif_id=downloaded.gbifID,
+            gbif_id=downloaded.gbif_id,
             identifier=downloaded.identifier,
             is_license_full=downloaded.is_license_full,
             license=downloaded.license,
@@ -122,7 +147,7 @@ class SuccessEntry:
     def to_list_download(downloaded: DownloadedImage) -> List:
         return [
             downloaded.unique_name,
-            downloaded.gbifID,
+            downloaded.gbif_id,
             downloaded.identifier,
             downloaded.is_license_full,
             downloaded.license,

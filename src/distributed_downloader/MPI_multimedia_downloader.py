@@ -76,8 +76,8 @@ def download_schedule(
                                                                job_end_time,
                                                                logger)
 
-            for batch_id in range(schedule_dict["PartitionIdFrom"], schedule_dict["PartitionIdTo"]):
-                window.Lock(schedule_dict["MainRank"], MPI.LOCK_EXCLUSIVE)
+            for batch_id in range(schedule_dict["partition_id_from"], schedule_dict["partition_id_to"]):
+                window.Lock(schedule_dict["main_rank"], MPI.LOCK_EXCLUSIVE)
                 try:
                     if not is_enough_time(rate_limit, job_end_time=job_end_time):
                         raise TimeoutError("Not enough time to download batch")
@@ -86,8 +86,8 @@ def download_schedule(
 
                     t0 = time.perf_counter()
 
-                    input_path = f"{server_urls_batched}/ServerName={schedule_dict['ServerName']}/partition_id={batch_id}"  # TODO: Make "ServerName" and "partition_id" changeable column from config
-                    output_path = f"{server_downloader_output}/ServerName={schedule_dict['ServerName']}/partition_id={batch_id}"
+                    input_path = f"{server_urls_batched}/server_name={schedule_dict['server_name']}/partition_id={batch_id}"  # TODO: Make "ServerName" and "partition_id" changeable column from config
+                    output_path = f"{server_downloader_output}/server_name={schedule_dict['server_name']}/partition_id={batch_id}"
                     completed_batch, finish_rate = download_batch(downloader, input_path, batch_id)
                     rate_limit.change_rate(finish_rate)
 
@@ -95,10 +95,10 @@ def download_schedule(
 
                     logger.info(f"Rank {rank} finished downloading batch {batch_id} of {schedule_dict['ServerName']}")
                 except Exception as e:
-                    window.Unlock(schedule_dict["MainRank"])
+                    window.Unlock(schedule_dict["main_rank"])
                     raise e
                 else:
-                    window.Unlock(schedule_dict["MainRank"])
+                    window.Unlock(schedule_dict["main_rank"])
 
                     t0 = time.perf_counter()
                     DirectWriter.write_batch(completed_batch, output_path, job_end_time, logger=logger)

@@ -85,27 +85,26 @@ def create_schedules(config: Config, logger: Logger) -> None:
     if os.path.exists(server_ignored_csv) and os.stat(server_ignored_csv).st_size != 0:
         ignored_servers_df = pd.read_csv(server_ignored_csv)
     else:
-        ignored_servers_df = pd.DataFrame(columns=["ServerName"])
+        ignored_servers_df = pd.DataFrame(columns=["server_name"])
 
     if os.path.exists(schedules_path) and len(os.listdir(schedules_path)) > 0:
         downloaded_batches: pd.DataFrame = verify_batches_for_prep(profiles_df, downloaded_images_path)
-        downloaded_batches = downloaded_batches.groupby("ServerName").count().reset_index().dropna()
+        downloaded_batches = downloaded_batches.groupby("server_name").count().reset_index().dropna()
         downloaded_batches = downloaded_batches.rename(
-            columns={"ServerName": "server_name", "Status": "already_downloaded"})
+            columns={"status": "already_downloaded"})
         profiles_df = profiles_df.merge(downloaded_batches, on="server_name", how="left", validate="1:1").fillna(0)
         profiles_df["left_to_download"] = profiles_df["total_batches"] - profiles_df["already_downloaded"]
     else:
         profiles_df["left_to_download"] = profiles_df["total_batches"]
 
-    profiles_df["Nodes"] = profiles_df["left_to_download"].apply(lambda x: schedule_rule(x, schedule_rule_dict))
-    profiles_df["ProcessPerNode"] = 1
+    profiles_df["nodes"] = profiles_df["left_to_download"].apply(lambda x: schedule_rule(x, schedule_rule_dict))
+    profiles_df["process_per_node"] = 1
     profiles_df = (profiles_df
                    .dropna()
-                   .reset_index(drop=True)
-                   .rename(columns={"total_batches": "TotalBatches", "server_name": "ServerName"}))
-    profiles_df = profiles_df[["ServerName", "TotalBatches", "ProcessPerNode", "Nodes"]]
+                   .reset_index(drop=True))
+    profiles_df = profiles_df[["server_name", "total_batches", "process_per_node", "nodes"]]
     profiles_df = profiles_df.loc[:, ~profiles_df.columns.duplicated()].copy()
-    profiles_df = profiles_df[~profiles_df["ServerName"].isin(ignored_servers_df["ServerName"])]
+    profiles_df = profiles_df[~profiles_df["server_name"].isin(ignored_servers_df["server_name"])]
 
     # Rename old schedule and logs
     init_new_current_folder(config.get_folder("schedules_folder"))

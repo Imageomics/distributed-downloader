@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from distributed_downloader.utils import init_logger
+from tools.utils import init_logger
 from tools.config import Config
 from tools.registry import ToolsRegistryBase
 

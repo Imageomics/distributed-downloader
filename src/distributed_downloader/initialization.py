@@ -60,7 +60,7 @@ if __name__ == "__main__":
                                   ))
                           .repartition(20))
 
-    multimedia_df_prep = multimedia_df_prep.withColumn("ServerName",
+    multimedia_df_prep = multimedia_df_prep.withColumn("server_name",
                                                        get_server_name(multimedia_df_prep.identifier))
     multimedia_df_prep = multimedia_df_prep.withColumn("UUID", get_uuid())
 
@@ -69,16 +69,16 @@ if __name__ == "__main__":
     logger.info("Starting batching")
 
     servers_grouped = (multimedia_df_prep
-                       .select("ServerName")
-                       .groupBy("ServerName")
+                       .select("server_name")
+                       .groupBy("server_name")
                        .count()
                        .withColumn("batch_count",
                                    func.floor(func.col("count") / config["downloader_parameters"]["batch_size"])))
 
-    window_part = Window.partitionBy("ServerName").orderBy("ServerName")
+    window_part = Window.partitionBy("server_name").orderBy("server_name")
     master_df_filtered = (multimedia_df_prep
                           .withColumn("row_number", func.row_number().over(window_part))
-                          .join(servers_grouped, ["ServerName"])
+                          .join(servers_grouped, ["server_name"])
                           .withColumn("partition_id", func.col("row_number") % func.col("batch_count"))
                           .withColumn("partition_id",
                                       (func
@@ -89,9 +89,9 @@ if __name__ == "__main__":
     logger.info("Writing to parquet")
 
     (master_df_filtered
-     .repartition("ServerName", "partition_id")
+     .repartition("server_name", "partition_id")
      .write
-     .partitionBy("ServerName", "partition_id")
+     .partitionBy("server_name", "partition_id")
      .mode("overwrite")
      .format("parquet")
      .save(output_path))
