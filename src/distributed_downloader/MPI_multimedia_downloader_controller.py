@@ -18,7 +18,7 @@ def create_new_schedule(config: Dict[str, str | int | bool | Dict[str, int | str
     logger.info(f"Creating new schedule for {server_schedule}")
 
     number_of_workers: int = (config["downloader_parameters"]["max_nodes"]
-                              * config["downloader_parameters"]["max_workers_per_nodes"])
+                              * config["downloader_parameters"]["workers_per_node"])
     server_profiler_path = os.path.join(config['path_to_output_folder'],
                                         config['output_structure']['profiles_table'])
 

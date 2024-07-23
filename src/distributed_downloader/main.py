@@ -96,6 +96,8 @@ class DistributedDownloader:
 
         if os.path.exists(self.schedules_folder):
             for schedule in os.listdir(self.schedules_folder):
+                if not os.path.exists(os.path.join(self.schedules_folder, schedule, "_jobs_ids.csv")):
+                    continue
                 with open(os.path.join(self.schedules_folder, schedule, "_jobs_ids.csv"), "r") as file:
                     all_prev_ids.append(int(list(csv.DictReader(file))[-1]["job_id"]))
 

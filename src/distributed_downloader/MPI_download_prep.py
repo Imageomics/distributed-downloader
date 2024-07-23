@@ -3,7 +3,6 @@ from logging import Logger
 from typing import Dict, List, Tuple
 
 import pandas as pd
-import yaml
 from pandas._libs.missing import NAType
 
 from distributed_downloader.utils import create_schedule_configs, load_config, update_checkpoint, submit_job, \
@@ -136,7 +135,7 @@ def submit_downloaders(config: Dict[str, str | int | bool | Dict[str, int | str]
     for schedule in os.listdir(schedules_path):
         submission_records = []
         offset = 0
-        download_id = 0
+        download_id = None
 
         for _ in range(config["downloader_parameters"]["num_downloads"]):
             download_id = submit_downloader(schedule,

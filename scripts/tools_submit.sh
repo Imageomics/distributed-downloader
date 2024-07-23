@@ -37,16 +37,16 @@ else
   fi
 fi
 
-sbatch_cmd="sbatch --output=\"${logs_dir}/${base_filename}.out\" --error=\"${logs_dir}/${base_filename}.err\" --nodes=\"${TOOLS_MAX_NODES}\""
+sbatch_cmd="sbatch --output=\"${logs_dir}/${base_filename}.out\" --error=\"${logs_dir}/${base_filename}.err\" --nodes=${TOOLS_MAX_NODES}"
 
 if [ -n "$dependency" ]; then
-  sbatch_cmd+=" --dependency=afterany:\"${dependency}\""
+  sbatch_cmd+=" --dependency=afterany:${dependency}"
 fi
 
 if [ -z "$spark_flag" ]; then
-  sbatch_cmd+=" --ntasks-per-node=\"${TOOLS_WORKERS_PER_NODE}\" --cpus-per-task=\"${TOOLS_CPU_PER_WORKER}\""
+  sbatch_cmd+=" --ntasks-per-node=${TOOLS_WORKERS_PER_NODE} --cpus-per-task=${TOOLS_CPU_PER_WORKER}"
 fi
 
-sbatch_cmd+=" --account=\"${ACCOUNT}\" \"${script}\" \"${tool_name}\""
+sbatch_cmd+=" --account=${ACCOUNT} ${script} ${tool_name}"
 
 eval "$sbatch_cmd"
