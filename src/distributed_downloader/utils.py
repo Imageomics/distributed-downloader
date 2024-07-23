@@ -1,74 +1,53 @@
 import os
-import shutil
-import subprocess
-import sys
-import logging
 from collections import deque
-from typing import List, Deque, Any, Dict, Optional, Sequence
+from typing import List, Deque, Dict, Any
+
 try:
     from typing import LiteralString
 except ImportError:
     from typing_extensions import LiteralString
 
-
 import pandas as pd
-import yaml
-from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.types import StructType
 
 
-def load_dataframe(spark: SparkSession, input_path: str, scheme: Optional[StructType | str] = None) -> DataFrame:
-    file_extension = input_path.split('.')[-1].lower()
+def verify_downloaded_batches(schedule_row: pd.Series, input_path: str) -> List[Dict[str, Any]]:
+    server_name = schedule_row["ServerName"]
+    server_start_idx = schedule_row["StartIndex"]
+    server_end_idx = schedule_row["EndIndex"]
+    verified_batches: List[Dict[str, Any]] = []
 
-    def infer_delimiter(_first_line):
-        if '\t' in _first_line:
-            return '\t'
-        elif ',' in _first_line:
-            return ','
-        elif ' ' in _first_line:
-            return ' '
-        elif '|' in _first_line:
-            return '|'
-        elif ';' in _first_line:
-            return ';'
-        else:
-            return None
+    if os.path.exists(
+            f"{input_path}/ServerName={server_name}"):  # TODO: Make "ServerName" changeable column from config
+        server_batches_names = os.listdir(f"{input_path}/ServerName={server_name}")
+        for batch_name in server_batches_names:
+            if not os.path.isdir(f"{input_path}/ServerName={server_name}/{batch_name}"):
+                continue
 
-    if file_extension in ['csv', 'tsv', 'txt']:
-        if file_extension == 'csv':
-            sep = ','
-        elif file_extension == 'tsv':
-            sep = '\t'
-        elif file_extension == 'txt':
-            with open(input_path, 'r') as file:
-                first_line = file.readline()
-                sep = infer_delimiter(first_line)
-            if sep is None:
-                raise ValueError(f"Could not infer delimiter for file {input_path}")
-        df = spark.read.csv(input_path, sep=sep, header=True, schema=scheme)
-    else:
-        try:
-            df = spark.read.load(input_path, scheme=scheme)
-        except Exception as e:
-            raise FileNotFoundError(f"File not supported: {e}")
+            batch_idx = int(batch_name.split("=")[1])
+            if server_start_idx > batch_idx or server_end_idx < batch_idx:
+                continue
 
-    return df
+            if os.path.exists(f"{input_path}/ServerName={server_name}/{batch_name}/completed"):
+                verified_batches.append({"ServerName": server_name, "PartitionId": batch_idx, "Status": "Completed"})
+            elif os.path.exists(f"{input_path}/ServerName={server_name}/{batch_name}/failed"):
+                verified_batches.append({"ServerName": server_name, "PartitionId": batch_idx, "Status": "Failed"})
+
+    return verified_batches
 
 
-def ensure_created(list_of_path: List[str]) -> None:
-    for path in list_of_path:
-        os.makedirs(path, exist_ok=True)
+def verify_batches_for_prep(schedule_row: pd.DataFrame, input_path: str) -> pd.DataFrame:
+    schedule_row["ServerName"] = schedule_row["server_name"]
+    schedule_row["StartIndex"] = 0
+    schedule_row["EndIndex"] = schedule_row["total_batches"]
 
+    verification_df = pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
 
-def truncate_paths(paths: Sequence[str]) -> None:
-    for path in paths:
-        is_dir = "." not in path.split("/")[-1]
-        if is_dir:
-            if os.path.exists(path):
-                shutil.rmtree(path)
-            os.makedirs(path)
-        else:
-            open(path, "w").close()
+    for idx, row in schedule_row.iterrows():
+        new_verification_df = verify_downloaded_batches(row, input_path)
+        verification_df = pd.concat([verification_df, pd.DataFrame(new_verification_df)],
+                                    ignore_index=True).drop_duplicates()
+
+    return verification_df
 
 
 def split_dataframe(df: pd.DataFrame, by_column: str = "Nodes", chunk_size=20) -> List[pd.DataFrame]:
@@ -132,42 +111,3 @@ def create_schedule_configs(group: pd.DataFrame, number_of_workers: int, schedul
         print(f"{number_of_schedules}={chunk['Nodes'].sum()}")
 
         number_of_schedules += 1
-
-
-def load_env(env: str) -> Dict[str, Any]:
-    from dotenv import load_dotenv, dotenv_values
-
-    load_dotenv(env)
-    return dotenv_values(env)
-
-
-def update_checkpoint(path: LiteralString | str | bytes, checkpoint: Dict[str, bool]) -> None:
-    with open(path, "w") as file:
-        yaml.dump(checkpoint, file)
-
-
-def get_id(output: bytes) -> int:
-    return int(output.decode().strip().split(" ")[-1])
-
-
-def load_config(path: LiteralString | str | bytes) -> Dict[str, str | int | bool | Dict[str, Any]]:
-    with open(path, "r") as file:
-        return yaml.full_load(file)
-
-
-def init_logger(logger_name: str, output_path: str = None, logging_level: str = "INFO") -> logging.Logger:
-    logging.basicConfig(
-        filename=output_path,
-        level=logging.getLevelName(logging_level),
-        format="%(asctime)s - %(levelname)s - %(process)d - %(message)s")
-    return logging.getLogger(logger_name)
-
-
-def submit_job(submitter_script: str, script: str, *args) -> int:
-    output = subprocess.check_output(f"{submitter_script} {script} {' '.join(args)}", shell=True)
-    idx = get_id(output)
-    return idx
-
-
-def preprocess_dep_ids(ids: List[int | None]) -> List[str]:
-    return [str(_id) for _id in ids if _id is not None]

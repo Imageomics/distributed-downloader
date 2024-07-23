@@ -5,19 +5,19 @@ from typing import Dict
 
 import pandas as pd
 
-from distributed_downloader.mpi_downloader.utils import get_latest_schedule, verify_downloaded_batches
-from distributed_downloader.utils import load_config, init_logger
+from distributed_downloader.mpi_downloader.utils import get_latest_schedule
+from distributed_downloader.utils import verify_downloaded_batches
+from tools.config import Config
+from tools.utils import init_logger
 
 
-def verify_batches(config: Dict[str, str | int | bool | Dict[str, int | str]],
+def verify_batches(config: Config,
                    server_schedule: str,
                    logger: Logger) -> None:
     logger.info(f"Verifying batches for {server_schedule}")
 
-    server_urls_downloaded = os.path.join(config['path_to_output_folder'],
-                                          config['output_structure']['images_folder'])
-    server_profiler_path = os.path.join(config['path_to_output_folder'],
-                                        config['output_structure']['profiles_table'])
+    server_urls_downloaded = config.get_folder("images_folder")
+    server_profiler_path = config.get_folder("profiles_table")
 
     config_file: str = f"{server_schedule}/_config.csv"
     verification_file: str = f"{server_schedule}/_verification.csv"
@@ -94,7 +94,7 @@ def main():
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = load_config(config_path)
+    config = Config.from_path(config_path)
     logger = init_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Server downloader verifier')

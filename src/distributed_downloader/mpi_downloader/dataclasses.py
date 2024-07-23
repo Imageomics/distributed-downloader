@@ -71,7 +71,7 @@ def init_downloaded_image_entry(image_entry: np.ndarray, row: Dict[str, Any]) ->
 
 
 @define
-class success_entry:
+class SuccessEntry:
     uuid: str
     gbif_id: int
     identifier: str
@@ -85,10 +85,24 @@ class success_entry:
     resized_size: np.ndarray[np.uint32]
     image: bytes
 
-    # image: np.ndarray
+    def __success_dtype(self, img_size: int):
+        return np.dtype([
+            ("uuid", "S32"),
+            ("gbif_id", "i4"),
+            ("identifier", "S256"),
+            ("is_license_full", "bool"),
+            ("license", "S256"),
+            ("source", "S256"),
+            ("title", "S256"),
+            ("original_size", "(2,)u4"),
+            ("resized_size", "(2,)u4"),
+            ("hashsum_original", "S32"),
+            ("hashsum_resized", "S32"),
+            ("image", f"({img_size},{img_size},3)uint8")
+        ])
 
     @classmethod
-    def from_downloaded(cls, downloaded: DownloadedImage) -> success_entry:
+    def from_downloaded(cls, downloaded: DownloadedImage) -> SuccessEntry:
         return cls(
             uuid=downloaded.unique_name,
             gbif_id=downloaded.gbifID,
@@ -119,6 +133,23 @@ class success_entry:
             downloaded.hashsum_original,
             downloaded.hashsum_resized,
             downloaded.image
+        ]
+
+    @staticmethod
+    def get_names() -> List[str]:
+        return [
+            "uuid",
+            "gbif_id",
+            "identifier",
+            "is_license_full",
+            "license",
+            "source",
+            "title",
+            "original_size",
+            "resized_size",
+            "hashsum_original",
+            "hashsum_resized",
+            "image"
         ]
 
     def to_list(self) -> List:
@@ -153,21 +184,29 @@ class success_entry:
                  self.hashsum_resized,
                  self.image)
             ],
-            dtype=success_dtype(np.max(self.resized_size)))
+            dtype=self.__success_dtype(np.max(self.resized_size)))
 
         return np_structure
 
 
 @define
-class error_entry:
+class ErrorEntry:
     uuid: str
     identifier: str
     retry_count: int
     error_code: int
     error_msg: str
 
+    _error_dtype = np.dtype([
+        ("uuid", "S32"),
+        ("identifier", "S256"),
+        ("retry_count", "i4"),
+        ("error_code", "i4"),
+        ("error_msg", "S256")
+    ])
+
     @classmethod
-    def from_downloaded(cls, downloaded: DownloadedImage) -> error_entry:
+    def from_downloaded(cls, downloaded: DownloadedImage) -> ErrorEntry:
         return cls(
             uuid=downloaded.unique_name,
             identifier=downloaded.identifier,
@@ -204,9 +243,19 @@ class error_entry:
                  self.error_code,
                  self.error_msg)
             ],
-            dtype=error_dtype)
+            dtype=self._error_dtype)
 
         return np_structure
+
+    @staticmethod
+    def get_names() -> List[str]:
+        return [
+            "uuid",
+            "identifier",
+            "retry_count",
+            "error_code",
+            "error_msg"
+        ]
 
 
 @define
@@ -271,48 +320,6 @@ class RateLimit:
         self.lower_bound = max(self.initial_rate * (1 - self._multiplier), 1)
         self.upper_bound = self.initial_rate * (1 + self._multiplier)
 
-
-success_dtype = lambda img_size: np.dtype([
-    ("uuid", "S32"),
-    ("gbif_id", "i4"),
-    ("identifier", "S256"),
-    ("is_license_full", "bool"),
-    ("license", "S256"),
-    ("source", "S256"),
-    ("title", "S256"),
-    ("original_size", "(2,)u4"),
-    ("resized_size", "(2,)u4"),
-    ("hashsum_original", "S32"),
-    ("hashsum_resized", "S32"),
-    ("image", f"({img_size},{img_size},3)uint8")
-])
-
-error_dtype = np.dtype([
-    ("uuid", "S32"),
-    ("identifier", "S256"),
-    ("retry_count", "i4"),
-    ("error_code", "i4"),
-    ("error_msg", "S256")
-])
-
-download_dtype = lambda img_size: np.dtype([
-    ("is_downloaded", "bool"),
-    ("retry_count", "i4"),
-    ("error_code", "i4"),
-    ("error_msg", "S256"),
-    ("uuid", "S32"),
-    ("gbif_id", "i4"),
-    ("identifier", "S256"),
-    ("is_license_full", "bool"),
-    ("license", "S256"),
-    ("source", "S256"),
-    ("title", "S256"),
-    ("original_size", "(2,)u4"),
-    ("resized_size", "(2,)u4"),
-    ("hashsum_original", "S32"),
-    ("hashsum_resized", "S32"),
-    ("image", f"({img_size},{img_size},3)uint8")
-])
 
 profile_dtype = np.dtype([
     ("server_name", "S256"),

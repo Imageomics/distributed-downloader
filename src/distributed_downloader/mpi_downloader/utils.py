@@ -79,48 +79,6 @@ def generate_ids_to_download(schedule_row: pd.Series, verifier_df: pd.DataFrame)
     return pd.Series([server_name, list(server_batches)], index=["ServerName", "Batches"])
 
 
-def verify_batches_for_prep(schedule_row: pd.DataFrame, input_path: str) -> pd.DataFrame:
-    schedule_row["ServerName"] = schedule_row["server_name"]
-    schedule_row["StartIndex"] = 0
-    schedule_row["EndIndex"] = schedule_row["total_batches"]
-
-    verification_df = pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
-
-    for idx, row in schedule_row.iterrows():
-        new_verification_df = verify_downloaded_batches(row, input_path)
-        verification_df = pd.concat([verification_df, pd.DataFrame(new_verification_df)],
-                                    ignore_index=True).drop_duplicates()
-
-    return verification_df
-
-
-def verify_downloaded_batches(schedule_row: pd.Series, input_path: str) -> List[Dict[str, Any]]:
-    server_name = schedule_row["ServerName"]
-    server_start_idx = schedule_row["StartIndex"]
-    server_end_idx = schedule_row["EndIndex"]
-    verified_batches: List[Dict[str, Any]] = []
-
-    if os.path.exists(f"{input_path}/ServerName={server_name}"): # TODO: Make "ServerName" changeable column from config
-        server_batches_names = os.listdir(f"{input_path}/ServerName={server_name}")
-        for batch_name in server_batches_names:
-            if not os.path.isdir(f"{input_path}/ServerName={server_name}/{batch_name}"):
-                continue
-
-            batch_idx = int(batch_name.split("=")[1])
-            if server_start_idx > batch_idx or server_end_idx < batch_idx:
-                continue
-
-            if os.path.exists(f"{input_path}/ServerName={server_name}/{batch_name}/completed"):
-                verified_batches.append({"ServerName": server_name, "PartitionId": batch_idx, "Status": "Completed"})
-            elif os.path.exists(f"{input_path}/ServerName={server_name}/{batch_name}/failed"):
-                verified_batches.append({"ServerName": server_name, "PartitionId": batch_idx, "Status": "Failed"})
-
-    return verified_batches
-    # if len(verified_batches) == 0:
-    #     return pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
-    # return pd.DataFrame(verified_batches)
-
-
 def separate_to_blocks(data_row: pd.Series) -> List[List[Tuple[int, int]]]:
     batches: List[int] = data_row["Batches"]
     num_of_blocks: int = data_row["ProcessPerNode"] * data_row["Nodes"]
@@ -170,11 +128,9 @@ def get_largest_nonempty_bucket(buckets: Dict[int, Deque[Dict[str, Any]]], avail
     return largest_bucket
 
 
-def is_enough_time(rate_limit: RateLimit, batch_size: int = 10000, avg_write_time: int = 600, job_end_time: int = int(os.getenv("SLURM_JOB_END_TIME", 0))) -> bool:
+def is_enough_time(rate_limit: RateLimit, batch_size: int = 10000, avg_write_time: int = 600,
+                   job_end_time: int = int(os.getenv("SLURM_JOB_END_TIME", 0))) -> bool:
     current_time = time.time()
-
-    # print(f"{current_time}|{job_end_time}")
-
     time_left = job_end_time - current_time - avg_write_time
     return rate_limit.initial_rate * time_left >= batch_size
 

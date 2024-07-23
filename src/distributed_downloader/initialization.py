@@ -1,6 +1,6 @@
 import os.path
 import uuid
-from typing import Sequence, Optional, List
+from typing import Dict
 from urllib.parse import urlparse
 
 import pyspark.sql.functions as func
@@ -8,8 +8,9 @@ from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
-from distributed_downloader.utils import load_config, load_dataframe, truncate_paths, init_logger
 from distributed_downloader.schemes import multimedia_scheme
+from tools.config import Config
+from tools.utils import load_dataframe, truncate_paths, init_logger
 
 
 @udf(returnType=StringType())
@@ -22,23 +23,9 @@ def get_uuid():
     return str(uuid.uuid4())
 
 
-def get_folders_path(path: str, folders: Sequence[str], exclude_folder: Optional[str] = None) -> List[str]:
-    result = []
-    for folder in folders:
-        if folder != exclude_folder:
-            result.append(f"{path}/{folder}")
-    return result
-
-
-def init_filestructure(_config: dict):
-    _output_folder = _config["path_to_output_folder"]
-    truncate_paths(
-        [_output_folder,
-         *get_folders_path(
-             _output_folder,
-             list(_config["output_structure"].values()),
-             _config["output_structure"]["inner_checkpoint_file"]
-         )])
+def init_filestructure(file_structure: Dict[str, str]) -> None:
+    filtered_fs = [value for key, value in file_structure.items() if key not in ["inner_checkpoint_file", "ignored_table"]]
+    truncate_paths(filtered_fs)
 
 
 if __name__ == "__main__":
@@ -46,12 +33,12 @@ if __name__ == "__main__":
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = load_config(config_path)
+    config = Config.from_path(config_path)
 
     # Initialize parameters
     input_path = config["path_to_input"]
     # init_filestructure(config)
-    output_path = f"{config['path_to_output_folder']}/{config['output_structure']['urls_folder']}"
+    output_path = config.get_folder("urls_folder")
     logger = init_logger(__name__)
 
     # Initialize SparkSession

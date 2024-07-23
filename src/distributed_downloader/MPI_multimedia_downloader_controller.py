@@ -9,18 +9,18 @@ import pandas as pd
 from distributed_downloader.mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, \
     separate_to_blocks, \
     get_largest_nonempty_bucket, get_schedule_count
-from distributed_downloader.utils import load_config, init_logger
+from tools.config import Config
+from tools.utils import init_logger
 
 
-def create_new_schedule(config: Dict[str, str | int | bool | Dict[str, int | str]],
+def create_new_schedule(config: Config,
                         server_schedule: str,
                         logger: Logger) -> None:
     logger.info(f"Creating new schedule for {server_schedule}")
 
     number_of_workers: int = (config["downloader_parameters"]["max_nodes"]
                               * config["downloader_parameters"]["workers_per_node"])
-    server_profiler_path = os.path.join(config['path_to_output_folder'],
-                                        config['output_structure']['profiles_table'])
+    server_profiler_path = config.get_folder("profiles_table")
 
     server_profiler_df = pd.read_csv(server_profiler_path)
     server_config_df = pd.read_csv(f"{server_schedule}/_config.csv")
@@ -118,7 +118,7 @@ def main():
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = load_config(config_path)
+    config = Config.from_path(config_path)
     logger = init_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Server downloader controller')

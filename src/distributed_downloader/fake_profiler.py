@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 from distributed_downloader.mpi_downloader.dataclasses import profile_dtype
-from distributed_downloader.utils import load_config
+from tools.config import Config
 
 
 def main():
@@ -11,14 +11,12 @@ def main():
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = load_config(config_path)
+    config = Config.from_path(config_path)
 
     # Get parameters from config
-    _DEFAULT_RATE_LIMIT: int = 10
-    server_urls_batched: str = os.path.join(config['path_to_output_folder'],
-                                            config['output_structure']['urls_folder'])
-    server_profiler_csv: str = os.path.join(config['path_to_output_folder'],
-                                            config['output_structure']['profiles_table'])
+    _DEFAULT_RATE_LIMIT: int = config["downloader_parameters"]["default_rate_limit"]
+    server_urls_batched: str = config.get_folder("urls_folder")
+    server_profiler_csv: str = config.get_folder("profiles_table")
 
     # Perform profiling
     server_list = os.listdir(server_urls_batched)

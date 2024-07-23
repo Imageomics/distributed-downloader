@@ -12,7 +12,8 @@ from distributed_downloader.mpi_downloader.Downloader import Downloader
 from distributed_downloader.mpi_downloader.PreLoader import load_one_batch
 from distributed_downloader.mpi_downloader.utils import get_latest_schedule, \
     get_or_init_downloader, is_enough_time
-from distributed_downloader.utils import init_logger, load_config
+from tools.config import Config
+from tools.utils import init_logger
 
 
 def download_batch(
@@ -28,17 +29,15 @@ def download_batch(
 
 
 def download_schedule(
-        config: Dict[str, str | int | bool | Dict[str, int | str]],
+        config: Config,
         server_schedule: str,
         logger: logging.Logger,
 ):
     header_str = config["downloader_parameters"]["header"]
     header = {header_str.split(": ")[0]: header_str.split(": ")[1]}
     img_size = config["downloader_parameters"]["image_size"]
-    server_urls_batched = os.path.join(config['path_to_output_folder'],
-                                       config['output_structure']['urls_folder'])
-    server_downloader_output = os.path.join(config['path_to_output_folder'],
-                                            config['output_structure']['images_folder'])
+    server_urls_batched = config.get_folder("urls_folder")
+    server_downloader_output = config.get_folder("images_folder")
     _RATE_MULTIPLIER: float = config["downloader_parameters"]["rate_multiplier"]
 
     if os.path.exists(f"{server_schedule}/_DONE"):
@@ -121,7 +120,7 @@ def main():
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = load_config(config_path)
+    config = Config.from_path(config_path)
     logger = init_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Server downloader')

@@ -5,7 +5,7 @@ from typing import List, Any
 
 import pandas as pd
 
-from .dataclasses import error_entry, success_entry, success_dtype, error_dtype, CompletedBatch
+from .dataclasses import ErrorEntry, SuccessEntry, CompletedBatch
 
 
 def write_batch(
@@ -28,11 +28,8 @@ def write_batch(
 
     try:
         for _ in range(completed_batch.success_queue.qsize()):
-            # if job_end_time - time.time() < 0:
-            #     raise TimeoutError("Not enough time")
-
             success = completed_batch.success_queue.get()
-            success_entity = success_entry.to_list_download(success)
+            success_entity = SuccessEntry.to_list_download(success)
             successes_list.append(success_entity)
             completed_batch.success_queue.task_done()
 
@@ -40,7 +37,7 @@ def write_batch(
 
         for _ in range(completed_batch.error_queue.qsize()):
             error = completed_batch.error_queue.get()
-            error_entity = error_entry.to_list_download(error)
+            error_entity = ErrorEntry.to_list_download(error)
             errors_list.append(error_entity)
             completed_batch.error_queue.task_done()
 
@@ -48,9 +45,10 @@ def write_batch(
 
         logger.info(f"Completed collecting entries for {output_path}")
 
-        pd.DataFrame(successes_list, columns=success_dtype(720).names).to_parquet(f"{output_path}/successes.parquet",
+        pd.DataFrame(successes_list, columns=SuccessEntry.get_names()).to_parquet(f"{output_path}/successes.parquet",
                                                                                   index=False)
-        pd.DataFrame(errors_list, columns=error_dtype.names).to_parquet(f"{output_path}/errors.parquet", index=False)
+        pd.DataFrame(errors_list, columns=ErrorEntry.get_names()).to_parquet(f"{output_path}/errors.parquet",
+                                                                             index=False)
 
         logger.info(f"Completed writing to {output_path}")
 

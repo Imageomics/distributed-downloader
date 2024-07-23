@@ -2,7 +2,7 @@ import cv2
 import h5py
 import numpy as np
 
-from .dataclasses import error_entry, error_dtype, profile_dtype, CompletedBatch
+from .dataclasses import ErrorEntry, error_dtype, profile_dtype, CompletedBatch
 
 sample_length = 5
 
@@ -28,7 +28,7 @@ def write_batch(
 
     for _ in range(errors_number):
         error_download = completed_batch.error_queue.get()
-        errors_list.append(error_entry.from_downloaded(error_download).to_np())
+        errors_list.append(ErrorEntry.from_downloaded(error_download).to_np())
 
     for idx in range(successes_number):
         success_download = completed_batch.success_queue.get()
@@ -45,7 +45,7 @@ def write_batch(
                 cv2.imwrite(f"{output_path}/samples/{server_name}_{idx}.jpg", resized_image)
 
         except Exception as e:
-            errors_list.append(error_entry(
+            errors_list.append(ErrorEntry(
                 uuid=success_download.unique_name,
                 identifier=success_download.identifier,
                 retry_count=0,

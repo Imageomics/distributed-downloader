@@ -58,6 +58,8 @@ downloader_parameters:
   image_size: 720
   logger_level: "INFO"
   batch_size: 10000
+  rate_multiplier: 1
+  default_rate_limit: 10
 
 tools_parameters:
   num_workers: 5

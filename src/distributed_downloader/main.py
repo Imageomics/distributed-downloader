@@ -1,61 +1,60 @@
 import csv
 import os.path
 from logging import Logger
-from typing import Any, Dict, Optional
+
+from tools.Checkpoint import Checkpoint
+from tools.config import Config
+
 try:
     from typing import LiteralString
 except ImportError:
     from typing_extensions import LiteralString
 
-import yaml
 from attr import define, field, Factory
 
 from distributed_downloader.initialization import init_filestructure
-from distributed_downloader.utils import update_checkpoint, load_config, submit_job, preprocess_dep_ids, init_logger
+from tools.utils import submit_job, preprocess_dep_ids, init_logger
 
 
 @define
 class DistributedDownloader:
-    config_path: LiteralString | str
-    config: Dict[str, str | int | bool | Dict[str, Any]]
+    config: Config
 
     logger: Logger = field(default=Factory(lambda: init_logger(__name__)))
 
-    urls_path: LiteralString | str = None
-    inner_checkpoint_path: LiteralString | str = None
-    profiles_path: LiteralString | str = None
-    schedules_folder: LiteralString | str = None
+    urls_path: str = None
+    inner_checkpoint_path: str = None
+    profiles_path: str = None
+    schedules_folder: str = None
 
-    inner_checkpoint: Optional[Dict[str, bool]] = None
+    inner_checkpoint: Checkpoint = None
+    default_checkpoint_structure = {
+        "batched": False,
+        "profiled": False,
+        "schedule_creation_scheduled": False,
+    }
 
     @classmethod
     def from_path(cls, path: str) -> "DistributedDownloader":
-        return cls(config=load_config(path),
-                   config_path=path)
+        return cls(config=Config.from_path(path))
 
     def __attrs_post_init__(self):
-        self.urls_path = os.path.join(self.config['path_to_output_folder'],
-                                      self.config['output_structure']['urls_folder'])
-        self.inner_checkpoint_path = os.path.join(self.config['path_to_output_folder'],
-                                                  self.config['output_structure']['inner_checkpoint_file'])
-        self.profiles_path = os.path.join(self.config['path_to_output_folder'],
-                                          self.config['output_structure']['profiles_table'])
-        self.schedules_folder = os.path.join(self.config['path_to_output_folder'],
-                                             self.config['output_structure']['schedules_folder'],
-                                             "current")
+        self.urls_path = self.config.get_folder("urls_folder")
+        self.inner_checkpoint_path = self.config.get_folder("inner_checkpoint_file")
+        self.profiles_path = self.config.get_folder("profiles_table")
+        self.schedules_folder = os.path.join(self.config["schedules_folder"], "current")
 
-        self.inner_checkpoint = self.__load_checkpoint()
+        self.inner_checkpoint = Checkpoint.from_path(self.inner_checkpoint_path, self.default_checkpoint_structure)
 
     def __init_environment(self) -> None:
-        os.environ["CONFIG_PATH"] = self.config_path
+        os.environ["CONFIG_PATH"] = self.config.config_path
 
         os.environ["ACCOUNT"] = self.config["account"]
         os.environ["PATH_TO_INPUT"] = self.config["path_to_input"]
 
         os.environ["PATH_TO_OUTPUT"] = self.config["path_to_output_folder"]
-        for output_folder, output_path in self.config["output_structure"].items():
-            os.environ["OUTPUT_" + output_folder.upper()] = os.path.join(self.config["path_to_output_folder"],
-                                                                         output_path)
+        for output_folder, output_path in self.config.folder_structure.items():
+            os.environ["OUTPUT_" + output_folder.upper()] = output_path
 
         for downloader_var, downloader_value in self.config["downloader_parameters"].items():
             os.environ["DOWNLOADER_" + downloader_var.upper()] = str(downloader_value)
@@ -65,24 +64,22 @@ class DistributedDownloader:
     def __schedule_initialization(self) -> int:
         self.logger.info("Scheduling initialization script")
 
-        init_filestructure(self.config)
+        init_filestructure(self.config.folder_structure)
 
-        idx = submit_job(self.config['scripts']['general_submitter'],
-                         self.config['scripts']['initialization_script'])
+        idx = submit_job(self.config.get_script("general_submitter"),
+                         self.config.get_script("initialization_script"))
 
         self.logger.info(f"Submitted initialization script {idx}")
         self.inner_checkpoint["batched"] = True
-        update_checkpoint(self.inner_checkpoint_path, self.inner_checkpoint)
         return idx
 
     def __schedule_profiling(self, prev_job_id: int = None) -> int:
         self.logger.info("Scheduling profiling script")
-        idx = submit_job(self.config['scripts']['general_submitter'],
-                         self.config['scripts']['profiling_script'],
+        idx = submit_job(self.config.get_script("general_submitter"),
+                         self.config.get_script("profiling_script"),
                          *preprocess_dep_ids([prev_job_id]))
         self.logger.info(f"Submitted profiling script {idx}")
         self.inner_checkpoint["profiled"] = True
-        update_checkpoint(self.inner_checkpoint_path, self.inner_checkpoint)
         return idx
 
     def __schedule_downloading(self, prev_job_id: int = None) -> None:
@@ -101,12 +98,11 @@ class DistributedDownloader:
                 with open(os.path.join(self.schedules_folder, schedule, "_jobs_ids.csv"), "r") as file:
                     all_prev_ids.append(int(list(csv.DictReader(file))[-1]["job_id"]))
 
-        schedule_creation_id = submit_job(self.config['scripts']['schedule_creator_submitter'],
-                                          self.config['scripts']['schedule_creation_script'],
+        schedule_creation_id = submit_job(self.config.get_script("schedule_creator_submitter"),
+                                          self.config.get_script("schedule_creation_script"),
                                           *preprocess_dep_ids(all_prev_ids))
         self.logger.info(f"Submitted schedule creation script {schedule_creation_id}")
         self.inner_checkpoint["schedule_creation_scheduled"] = True
-        update_checkpoint(self.inner_checkpoint_path, self.inner_checkpoint)
 
     def __check_downloading(self) -> bool:
         if not os.path.exists(self.schedules_folder):
@@ -122,17 +118,6 @@ class DistributedDownloader:
             done = done and os.path.exists(f"{schedule_path}/_DONE")
 
         return done
-
-    def __load_checkpoint(self) -> Dict[str, bool]:
-        if not os.path.exists(self.inner_checkpoint_path):
-            return {
-                "batched": False,
-                "profiled": False,
-                "schedule_creation_scheduled": False,
-            }
-
-        with open(self.inner_checkpoint_path, "r") as file:
-            return yaml.full_load(file)
 
     def download_images(self) -> None:
         self.__init_environment()

@@ -5,9 +5,10 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from pandas._libs.missing import NAType
 
-from distributed_downloader.utils import create_schedule_configs, load_config, update_checkpoint, submit_job, \
-    init_logger, preprocess_dep_ids
-from distributed_downloader.mpi_downloader.utils import verify_batches_for_prep
+from tools.Checkpoint import Checkpoint
+from tools.config import Config
+from tools.utils import submit_job, init_logger, preprocess_dep_ids
+from distributed_downloader.utils import create_schedule_configs, verify_batches_for_prep
 
 
 def schedule_rule(total_batches: int, rule: List[Tuple[int, int]]) -> int | NAType:
@@ -66,18 +67,14 @@ def submit_verifier(_schedule: str,
     return idx
 
 
-def create_schedules(config: Dict[str, str | int | bool | Dict[str, int | str]], logger: Logger) -> None:
+def create_schedules(config: Config, logger: Logger) -> None:
     logger.info("Creating schedules")
     # Get parameters from config
-    server_ignored_csv: str = os.path.join(config['path_to_output_folder'],
-                                           config['output_structure']['ignored_table'])
-    schedules_path: str = os.path.join(config['path_to_output_folder'],
-                                       config['output_structure']['schedules_folder'],
+    server_ignored_csv: str = config.get_folder("ignored_table")
+    schedules_path: str = os.path.join(config.get_folder("schedules_folder"),
                                        "current")
-    server_profiler_csv: str = os.path.join(config['path_to_output_folder'],
-                                            config['output_structure']['profiles_table'])
-    downloaded_images_path: str = os.path.join(config['path_to_output_folder'],
-                                               config['output_structure']['images_folder'])
+    server_profiler_csv: str = config.get_folder("profiles_table")
+    downloaded_images_path: str = config.get_folder("images_folder")
     number_of_workers: int = (config['downloader_parameters']['max_nodes']
                               * config['downloader_parameters']['workers_per_node'])
     schedule_rule_dict: List[Tuple[int, int]] = fix_rule(config['schedule_rules'])
@@ -111,25 +108,22 @@ def create_schedules(config: Dict[str, str | int | bool | Dict[str, int | str]],
     profiles_df = profiles_df[~profiles_df["ServerName"].isin(ignored_servers_df["ServerName"])]
 
     # Rename old schedule and logs
-    init_new_current_folder(os.path.join(config['path_to_output_folder'],
-                                         config['output_structure']['schedules_folder']))
-    init_new_current_folder(os.path.join(config['path_to_output_folder'],
-                                         config['output_structure']['logs_folder']))
+    init_new_current_folder(config.get_folder("schedules_folder"))
+    init_new_current_folder(config.get_folder("logs_folder"))
 
     # Create schedules
     create_schedule_configs(profiles_df, number_of_workers, schedules_path)
     logger.info("Schedules created")
 
 
-def submit_downloaders(config: Dict[str, str | int | bool | Dict[str, int | str]], logger: Logger) -> None:
+def submit_downloaders(config: Config, logger: Logger) -> None:
     logger.info("Submitting downloaders")
     # Get parameters from config
-    schedules_path: str = os.path.join(config['path_to_output_folder'],
-                                       config['output_structure']['schedules_folder'],
+    schedules_path: str = os.path.join(config.get_folder("schedules_folder"),
                                        "current")
-    mpi_submitter_script: str = config['scripts']['mpi_submitter']
-    downloading_script: str = config['scripts']['download_script']
-    verifying_script: str = config['scripts']['verify_script']
+    mpi_submitter_script: str = config.get_script("mpi_submitter")
+    downloading_script: str = config.get_script('download_script')
+    verifying_script: str = config.get_script('verify_script')
 
     # Schedule downloaders
     for schedule in os.listdir(schedules_path):
@@ -175,20 +169,18 @@ def main():
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = load_config(config_path)
+    config = Config.from_path(config_path)
     logger = init_logger(__name__)
 
-    inner_checkpoint_path: str = os.path.join(config['path_to_output_folder'],
-                                              config['output_structure']['inner_checkpoint_file'])
+    inner_checkpoint_path: str = config.get_folder("inner_checkpoint_file")
     if not os.path.exists(inner_checkpoint_path):
         raise FileNotFoundError(f"Inner checkpoint file {inner_checkpoint_path} not found")
-    inner_checkpoint = load_config(inner_checkpoint_path)
+    inner_checkpoint = Checkpoint.from_path(inner_checkpoint_path, {"schedule_creation_scheduled": False})
 
     create_schedules(config, logger)
     submit_downloaders(config, logger)
 
     inner_checkpoint["schedule_creation_scheduled"] = False
-    update_checkpoint(inner_checkpoint_path, inner_checkpoint)
 
 
 if __name__ == "__main__":
