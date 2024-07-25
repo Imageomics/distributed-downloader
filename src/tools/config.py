@@ -20,7 +20,9 @@ class Config:
 
         # print(cfg)
         return cls(config_path=path,
-                   cfg_dict=cfg)
+                   cfg_dict=cfg,
+                   scripts=cls.__load_scripts(cfg),
+                   folder_structure=cls.__load_folder_structure(cfg))
 
     @staticmethod
     def __check_config(cfg: Dict[str, str | int | bool | Dict[str, Any]]) -> bool:

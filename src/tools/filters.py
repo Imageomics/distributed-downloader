@@ -103,7 +103,7 @@ class DuplicatesBasedFiltering(SparkFilterToolBase):
 
         duplicate_records = (successes_df
                              .join(not_duplicate_records, on="hashsum_original", how='left_anti')
-                             .select("uuid", "gbif_id", "ServerName", "partition_id", "hashsum_original"))
+                             .select("uuid", "gbif_id", "server_name", "partition_id", "hashsum_original"))
 
         window = ps.Window.partitionBy("hashsum_original").orderBy("partition_id", "server_name")
 

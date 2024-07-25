@@ -36,7 +36,8 @@ def create_new_schedule(config: Config,
     server_config_df = server_config_df.merge(server_profiler_df,
                                               on="server_name",
                                               how="left",
-                                              validate="1:1")
+                                              validate="1:1",
+                                              suffixes=("", "_y"))
     server_config_df["end_index"] = server_config_df["total_batches"] - 1
     server_config_df = server_config_df[server_config_columns]
 

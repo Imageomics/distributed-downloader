@@ -42,7 +42,7 @@ class DistributedDownloader:
         self.urls_path = self.config.get_folder("urls_folder")
         self.inner_checkpoint_path = self.config.get_folder("inner_checkpoint_file")
         self.profiles_path = self.config.get_folder("profiles_table")
-        self.schedules_folder = os.path.join(self.config["schedules_folder"], "current")
+        self.schedules_folder = os.path.join(self.config.get_folder("schedules_folder"), "current")
 
         self.inner_checkpoint = Checkpoint.from_path(self.inner_checkpoint_path, self.default_checkpoint_structure)
 
@@ -147,7 +147,7 @@ class DistributedDownloader:
 
 
 def main() -> None:
-    config_path = "/mnt/c/Users/24122/PycharmProjects/distributed-downloader/config/local_config.yaml"
+    config_path = "/users/PAS2119/andreykopanev/distributed_downloader_test/config/local_config.yaml"
 
     dd = DistributedDownloader.from_path(config_path)
     dd.download_images()

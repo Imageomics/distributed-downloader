@@ -49,6 +49,8 @@ dependencies = [
     "texttable",
     "tzdata",
     "urllib3",
+    "attrs",
+    "PyYaml"
 ]
 
 [project.optional-dependencies]

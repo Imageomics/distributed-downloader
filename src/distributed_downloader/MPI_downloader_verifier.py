@@ -28,7 +28,7 @@ def verify_batches(config: Config,
     if os.path.exists(verification_file):
         verification_df = pd.read_csv(verification_file)
     else:
-        verification_df = pd.DataFrame(columns=["ServerName", "PartitionId", "Status"])
+        verification_df = pd.DataFrame(columns=["server_name", "partition_id", "status"])
 
     verification_original_df = verification_df.copy()
 
@@ -42,7 +42,8 @@ def verify_batches(config: Config,
     server_config_df = server_config_df.merge(server_profiler_df,
                                               on="server_name",
                                               how="left",
-                                              validate="1:1")
+                                              validate="1:1",
+                                              suffixes=("", "_y"))
 
     server_config_df["end_index"] = server_config_df["total_batches"] - 1
     server_config_df = server_config_df[server_config_columns]

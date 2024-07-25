@@ -82,7 +82,7 @@ def download_schedule(
                     if not is_enough_time(rate_limit, job_end_time=job_end_time):
                         raise TimeoutError("Not enough time to download batch")
 
-                    logger.info(f"Rank {rank} started downloading batch {batch_id} of {schedule_dict['ServerName']}")
+                    logger.info(f"Rank {rank} started downloading batch {batch_id} of {schedule_dict['server_name']}")
 
                     t0 = time.perf_counter()
 
@@ -93,7 +93,7 @@ def download_schedule(
 
                     downloading_time += time.perf_counter() - t0
 
-                    logger.info(f"Rank {rank} finished downloading batch {batch_id} of {schedule_dict['ServerName']}")
+                    logger.info(f"Rank {rank} finished downloading batch {batch_id} of {schedule_dict['server_name']}")
                 except Exception as e:
                     window.Unlock(schedule_dict["main_rank"])
                     raise e
@@ -102,7 +102,7 @@ def download_schedule(
 
                     t0 = time.perf_counter()
                     DirectWriter.write_batch(completed_batch, output_path, job_end_time, logger=logger)
-                    logger.info(f"Rank {rank} finished writing batch {batch_id} of {schedule_dict['ServerName']}")
+                    logger.info(f"Rank {rank} finished writing batch {batch_id} of {schedule_dict['server_name']}")
 
                     writing_time += time.perf_counter() - t0
 

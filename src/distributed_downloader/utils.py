@@ -28,9 +28,9 @@ def verify_downloaded_batches(schedule_row: pd.Series, input_path: str) -> List[
                 continue
 
             if os.path.exists(f"{input_path}/server_name={server_name}/{batch_name}/completed"):
-                verified_batches.append({"server_name": server_name, "PartitionId": batch_idx, "Status": "Completed"})
+                verified_batches.append({"server_name": server_name, "partition_id": batch_idx, "status": "Completed"})
             elif os.path.exists(f"{input_path}/server_name={server_name}/{batch_name}/failed"):
-                verified_batches.append({"server_name": server_name, "PartitionId": batch_idx, "Status": "Failed"})
+                verified_batches.append({"server_name": server_name, "partition_id": batch_idx, "status": "Failed"})
 
     return verified_batches
 
@@ -49,7 +49,7 @@ def verify_batches_for_prep(schedule_row: pd.DataFrame, input_path: str) -> pd.D
     return verification_df
 
 
-def split_dataframe(df: pd.DataFrame, by_column: str = "Nodes", chunk_size=20) -> List[pd.DataFrame]:
+def split_dataframe(df: pd.DataFrame, by_column: str = "nodes", chunk_size=20) -> List[pd.DataFrame]:
     chunks: List[pd.DataFrame] = []
 
     row_list = df.to_dict("records")
