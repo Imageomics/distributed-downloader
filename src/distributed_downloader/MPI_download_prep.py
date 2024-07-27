@@ -168,7 +168,7 @@ def main():
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = Config.from_path(config_path)
+    config = Config.from_path(config_path, "downloader")
     logger = init_logger(__name__)
 
     inner_checkpoint_path: str = config.get_folder("inner_checkpoint_file")

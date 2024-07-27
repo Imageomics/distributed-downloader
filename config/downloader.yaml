@@ -1,0 +1,50 @@
+account: ""
+path_to_input: ""
+path_to_output_folder: ""
+
+scripts:
+  # Wrapper scripts to submit jobs to the cluster
+  general_submitter: ""
+  mpi_submitter: ""
+  schedule_creator_submitter: ""
+  # Cluster job's scripts
+  initialization_script: ""
+  profiling_script: ""
+  schedule_creation_script: ""
+  verify_script: ""
+  download_script: ""
+
+# Rules for the schedule creation
+# They determine how many simultaneous downloader instances can be run on the same server
+# Rules are based on the number of batches required to be downloaded from the server
+# Rule is: key - number of batches, value - number of instances; if server has more than key batches, value instances can be run
+# Server with 0 batches is considered to be downloaded and are ignored
+# Default value is 1
+# Order of the rules does not matter
+schedule_rules:
+  1: 1
+
+# Structure of the output folder that will be created automatically
+output_structure:
+  urls_folder: ""
+  logs_folder: ""
+  images_folder: ""
+  schedules_folder: ""
+  profiles_table: ""
+  ignored_table: ""
+  inner_checkpoint_file: ""
+  tools_folder: ""
+
+# Parameters for the downloader
+suppress_unchanged_error: False
+downloader_parameters:
+  num_downloads: 0
+  max_nodes: 0
+  workers_per_node: 0
+  cpu_per_worker: 0
+  header: ""
+  image_size: 0
+  logger_level: ""
+  batch_size: 0
+  rate_multiplier: 0
+  default_rate_limit: 0

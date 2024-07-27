@@ -10,11 +10,12 @@ if __name__ == "__main__":
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = Config.from_path(config_path)
+    config = Config.from_path(config_path, "tools")
     logger = init_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Filtering step of the Tool')
-    parser.add_argument("filter_name", metavar="filter_name", type=str, help="the name of the tool that is intended to be used")
+    parser.add_argument("filter_name", metavar="filter_name", type=str,
+                        help="the name of the tool that is intended to be used")
     _args = parser.parse_args()
     tool_name = _args.filter_name
 
@@ -26,3 +27,5 @@ if __name__ == "__main__":
     tool_filter.run()
 
     logger.info("completed filtering")
+
+    tool_filter = None

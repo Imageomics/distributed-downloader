@@ -1,9 +1,12 @@
+import argparse
 import csv
 import os.path
 from logging import Logger
 
 from tools.Checkpoint import Checkpoint
 from tools.config import Config
+
+from typing import Optional, Dict
 
 try:
     from typing import LiteralString
@@ -28,6 +31,7 @@ class DistributedDownloader:
     schedules_folder: str = None
 
     inner_checkpoint: Checkpoint = None
+    _checkpoint_override: Optional[Dict[str, bool]] = None
     default_checkpoint_structure = {
         "batched": False,
         "profiled": False,
@@ -35,8 +39,10 @@ class DistributedDownloader:
     }
 
     @classmethod
-    def from_path(cls, path: str) -> "DistributedDownloader":
-        return cls(config=Config.from_path(path))
+    def from_path(cls, path: str,
+                  checkpoint_override: Optional[Dict[str, bool]] = None) -> "DistributedDownloader":
+        return cls(config=Config.from_path(path, "downloader"),
+                   checkpoint_override=checkpoint_override)
 
     def __attrs_post_init__(self):
         self.urls_path = self.config.get_folder("urls_folder")
@@ -45,6 +51,12 @@ class DistributedDownloader:
         self.schedules_folder = os.path.join(self.config.get_folder("schedules_folder"), "current")
 
         self.inner_checkpoint = Checkpoint.from_path(self.inner_checkpoint_path, self.default_checkpoint_structure)
+        if self._checkpoint_override is not None:
+            for key, value in self._checkpoint_override.items():
+                if key not in self.default_checkpoint_structure.keys():
+                    raise KeyError("Unknown key for override in checkpoint")
+
+                self.inner_checkpoint[key] = value
 
     def __init_environment(self) -> None:
         os.environ["CONFIG_PATH"] = self.config.config_path
@@ -147,9 +159,26 @@ class DistributedDownloader:
 
 
 def main() -> None:
-    config_path = "/users/PAS2119/andreykopanev/distributed_downloader_test/config/local_config.yaml"
+    parser = argparse.ArgumentParser(description='Distributed downloader')
+    parser.add_argument("config_path", metavar="config_path", type=str,
+                        help="the name of the tool that is intended to be used")
+    parser.add_argument("--reset_batched", action="store_true", help="Will reset filtering and scheduling steps")
+    parser.add_argument("--reset_profiled", action="store_true", help="Will reset scheduling step")
+    _args = parser.parse_args()
 
-    dd = DistributedDownloader.from_path(config_path)
+    config_path = _args.config_path
+    state_override = None
+    if _args.reset_filtering:
+        state_override = {
+            "batched": False,
+            "profiled": False
+        }
+    elif _args.reset_scheduling:
+        state_override = {
+            "profiled": False
+        }
+
+    dd = DistributedDownloader.from_path(config_path, state_override)
     dd.download_images()
 
 

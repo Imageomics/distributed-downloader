@@ -15,7 +15,7 @@ if __name__ == "__main__":
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = Config.from_path(config_path)
+    config = Config.from_path(config_path, "tools")
     logger = init_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Running step of the Tool')
@@ -29,7 +29,8 @@ if __name__ == "__main__":
     tool_folder = os.path.join(config.get_folder("tools_folder"), tool_name)
     checkpoint = Checkpoint.from_path(os.path.join(tool_folder, "tool_checkpoint.yaml"), {"completed": False})
     schedule_df = pd.read_csv(os.path.join(tool_folder, "schedule.csv"))
-    verification_df = MPIRunnerTool.load_table(os.path.join(tool_folder, "verification"), ["server_name", "partition_id"])
+    verification_df = MPIRunnerTool.load_table(os.path.join(tool_folder, "verification"),
+                                               ["server_name", "partition_id"])
 
     outer_join = schedule_df.merge(verification_df, how='outer', indicator=True, on=["server_name", "partition_id"])
     left = outer_join[(outer_join["_merge"] == 'left_only')].drop('_merge', axis=1)

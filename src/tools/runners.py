@@ -57,7 +57,7 @@ class MPIRunnerTool(RunnerToolBase):
     def get_csv_writer(path: str, scheme: List[str]) -> TextIO:
         if not os.path.exists(path):
             file = open(path, "w")
-            print(",".join(scheme), file=file)
+            print(",".join(scheme), file=file, flush=True)
         else:
             file = open(path, "a")
         return file
@@ -71,9 +71,6 @@ class MPIRunnerTool(RunnerToolBase):
         self.verification_folder = os.path.join(self.tools_path, self.filter_name, "verification")
 
         os.makedirs(self.verification_folder, exist_ok=True)
-
-        self.verification_IO = self.get_csv_writer(f"{self.verification_folder}/{str(self.mpi_rank).zfill(4)}.csv",
-                                                   self.verification_scheme)
 
     def get_schedule(self):
         schedule_df = pd.read_csv(os.path.join(self.filter_folder, "schedule.csv"))
@@ -122,12 +119,16 @@ class MPIRunnerTool(RunnerToolBase):
             self.logger.error(f"Schedule not found or empty for rank {self.mpi_rank}")
             exit(0)
 
+        self.verification_IO = self.get_csv_writer(f"{self.verification_folder}/{str(self.mpi_rank).zfill(4)}.csv",
+                                                   self.verification_scheme)
+
         remaining_table = self.get_remaining_table(schedule)
 
         remaining_table.apply(self.runner_fn)
 
     def __del__(self):
-        self.verification_IO.close()
+        if self.verification_IO is not None:
+            self.verification_IO.close()
 
 
 class FilterRunnerTool(MPIRunnerTool):

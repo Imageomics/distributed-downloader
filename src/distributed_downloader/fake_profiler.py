@@ -11,7 +11,7 @@ def main():
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = Config.from_path(config_path)
+    config = Config.from_path(config_path, "downloader")
 
     # Get parameters from config
     _DEFAULT_RATE_LIMIT: int = config["downloader_parameters"]["default_rate_limit"]

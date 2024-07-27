@@ -1,18 +1,15 @@
+import argparse
 import os
 from logging import Logger
-from pprint import pprint
-from typing import Literal, List, Dict, Optional, Any, TextIO, Tuple
+from typing import List, Dict, Optional, TextIO, Tuple
 
 import pandas as pd
-import yaml
 from attr import define, field, Factory
 
 from tools.Checkpoint import Checkpoint
-from tools.utils import submit_job, init_logger, ensure_created, preprocess_dep_ids
 from tools.config import Config
 from tools.registry import ToolsRegistryBase
-
-
+from tools.utils import submit_job, init_logger, ensure_created, preprocess_dep_ids, truncate_paths
 
 
 @define
@@ -32,16 +29,20 @@ class Tools:
     }
 
     tool_checkpoint: Checkpoint = None
+    _checkpoint_override: Optional[Dict[str, bool]] = None
     tool_job_history: List[int] = None
     tool_job_history_io: TextIO = None
 
     @classmethod
-    def from_path(cls, path: str, tool_name: str) -> "Tools":
+    def from_path(cls, path: str,
+                  tool_name: str,
+                  checkpoint_override: Optional[Dict[str, bool]] = None) -> "Tools":
         if tool_name not in ToolsRegistryBase.TOOLS_REGISTRY.keys():
             raise ValueError("unknown tool name")
 
-        return cls(config=Config.from_path(path),
-                   tool_name=tool_name)
+        return cls(config=Config.from_path(path, "tools"),
+                   tool_name=tool_name,
+                   checkpoint_override=checkpoint_override)
 
     def __attrs_post_init__(self):
         # noinspection PyTypeChecker
@@ -79,6 +80,16 @@ class Tools:
         ])
 
         self.tool_checkpoint = Checkpoint.from_path(self.tool_checkpoint_path, self.checkpoint_scheme)
+        if self._checkpoint_override is not None:
+            for key, value in self._checkpoint_override.items():
+                if key == "verification":
+                    truncate_paths([os.path.join(self.tool_folder, "verification")])
+                    continue
+                if key not in self.checkpoint_scheme.keys():
+                    raise KeyError("Unknown key for override in checkpoint")
+
+                self.tool_checkpoint[key] = value
+
         self.tool_job_history, self.tool_job_history_io = self.__load_job_history()
 
     def __load_job_history(self) -> Tuple[List[int], TextIO]:
@@ -160,10 +171,37 @@ class Tools:
 
 
 def main():
-    config_path = "/users/PAS2119/andreykopanev/distributed-downloader/config/local_config.yaml"
-    tool_name = "duplication_based"
+    parser = argparse.ArgumentParser(description='Tools')
+    parser.add_argument("config_path", metavar="config_path", type=str,
+                        help="the name of the tool that is intended to be used")
+    parser.add_argument("tool_name", metavar="tool_name", type=str,
+                        help="the name of the tool that is intended to be used")
+    parser.add_argument("--reset_filtering", action="store_true", help="Will reset filtering and scheduling steps")
+    parser.add_argument("--reset_scheduling", action="store_true", help="Will reset scheduling step")
+    parser.add_argument("--reset_runners", action="store_true", help="Will reset runners, making them to start over")
+    _args = parser.parse_args()
 
-    dd = Tools.from_path(config_path, tool_name)
+    config_path = _args.config_path
+    tool_name = _args.tool_name
+    state_override = None
+    if _args.reset_filtering:
+        state_override = {
+            "filtered": False,
+            "schedule_created": False,
+            "verification": False
+        }
+    elif _args.reset_scheduling:
+        state_override = {
+            "schedule_created": False
+        }
+    elif _args.reset_runners:
+        state_override = {
+            "verification": False
+        }
+
+    dd = Tools.from_path(config_path,
+                         tool_name,
+                         state_override)
     dd.apply_tool()
 
 

@@ -118,7 +118,7 @@ def main():
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = Config.from_path(config_path)
+    config = Config.from_path(config_path, "downloader")
     logger = init_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Server downloader controller')

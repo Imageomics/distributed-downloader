@@ -33,7 +33,7 @@ if __name__ == "__main__":
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
 
-    config = Config.from_path(config_path)
+    config = Config.from_path(config_path, "downloader")
 
     # Initialize parameters
     input_path = config["path_to_input"]

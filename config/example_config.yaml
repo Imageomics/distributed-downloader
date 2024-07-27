@@ -17,8 +17,8 @@ scripts:
   # tools scripts
   tools_filter_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/tools_filter.slurm"
   tools_scheduling_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/tools_scheduler.slurm"
-  tools_worker_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/tools_verifier.slurm"
-  tools_verification_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/tools_worker.slurm"
+  tools_worker_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/tools_worker.slurm"
+  tools_verification_script: "/users/PAS2119/andreykopanev/distributed-downloader/scripts/tools_verifier.slurm"
 
 # Rules for the schedule creation
 # They determine how many simultaneous downloader instances can be run on the same server
