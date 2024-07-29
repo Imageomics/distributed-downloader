@@ -1,9 +1,9 @@
 import argparse
 import os
 
-from tools.utils import init_logger
-from tools.config import Config
-from tools.registry import ToolsRegistryBase
+from distributed_downloader.tools.utils import init_logger
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.registry import ToolsRegistryBase
 
 if __name__ == "__main__":
     config_path = os.environ.get("CONFIG_PATH")

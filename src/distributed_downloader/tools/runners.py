@@ -10,8 +10,8 @@ import pandas as pd
 from PIL import UnidentifiedImageError, Image
 import mpi4py.MPI as MPI
 
-from tools.config import Config
-from tools.registry import ToolsBase, ToolsRegistryBase
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.registry import ToolsBase, ToolsRegistryBase
 
 
 class RunnerToolBase(ToolsBase):

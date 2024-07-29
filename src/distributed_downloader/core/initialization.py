@@ -8,9 +8,9 @@ from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
-from distributed_downloader.schemes import multimedia_scheme
-from tools.config import Config
-from tools.utils import load_dataframe, truncate_paths, init_logger
+from distributed_downloader.core.schemes import multimedia_scheme
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.utils import load_dataframe, truncate_paths, init_logger
 
 
 @udf(returnType=StringType())

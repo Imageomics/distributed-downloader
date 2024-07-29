@@ -5,10 +5,10 @@ import pyspark.sql as ps
 import pyspark.sql.functions as func
 from pyspark.sql import SparkSession
 
-from distributed_downloader.mpi_downloader.dataclasses import SuccessEntry
-from tools.config import Config
-from tools.registry import ToolsBase
-from tools.registry import ToolsRegistryBase
+from distributed_downloader.core.mpi_downloader import SuccessEntry
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.registry import ToolsBase
+from distributed_downloader.tools.registry import ToolsRegistryBase
 
 
 class FilterToolBase(ToolsBase):

@@ -6,14 +6,14 @@ from typing import Dict, Tuple
 
 import mpi4py.MPI as MPI
 
-from distributed_downloader.mpi_downloader import DirectWriter
-from distributed_downloader.mpi_downloader.dataclasses import CompletedBatch
-from distributed_downloader.mpi_downloader.Downloader import Downloader
-from distributed_downloader.mpi_downloader.PreLoader import load_one_batch
-from distributed_downloader.mpi_downloader.utils import get_latest_schedule, \
+from distributed_downloader.core.mpi_downloader import DirectWriter
+from distributed_downloader.core.mpi_downloader.dataclasses import CompletedBatch
+from distributed_downloader.core.mpi_downloader.Downloader import Downloader
+from distributed_downloader.core.mpi_downloader.PreLoader import load_one_batch
+from distributed_downloader.core.mpi_downloader.utils import get_latest_schedule, \
     get_or_init_downloader, is_enough_time
-from tools.config import Config
-from tools.utils import init_logger
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.utils import init_logger
 
 
 def download_batch(

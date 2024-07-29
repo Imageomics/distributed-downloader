@@ -3,8 +3,8 @@ import os
 
 import pandas as pd
 
-from tools.config import Config
-from tools.registry import ToolsBase, ToolsRegistryBase
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.registry import ToolsBase, ToolsRegistryBase
 
 
 class SchedulerToolBase(ToolsBase):

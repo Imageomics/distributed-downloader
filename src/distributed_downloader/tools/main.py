@@ -6,10 +6,10 @@ from typing import List, Dict, Optional, TextIO, Tuple
 import pandas as pd
 from attr import define, field, Factory
 
-from tools.Checkpoint import Checkpoint
-from tools.config import Config
-from tools.registry import ToolsRegistryBase
-from tools.utils import submit_job, init_logger, ensure_created, preprocess_dep_ids, truncate_paths
+from distributed_downloader.tools.checkpoint import Checkpoint
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.registry import ToolsRegistryBase
+from distributed_downloader.tools.utils import submit_job, init_logger, ensure_created, preprocess_dep_ids, truncate_paths
 
 
 @define

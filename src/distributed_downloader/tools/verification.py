@@ -2,13 +2,12 @@ import argparse
 import os
 
 import pandas as pd
-import yaml
 
-from tools.Checkpoint import Checkpoint
-from tools.utils import init_logger
-from tools.config import Config
-from tools.registry import ToolsRegistryBase
-from tools.runners import MPIRunnerTool
+from distributed_downloader.tools.checkpoint import Checkpoint
+from distributed_downloader.tools.utils import init_logger
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.registry import ToolsRegistryBase
+from distributed_downloader.tools.runners import MPIRunnerTool
 
 if __name__ == "__main__":
     config_path = os.environ.get("CONFIG_PATH")

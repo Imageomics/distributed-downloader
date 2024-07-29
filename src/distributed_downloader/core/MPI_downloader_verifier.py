@@ -4,10 +4,10 @@ from logging import Logger
 
 import pandas as pd
 
-from distributed_downloader.mpi_downloader.utils import get_latest_schedule
-from distributed_downloader.utils import verify_downloaded_batches
-from tools.config import Config
-from tools.utils import init_logger
+from distributed_downloader.core.mpi_downloader.utils import get_latest_schedule
+from distributed_downloader.core.utils import verify_downloaded_batches
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.utils import init_logger
 
 
 def verify_batches(config: Config,

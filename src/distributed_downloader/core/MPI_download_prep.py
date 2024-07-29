@@ -5,10 +5,10 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from pandas._libs.missing import NAType
 
-from tools.Checkpoint import Checkpoint
-from tools.config import Config
-from tools.utils import submit_job, init_logger, preprocess_dep_ids
-from distributed_downloader.utils import create_schedule_configs, verify_batches_for_prep
+from distributed_downloader.tools.checkpoint import Checkpoint
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.utils import submit_job, init_logger, preprocess_dep_ids
+from distributed_downloader.core.utils import create_schedule_configs, verify_batches_for_prep
 
 
 def schedule_rule(total_batches: int, rule: List[Tuple[int, int]]) -> int | NAType:

@@ -4,9 +4,9 @@ from typing import Any, Dict, Literal
 import yaml
 from attr import define
 
-TEMP_PATH = {
-    "downloader": "/users/PAS2119/andreykopanev/distributed_downloader_test/config/downloader.yaml",
-    "tools": "/users/PAS2119/andreykopanev/distributed_downloader_test/config/tools.yaml"
+TEMPLATE_PATH = {
+    "downloader": "config_templates/downloader.yaml",
+    "tools": "config_templates/tools.yaml"
 }
 
 
@@ -40,7 +40,7 @@ class Config:
     @staticmethod
     def __check_config(cfg: Dict[str, str | int | bool | Dict[str, Any]],
                        config_type: Literal["downloader", "tools"]) -> bool:
-        config_template_path = TEMP_PATH[config_type]
+        config_template_path = TEMPLATE_PATH[config_type]
         if not os.path.exists(config_template_path):
             raise FileNotFoundError(f"Config template not found, can't check it {config_template_path}")
         with open(config_template_path, "r") as f:

@@ -1,8 +1,8 @@
 import os
 from typing import Dict, Type
 
-from tools.utils import init_logger
-from tools.config import Config
+from distributed_downloader.tools.utils import init_logger
+from distributed_downloader.tools.config import Config
 
 
 class ToolsRegistryBase(type):

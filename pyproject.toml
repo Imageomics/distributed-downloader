@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 packages = ["src/distributed_downloader"]
 
 [project]
-name = "distributed-downloader"
+name = "distributed_downloader"
 dynamic = ["version"]
 authors = [
     { name = "Andrey Kopanev", email = "kopanev.1@osu.edu" },
@@ -22,35 +22,32 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "Brotli",
-    "certifi",
-    "charset-normalizer",
-    "Cython",
-    "idna",
+    "attrs",
+    "brotli",
+    "requests",
+    "cython",
+    "fastparquet",
+    "hatchling",
     "inflate64",
     "mpi4py",
     "multivolumefile",
-    "numpy",
     "opencv-python",
-    "pandas",
     "pillow",
+    "pip",
     "psutil",
-    "py4j",
+    "pyarrow",
+    "pyyaml",
     "pybcj",
     "pycryptodomex",
     "pyppmd",
     "pyspark",
-    "python-dateutil",
     "python-dotenv",
-    "pytz",
     "pyzstd",
     "requests",
-    "six",
+    "setuptools",
     "texttable",
-    "tzdata",
-    "urllib3",
-    "attrs",
-    "PyYaml"
+    "typing-extensions",
+    "wheel"
 ]
 
 [project.optional-dependencies]
@@ -70,6 +67,7 @@ Repository = "https://github.com/Imageomics/distributed-downloader.git"
 
 [project.scripts]
 distributed_downloader = "distributed_downloader.main:main"
+distributed_downloader_tools = "distributed_downloader.tools:main"
 
 [tool.hatch.version]
-path = "src/distributed_downloader/__about__.py"
+path = "src/distributed_downloader/core/__about__.py"

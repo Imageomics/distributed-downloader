@@ -3,8 +3,8 @@ import csv
 import os.path
 from logging import Logger
 
-from tools.Checkpoint import Checkpoint
-from tools.config import Config
+from distributed_downloader.tools.checkpoint import Checkpoint
+from distributed_downloader.tools.config import Config
 
 from typing import Optional, Dict
 
@@ -15,8 +15,8 @@ except ImportError:
 
 from attr import define, field, Factory
 
-from distributed_downloader.initialization import init_filestructure
-from tools.utils import submit_job, preprocess_dep_ids, init_logger
+from distributed_downloader.core.initialization import init_filestructure
+from distributed_downloader.tools.utils import submit_job, preprocess_dep_ids, init_logger
 
 
 @define

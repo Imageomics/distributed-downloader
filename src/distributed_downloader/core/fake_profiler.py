@@ -2,8 +2,8 @@ import os
 
 import pandas as pd
 
-from distributed_downloader.mpi_downloader.dataclasses import profile_dtype
-from tools.config import Config
+from distributed_downloader.core.mpi_downloader.dataclasses import profile_dtype
+from distributed_downloader.tools.config import Config
 
 
 def main():

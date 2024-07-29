@@ -6,11 +6,11 @@ from typing import Any, Dict, List, Deque
 
 import pandas as pd
 
-from distributed_downloader.mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, \
+from distributed_downloader.core.mpi_downloader.utils import get_latest_schedule, generate_ids_to_download, \
     separate_to_blocks, \
     get_largest_nonempty_bucket, get_schedule_count
-from tools.config import Config
-from tools.utils import init_logger
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.utils import init_logger
 
 
 def create_new_schedule(config: Config,
