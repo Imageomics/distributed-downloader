@@ -36,9 +36,9 @@ the same `config_path` argument to continue downloading.
 
 Downloader has two logging profiles:
 
-- "INFO" - logs only the most important information, for example when a batch is started and finished. It also logs out
+- `INFO` - logs only the most important information, for example when a batch is started and finished. It also logs out
   any error that occurred during download, image decoding, or writing batch to the filesystem
-- "DEBUG" - logs all information, for example logging start and finish of each downloaded image.
+- `DEBUG` - logs all information, for example logging start and finish of each downloaded image.
 
 ### Tools script
 
@@ -58,27 +58,16 @@ You can also add your own tool, the instructions are in the section below.
 
 You can also add your own tool by creating 3 classes and registering them with respective decorators.
 
-##### General rules for tools:
-
 - Each tool's output will be saved in separate folder in `{config.output_structure.tools_folder}/{tool_name}`
-- There are 3 steps in the tool pipeline: `filter`, `schedule creation` and `applying filter on data`.
+- There are 3 steps in the tool pipeline: `filter`, `scheduler` and `runner`.
+  - `filter` - filters the images that should be processed by the tool and creates csv files with them
+  - `scheduler` - creates a schedule for processing the images for MPI
+  - `runner` - processes the images using MPI
 - Each step should be implemented in a separate class.
 - Tool name should be the same across all classes.
-- Every tool should inherit from `ToolsBase` class.
-- Every tool should have a `run` method that will be called by the main script.
-
-##### Filtering class
-
-Class for "filtering", it should create a csv files with a list of images uuids, server name and
-partition_id that should be processed in `{tools_folder}/filter_table` folder.
-It should inherit from `FilterToolBase` and implement the `run` method. You can also inherit
-from `SparkFilterToolBase` if you want to use spark or `PythonFilterToolBase` if you want to use just python.
-The required output fields are `server_name` and `partition_id`, you can add more fields if needed.
-You should register the class with the `@FilterRegister` decorator with tool name as an argument.
-
-##### Schedule creation class
-
-Schedule creation class, it should create a csv file ...
+- Each tool should inherit from `ToolsBase` class.
+- Each tool should have a `run` method that will be called by the main script.
+- Each tool should be registered with a decorator from a respective package (`FilterRegister` from `filters` etc.)
 
 ## Rules for scripts:
 
