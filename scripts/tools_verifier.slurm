@@ -27,4 +27,4 @@ srun \
   --cpus-per-task=1 \
   --mem=0 \
   --output="${logs_dir}/tool_verifier.log" \
-  python "${REPO_ROOT}/src/tools/verification.py" "${tool_name}"
+  python "${REPO_ROOT}/src/distributed_downloader/tools/verification.py" "${tool_name}"

@@ -32,7 +32,7 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
     --cpus-per-task=1 \
     --output="${logs_dir}/MPI_downloader_verifier.log" \
     python \
-    "${REPO_ROOT}/src/distributed_downloader/MPI_downloader_verifier.py" \
+    "${REPO_ROOT}/src/distributed_downloader/core/MPI_downloader_verifier.py" \
     "$schedule_path"
 } && {
   srun \
@@ -42,7 +42,7 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
     --cpus-per-task=1 \
     --output="${logs_dir}/MPI_multimedia_downloader.log" \
     python \
-    "${REPO_ROOT}/src/distributed_downloader/MPI_multimedia_downloader_controller.py" \
+    "${REPO_ROOT}/src/distributed_downloader/core/MPI_multimedia_downloader_controller.py" \
     "$schedule_path"
 } && {
   srun \
@@ -52,6 +52,6 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
   --cpus-per-task="$DOWNLOADER_CPU_PER_WORKER" \
   --mem=0 \
   --output="${logs_dir}/MPI_multimedia_downloader-%2t.log" \
-  python "${REPO_ROOT}/src/distributed_downloader/MPI_multimedia_downloader.py" \
+  python "${REPO_ROOT}/src/distributed_downloader/core/MPI_multimedia_downloader.py" \
   "$schedule_path"
 }

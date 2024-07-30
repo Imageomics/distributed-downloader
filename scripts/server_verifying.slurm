@@ -28,5 +28,5 @@ srun \
   --cpus-per-task=1 \
   --output="${logs_dir}/MPI_downloader_verifier.log" \
   python \
-  "${REPO_ROOT}/src/distributed_downloader/MPI_downloader_verifier.py" \
+  "${REPO_ROOT}/src/distributed_downloader/core/MPI_downloader_verifier.py" \
   "$schedule_path"

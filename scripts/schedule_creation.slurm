@@ -12,7 +12,7 @@ source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 
 python \
-  "${REPO_ROOT}/src/distributed_downloader/MPI_download_prep.py" \
+  "${REPO_ROOT}/src/distributed_downloader/core/MPI_download_prep.py" \
   > "${logs_dir}/MPI_downloader_prep.log"
 
 mv "${logs_dir}/${LOGS_BASE_FILENAME}.out" "${logs_dir}/current"
