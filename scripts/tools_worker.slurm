@@ -27,4 +27,4 @@ srun \
   --cpus-per-task="$TOOLS_CPU_PER_WORKER" \
   --mem=0 \
   --output="${logs_dir}/tool_worker-%2t.log" \
-  python "${REPO_ROOT}/src/tools/runner.py" "${tool_name}"
+  python "${REPO_ROOT}/src/distributed_downloader/tools/runner.py" "${tool_name}"

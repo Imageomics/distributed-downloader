@@ -1,14 +1,17 @@
 import os.path
+from functools import partial
 
 import pandas as pd
 import pyspark.sql as ps
 import pyspark.sql.functions as func
 from pyspark.sql import SparkSession
 
-from distributed_downloader.core.mpi_downloader import SuccessEntry
+from distributed_downloader.core.mpi_downloader.dataclasses import SuccessEntry
 from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.registry import ToolsBase
 from distributed_downloader.tools.registry import ToolsRegistryBase
+
+FilterRegister = partial(ToolsRegistryBase.register, "filter")
 
 
 class FilterToolBase(ToolsBase):
@@ -53,7 +56,7 @@ class SparkFilterToolBase(FilterToolBase):
             self.spark.stop()
 
 
-@ToolsRegistryBase.register("filter", "size_based")
+@FilterRegister("size_based")
 class SizeBasedFiltering(SparkFilterToolBase):
 
     def __init__(self, cfg: Config, spark: SparkSession = None):
@@ -85,7 +88,7 @@ class SizeBasedFiltering(SparkFilterToolBase):
         self.logger.info(f"Too small images number: {too_small_images.count()}")
 
 
-@ToolsRegistryBase.register("filter", "duplication_based")
+@FilterRegister("duplication_based")
 class DuplicatesBasedFiltering(SparkFilterToolBase):
 
     def __init__(self, cfg: Config, spark: SparkSession = None):
@@ -156,7 +159,7 @@ class PythonFilterToolBase(FilterToolBase):
         filter_table.to_csv(filter_table_folder + "/table.csv", header=True, index=False)
 
 
-@ToolsRegistryBase.register("filter", "resize")
+@FilterRegister("resize")
 class ResizeToolFilter(PythonFilterToolBase):
 
     def __init__(self, cfg: Config):
@@ -164,7 +167,7 @@ class ResizeToolFilter(PythonFilterToolBase):
         self.filter_name = "resize"
 
 
-@ToolsRegistryBase.register("filter", "image_verification")
+@FilterRegister("image_verification")
 class ImageVerificationToolFilter(PythonFilterToolBase):
 
     def __init__(self, cfg: Config):

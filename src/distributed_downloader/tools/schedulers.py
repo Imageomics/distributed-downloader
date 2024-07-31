@@ -1,10 +1,13 @@
 import glob
 import os
+from functools import partial
 
 import pandas as pd
 
 from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.registry import ToolsBase, ToolsRegistryBase
+
+SchedulerRegister = partial(ToolsRegistryBase.register, "scheduler")
 
 
 class SchedulerToolBase(ToolsBase):
@@ -35,7 +38,7 @@ class DefaultScheduler(SchedulerToolBase):
         df.to_csv(os.path.join(filter_folder, "schedule.csv"), header=True, index=False)
 
 
-@ToolsRegistryBase.register("scheduler", "size_based")
+@SchedulerRegister("size_based")
 class SizeBasedScheduler(DefaultScheduler):
 
     def __init__(self, cfg: Config):
@@ -44,7 +47,7 @@ class SizeBasedScheduler(DefaultScheduler):
         self.filter_name: str = "size_based"
 
 
-@ToolsRegistryBase.register("scheduler", "duplication_based")
+@SchedulerRegister("duplication_based")
 class DuplicatesBasedScheduler(DefaultScheduler):
 
     def __init__(self, cfg: Config):
@@ -53,7 +56,7 @@ class DuplicatesBasedScheduler(DefaultScheduler):
         self.filter_name: str = "duplication_based"
 
 
-@ToolsRegistryBase.register("scheduler", "resize")
+@SchedulerRegister("resize")
 class ResizeToolScheduler(DefaultScheduler):
 
     def __init__(self, cfg: Config):
@@ -62,7 +65,7 @@ class ResizeToolScheduler(DefaultScheduler):
         self.filter_name: str = "resize"
 
 
-@ToolsRegistryBase.register("scheduler", "image_verification")
+@SchedulerRegister("image_verification")
 class ImageVerificationBasedScheduler(DefaultScheduler):
 
     def __init__(self, cfg: Config):

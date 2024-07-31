@@ -12,80 +12,69 @@ overloading source servers (GBIF documents approximately 200M images across 545 
 final dataset construction and metadata management (e.g., using `HDF5` as discussed
 in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
 
-## How to Use
-
-`distributed-downloader` utilizes multiple nodes on a High Performance Computing (HPC) system (specifically, an HPC
-with `slurm` workload manager) to download a collection of images specified in a given tab-delimited text file. There
-are three manual steps to get the downloader running as designed; the first two function as a preprocessing step (to be
-done once with the initial file), and the third initiates the download (this step may be run multiple times for
-pre-established periods and each will pick up where the last left off).
-
-1. The first step is to run the file through `src/server_prep.py`. This includes partitioning the dataset by server to
-   generate batches of 10K URLs per server. Servers are determined by the URL in the input file. Additionally, it adds a
-   UUID to each entry in the file to ensure preservation of provenance throughout the download and processing and
-   beyond. This processing is still GBIF occurrence snapshot-specific in that it includes filters on the input file by
-   media type (`StillImage`), checks for missing `gbifID`, and checks that the record indeed contains an image (through
-   the `format` column).
-
-2. After the partitioning and filtering, `MPI_download_prep.py` must be run to establish the rate limits (by server) for
-   the download. An "average" rate limit is established and then scaled based on the number of batches/simultaneous
-   downloads per server (to avoid overloading a server while running simultaneous downloads). After the download is
-   initialized, manual adjustments can be made based on results. Additionally, if a server returns any retry
-   error (`429, 500, 501, 502, 503, 504`), the request rate for that server is reduced.
-
-3. Finally, `submitter.py` is run with the path to the `.env` file for various download settings and paths. This can be
-   run for set periods of time and will restart where it has left off on the next run. Timing for batches is set in
-   the `slurm` scripts passed through the `.env`.If you want the downloader to ignore some of the servers, you can add them to the `ignored_servers.csv` file. Then you need to rerun the `MPI_download_prep.py` script to update the schedules for the changes to take effect.
-
-### Running on other systems
-
-The parameters for step 3 can all be set in the configuration file. This includes information about your HPC account and
-paths to various files, as well as distribution of work and download settings; be sure to fill in your information.
-The configuration file (`config/hpc.env`) should be in this location relative to the root of the directory from which
-these files are being run.
-
-Note that the current default is to download images such that the longest side is 720 pixels. The original and resized
-sizes are recorded in the metadata; the aspect ratio is preserved when resizing images.
-
-The provided `slurm` scripts for running steps 1 and 2 (`scripts/server_downloading_prep.slurm`
-and `scripts/server_profiling.slurm`) must have the account info changed at the top of their
-files (`#SBATCH --account=<your account here>`). These are each only run once at the start of the project
-
-## Note on files
-
-`resize_mpi` (`py` and `slurm`) and `resizer_scheduler.py` are scripts intended to resize the images after download. For
-instance, in the case that the initial download size is set higher than intended, these can be used to adjust the size
-within the given structure and repackage it. They have not been generalized to fit in with the remaining package
-infrastructure and are simply extra tools that we used; they may be generalized in the future.
-
-Downloader has two logging profiles:
-- "INFO" - logs only the most important information, for example when a batch is started and finished. It also logs out any error that occurred during download, image decoding, or writing batch to the filesystem
-- "DEBUG" - logs all information, for example logging start and finish of each downloaded image.
-
 ## Installation Instructions
 
 1. Install Python 3.10 or higher
 2. Install MPI, any MPI should work, tested with OpenMPI and IntelMPI.
-3. Install Parallel HDF5, tested with version 1.12.2
-4. Install/Update pip, setuptools, and wheel
-    ```
-    pip install -U wheel setuptools pip Cython
-    ```
-5. Install h5py:
-    ```
-    export CC=/path/to/mpicc
-    export HDF5_MPI="ON" 
-    export HDF5_DIR=/path/to/hdf5
-    pip install --no-cache-dir --no-binary=h5py h5py
-    ```
-6. Install required packages:
+3. Install required packages:
     ```
     pip install -r requirements.txt
     ```
 
+## How to Use
+
+`distributed-downloader` utilizes multiple nodes on a High Performance Computing (HPC) system (specifically, an HPC
+with `slurm` workload manager) to download a collection of images specified in a given tab-delimited text file.
+
+### Main script
+
+There are one manual step to get the downloader running as designed:
+You need to call function `download_images` from package `distributed_downloader` with the `config_path` as an argument.
+This will initialize filestructure in the output folder, partition the input file, profile the servers for their
+possible download speed, and start downloading images. If downloading didn't finish, you can call the same function with
+the same `config_path` argument to continue downloading.
+
+Downloader has two logging profiles:
+
+- `INFO` - logs only the most important information, for example when a batch is started and finished. It also logs out
+  any error that occurred during download, image decoding, or writing batch to the filesystem
+- `DEBUG` - logs all information, for example logging start and finish of each downloaded image.
+
+### Tools script
+
+After downloading is finished, you can use the `tools` package perform various operations on them.
+To do this, you need to call the function `apply_tools` from package `distributed_downloader` with the `config_path`
+and `tool_name` as an argument.
+Following tools are available:
+
+- `resize` - resizes images to a new size
+- `image_verification` - verifies images by checking if they are corrupted
+- `duplication_based` - removes duplicate images
+- `size_based` - removes images that are too small
+
+You can also add your own tool, the instructions are in the section below.
+
+### Creating a new tool
+
+You can also add your own tool by creating 3 classes and registering them with respective decorators.
+
+- Each tool's output will be saved in separate folder in `{config.output_structure.tools_folder}/{tool_name}`
+- There are 3 steps in the tool pipeline: `filter`, `scheduler` and `runner`.
+  - `filter` - filters the images that should be processed by the tool and creates csv files with them
+  - `scheduler` - creates a schedule for processing the images for MPI
+  - `runner` - processes the images using MPI
+- Each step should be implemented in a separate class.
+- Tool name should be the same across all classes.
+- Each tool should inherit from `ToolsBase` class.
+- Each tool should have a `run` method that will be called by the main script.
+- Each tool should be registered with a decorator from a respective package (`FilterRegister` from `filters` etc.)
+
 ## Rules for scripts:
 
-1. All scripts can expect to have the following custom environment variables:
+All scripts can expect to have the following custom environment variables, specific variables are only initialized
+when respective tool is called:
+
+- General parameters
     - `CONFIG_PATH`
     - `ACCOUNT`
     - `PATH_TO_INPUT`
@@ -97,6 +86,8 @@ Downloader has two logging profiles:
     - `OUTPUT_PROFILES_TABLE`
     - `OUTPUT_IGNORED_TABLE`
     - `OUTPUT_INNER_CHECKPOINT_FILE`
+    - `OUTPUT_TOOLS_FOLDER`
+- Specific for downloader
     - `DOWNLOADER_NUM_DOWNLOADS`
     - `DOWNLOADER_MAX_NODES`
     - `DOWNLOADER_WORKERS_PER_NODE`
@@ -104,3 +95,13 @@ Downloader has two logging profiles:
     - `DOWNLOADER_HEADER`
     - `DOWNLOADER_IMAGE_SIZE`
     - `DOWNLOADER_LOGGER_LEVEL`
+    - `DOWNLOADER_BATCH_SIZE`
+    - `DOWNLOADER_RATE_MULTIPLIER`
+    - `DOWNLOADER_DEFAULT_RATE_LIMIT`
+- Specific for tools
+    - `TOOLS_NUM_WORKERS`
+    - `TOOLS_MAX_NODES`
+    - `TOOLS_WORKERS_PER_NODE`
+    - `TOOLS_CPU_PER_WORKER`
+    - `TOOLS_THRESHOLD_SIZE`
+    - `TOOLS_NEW_RESIZE_SIZE`

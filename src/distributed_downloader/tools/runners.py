@@ -2,6 +2,7 @@ import glob
 import hashlib
 import os
 import time
+from functools import partial
 from typing import List, TextIO, Tuple
 
 import cv2
@@ -12,6 +13,8 @@ import mpi4py.MPI as MPI
 
 from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.registry import ToolsBase, ToolsRegistryBase
+
+RunnerRegister = partial(ToolsRegistryBase.register, "runner")
 
 
 class RunnerToolBase(ToolsBase):
@@ -167,7 +170,7 @@ class FilterRunnerTool(MPIRunnerTool):
         return len(filtered_parquet)
 
 
-@ToolsRegistryBase.register("runner", "duplication_based")
+@RunnerRegister("duplication_based")
 class DuplicationFilterRunnerTool(FilterRunnerTool):
 
     def __init__(self, cfg: Config):
@@ -176,7 +179,7 @@ class DuplicationFilterRunnerTool(FilterRunnerTool):
         self.filter_name = "duplication_based"
 
 
-@ToolsRegistryBase.register("runner", "size_based")
+@RunnerRegister("size_based")
 class SizeBasedFilterRunnerTool(FilterRunnerTool):
 
     def __init__(self, cfg: Config):
@@ -185,7 +188,7 @@ class SizeBasedFilterRunnerTool(FilterRunnerTool):
         self.filter_name: str = "size_based"
 
 
-@ToolsRegistryBase.register("runner", "image_verification")
+@RunnerRegister("image_verification")
 class ImageVerificationRunnerTool(MPIRunnerTool):
 
     def __init__(self, cfg: Config):
@@ -288,7 +291,7 @@ class ImageVerificationRunnerTool(MPIRunnerTool):
         return verified_image
 
 
-@ToolsRegistryBase.register("runner", "resize")
+@RunnerRegister("resize")
 class ResizeRunnerTool(MPIRunnerTool):
 
     def __init__(self, cfg: Config):

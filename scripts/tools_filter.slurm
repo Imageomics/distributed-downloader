@@ -23,6 +23,6 @@ export PYTHONPATH=${PYTHONPATH}:"${REPO_ROOT}/src":"${REPO_ROOT}/distributed-dow
 pbs-spark-submit \
     --driver-memory $driver_memory \
     --executor-memory $executor_memory \
-    "${REPO_ROOT}/src/tools/filter.py" \
+    "${REPO_ROOT}/src/distributed_downloader/tools/filter.py" \
     "${tool_name}" \
     > "${logs_dir}/tool_filter.log"
