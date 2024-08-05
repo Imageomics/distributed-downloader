@@ -6,3 +6,5 @@ dependencies:
   - openmpi
   - python
   - uv
+  - opencv
+  - pyspark
