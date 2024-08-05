@@ -1,0 +1,8 @@
+name: distributed-downloader
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - openmpi
+  - python
+  - uv
