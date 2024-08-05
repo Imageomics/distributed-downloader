@@ -8,3 +8,46 @@ dependencies:
   - uv
   - opencv
   - pyspark
+  - attrs
+  - brotli
+  - certifi
+  - charset-normalizer
+  - cramjam
+  - cython
+  - exceptiongroup
+  - fsspec
+  - hatchling
+  - idna
+  - inflate64
+  - iniconfig
+  - mpi4py
+  - multivolumefile
+  - numpy
+  - packaging
+  - pandas
+  - pathspec
+  - pillow
+  - pip
+  - pluggy
+  - psutil
+  - py4j
+  - pyarrow
+  - pybcj
+  - pycryptodomex
+  - pyppmd
+  - pytest
+  - python-dateutil
+  - python-dotenv
+  - pytz
+  - pyyaml
+  - pyzstd
+  - requests
+  - setuptools
+  - six
+  - texttable
+  - tomli
+  - trove-classifiers
+  - typing-extensions
+  - tzdata
+  - urllib3
+  - wheel
