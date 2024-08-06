@@ -15,6 +15,11 @@ from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.registry import ToolsBase, ToolsRegistryBase
 
 RunnerRegister = partial(ToolsRegistryBase.register, "runner")
+__all__ = ["RunnerRegister",
+           "DuplicationFilterRunnerTool",
+           "FilterRunnerTool",
+           "ImageVerificationRunnerTool",
+           "SizeBasedFilterRunnerTool"]
 
 
 class RunnerToolBase(ToolsBase):

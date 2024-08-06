@@ -8,6 +8,11 @@ from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.registry import ToolsBase, ToolsRegistryBase
 
 SchedulerRegister = partial(ToolsRegistryBase.register, "scheduler")
+__all__ = ["SchedulerRegister",
+           "SizeBasedScheduler",
+           "DuplicatesBasedScheduler",
+           "ResizeToolScheduler",
+           "ImageVerificationBasedScheduler"]
 
 
 class SchedulerToolBase(ToolsBase):

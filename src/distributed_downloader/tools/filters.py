@@ -12,6 +12,11 @@ from distributed_downloader.tools.registry import ToolsBase
 from distributed_downloader.tools.registry import ToolsRegistryBase
 
 FilterRegister = partial(ToolsRegistryBase.register, "filter")
+__all__ = ["FilterRegister",
+           "SizeBasedFiltering",
+           "DuplicatesBasedFiltering",
+           "ResizeToolFilter",
+           "ImageVerificationToolFilter"]
 
 
 class FilterToolBase(ToolsBase):
