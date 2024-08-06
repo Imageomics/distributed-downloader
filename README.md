@@ -15,22 +15,29 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
 ## Installation Instructions
 
 ### Conda installation
+
 1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 2. Create a new conda environment:
-    ```
+    ```commandline
     conda env create -f environment.yaml --solver=libmamba -y
     ```
 
 ### Pip installation
+
 1. Install Python 3.10 or higher
 2. Install MPI, any MPI should work, tested with OpenMPI and IntelMPI. Installation instructions can be found on
    official websites:
     - [OpenMPI](https://docs.open-mpi.org/en/v5.0.x/installing-open-mpi/quickstart.html)
     - [IntelMPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html)
-3. Install required packages:
-    ```
-    pip install .[dev]
-    ```
+3. Install required package:
+    - For general use:
+      ```commandline
+      pip install git+https://github.com/Imageomics/distributed-downloader
+      ```
+    - For development:
+      ```commandline
+      pip install .[dev]
+      ```
 
 ## How to Use
 
