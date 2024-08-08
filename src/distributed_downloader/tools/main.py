@@ -1,15 +1,21 @@
 import argparse
 import os
 from logging import Logger
-from typing import List, Dict, Optional, TextIO, Tuple
+from typing import Dict, List, Optional, TextIO, Tuple
 
 import pandas as pd
-from attr import define, field, Factory
+from attr import Factory, define, field
 
 from distributed_downloader.tools.checkpoint import Checkpoint
 from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.registry import ToolsRegistryBase
-from distributed_downloader.tools.utils import submit_job, init_logger, ensure_created, preprocess_dep_ids, truncate_paths
+from distributed_downloader.tools.utils import (
+    ensure_created,
+    init_logger,
+    preprocess_dep_ids,
+    submit_job,
+    truncate_paths,
+)
 
 
 @define
@@ -115,7 +121,8 @@ class Tools:
         job_id = submit_job(self.config.get_script("tools_submitter"),
                             self.config.get_script("tools_filter_script"),
                             self.tool_name,
-                            *preprocess_dep_ids([self.tool_job_history[-1] if len(self.tool_job_history) != 0 else None]),
+                            *preprocess_dep_ids(
+                                [self.tool_job_history[-1] if len(self.tool_job_history) != 0 else None]),
                             "--spark")
         self.__update_job_history(job_id)
         self.tool_checkpoint["filtered"] = True

@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name tool_verifier
 #SBATCH --mem=0
+#SBATCH --time=00:05:00
 
 if [ "$#" -eq 0 ]; then
     echo "Usage: $0 tool_name"

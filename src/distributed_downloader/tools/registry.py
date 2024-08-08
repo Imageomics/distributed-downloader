@@ -50,9 +50,9 @@ class ToolsBase(metaclass=ToolsRegistryBase):
 
         self.logger = init_logger(__name__)
 
-        self.urls_path = os.path.join(self.config.get_folder("urls_folder"))
-        self.downloaded_images_path = os.path.join(self.config.get_folder("images_folder"))
-        self.tools_path = os.path.join(self.config.get_folder("tools_folder"))
+        self.urls_path = self.config.get_folder("urls_folder")
+        self.downloaded_images_path = self.config.get_folder("images_folder")
+        self.tools_path = self.config.get_folder("tools_folder")
         self.total_workers = (self.config["tools_parameters"]["max_nodes"]
                               * self.config["tools_parameters"]["workers_per_node"])
 

@@ -1,4 +1,5 @@
 import os.path
+from pathlib import Path
 from typing import Any, Dict, Literal
 
 import yaml
@@ -40,7 +41,7 @@ class Config:
     @staticmethod
     def __check_config(cfg: Dict[str, str | int | bool | Dict[str, Any]],
                        config_type: Literal["downloader", "tools"]) -> bool:
-        config_template_path = TEMPLATE_PATH[config_type]
+        config_template_path = os.path.join(Path(__file__).parent.absolute(), TEMPLATE_PATH[config_type])
         if not os.path.exists(config_template_path):
             raise FileNotFoundError(f"Config template not found, can't check it {config_template_path}")
         with open(config_template_path, "r") as f:

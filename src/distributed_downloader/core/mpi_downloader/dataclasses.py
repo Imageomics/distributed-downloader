@@ -21,7 +21,7 @@ class DownloadedImage:
     error_msg: str
 
     unique_name: str
-    gbif_id: int
+    source_id: int
     identifier: str
     is_license_full: bool
     license: str
@@ -44,8 +44,8 @@ class DownloadedImage:
             retry_count=0,
             error_code=0,
             error_msg="",
-            unique_name=row.get("UUID", uuid.uuid4().hex),
-            gbif_id=row.get("gbifID", 0),
+            unique_name=row.get("uuid", uuid.uuid4().hex),
+            source_id=row.get("source_id", 0),
             identifier=row.get("identifier", ""),
             is_license_full=all([row.get("license", None), row.get("source", None), row.get("title", None)]),
             license=row.get("license", _NOT_PROVIDED) or _NOT_PROVIDED,
@@ -60,7 +60,7 @@ def init_downloaded_image_entry(image_entry: np.ndarray, row: Dict[str, Any]) ->
     image_entry["error_code"] = 0
     image_entry["error_msg"] = ""
     image_entry["uuid"] = row.get("UUID", uuid.uuid4().hex)
-    image_entry["gbif_id"] = row.get("gbifID", 0)
+    image_entry["source_id"] = row.get("source_id", 0)
     image_entry["identifier"] = row.get("identifier", "")
     image_entry["is_license_full"] = all([row.get("license", None), row.get("source", None), row.get("title", None)])
     image_entry["license"] = row.get("license", _NOT_PROVIDED) or _NOT_PROVIDED
@@ -73,7 +73,7 @@ def init_downloaded_image_entry(image_entry: np.ndarray, row: Dict[str, Any]) ->
 @define
 class SuccessEntry:
     uuid: str
-    gbif_id: int
+    source_id: int
     identifier: str
     is_license_full: bool
     license: str
@@ -88,7 +88,7 @@ class SuccessEntry:
     def __success_dtype(self, img_size: int):
         return np.dtype([
             ("uuid", "S32"),
-            ("gbif_id", "i4"),
+            ("source_id", "i4"),
             ("identifier", "S256"),
             ("is_license_full", "bool"),
             ("license", "S256"),
@@ -113,7 +113,7 @@ class SuccessEntry:
 
         return StructType([
             StructField("uuid", StringType(), False),
-            StructField("gbif_id", LongType(), False),
+            StructField("source_id", LongType(), False),
             StructField("identifier", StringType(), False),
             StructField("is_license_full", BooleanType(), False),
             StructField("license", StringType(), True),
@@ -130,7 +130,7 @@ class SuccessEntry:
     def from_downloaded(cls, downloaded: DownloadedImage) -> SuccessEntry:
         return cls(
             uuid=downloaded.unique_name,
-            gbif_id=downloaded.gbif_id,
+            source_id=downloaded.source_id,
             identifier=downloaded.identifier,
             is_license_full=downloaded.is_license_full,
             license=downloaded.license,
@@ -147,7 +147,7 @@ class SuccessEntry:
     def to_list_download(downloaded: DownloadedImage) -> List:
         return [
             downloaded.unique_name,
-            downloaded.gbif_id,
+            downloaded.source_id,
             downloaded.identifier,
             downloaded.is_license_full,
             downloaded.license,
@@ -164,7 +164,7 @@ class SuccessEntry:
     def get_names() -> List[str]:
         return [
             "uuid",
-            "gbif_id",
+            "source_id",
             "identifier",
             "is_license_full",
             "license",
@@ -180,7 +180,7 @@ class SuccessEntry:
     def to_list(self) -> List:
         return [
             self.uuid,
-            self.gbif_id,
+            self.source_id,
             self.identifier,
             self.is_license_full,
             self.license,
@@ -197,7 +197,7 @@ class SuccessEntry:
         np_structure = np.array(
             [
                 (self.uuid,
-                 self.gbif_id,
+                 self.source_id,
                  self.identifier,
                  self.is_license_full,
                  self.license,
