@@ -14,12 +14,30 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
 
 ## Installation Instructions
 
+### Conda installation
+
+1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+2. Create a new conda environment:
+    ```commandline
+    conda env create -f environment.yaml --solver=libmamba -y
+    ```
+
+### Pip installation
+
 1. Install Python 3.10 or higher
-2. Install MPI, any MPI should work, tested with OpenMPI and IntelMPI.
-3. Install required packages:
-    ```
-    pip install -r requirements.txt
-    ```
+2. Install MPI, any MPI should work, tested with OpenMPI and IntelMPI. Installation instructions can be found on
+   official websites:
+    - [OpenMPI](https://docs.open-mpi.org/en/v5.0.x/installing-open-mpi/quickstart.html)
+    - [IntelMPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html)
+3. Install required package:
+    - For general use:
+      ```commandline
+      pip install git+https://github.com/Imageomics/distributed-downloader
+      ```
+    - For development:
+      ```commandline
+      pip install .[dev]
+      ```
 
 ## How to Use
 
@@ -60,9 +78,9 @@ You can also add your own tool by creating 3 classes and registering them with r
 
 - Each tool's output will be saved in separate folder in `{config.output_structure.tools_folder}/{tool_name}`
 - There are 3 steps in the tool pipeline: `filter`, `scheduler` and `runner`.
-  - `filter` - filters the images that should be processed by the tool and creates csv files with them
-  - `scheduler` - creates a schedule for processing the images for MPI
-  - `runner` - processes the images using MPI
+    - `filter` - filters the images that should be processed by the tool and creates csv files with them
+    - `scheduler` - creates a schedule for processing the images for MPI
+    - `runner` - processes the images using MPI
 - Each step should be implemented in a separate class.
 - Tool name should be the same across all classes.
 - Each tool should inherit from `ToolsBase` class.
