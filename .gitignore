@@ -161,3 +161,7 @@ cython_debug/
 
 # Mac System
 .DS_Store
+
+app-*/
+spark-*
+/column_name_change/
