@@ -143,7 +143,7 @@ class FilterRunnerTool(MPIRunnerTool):
 
     def __init__(self, cfg: Config):
         super().__init__(cfg)
-        self.data_scheme: List[str] = ["uuid", "gbif_id", "server_name", "partition_id"]
+        self.data_scheme: List[str] = ["uuid", "source_id", "server_name", "partition_id"]
         self.verification_scheme: List[str] = ["server_name", "partition_id"]
         self.total_time = 150
 
@@ -204,7 +204,7 @@ class ImageVerificationRunnerTool(MPIRunnerTool):
         self.data_scheme: List[str] = ["server_name", "partition_id"]
         self.verification_scheme: List[str] = ["server_name", "partition_id"]
         self.corrupted_folder: str = None
-        self.corrupted_scheme: List[str] = ["uuid", "gbif_id", "server_name", "partition_id"]
+        self.corrupted_scheme: List[str] = ["uuid", "source_id", "server_name", "partition_id"]
         self.corrupted_IO: TextIO = None
         self.total_time = 150
 

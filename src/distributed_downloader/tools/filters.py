@@ -42,7 +42,7 @@ class SparkFilterToolBase(FilterToolBase):
     def load_data_parquet(self):
         return (self.spark
                 .read
-                .schema(self.success_scheme)
+                # .schema(self.success_scheme)
                 .option("basePath", self.downloaded_images_path)
                 .parquet(self.downloaded_images_path + "/server_name=*/partition_id=*/successes.parquet"))
 
@@ -84,7 +84,7 @@ class SizeBasedFiltering(SparkFilterToolBase):
                                     self.threshold_size))
 
         too_small_images = successes_df.filter(~successes_df["is_big"]).select("uuid",
-                                                                               "gbif_id",
+                                                                               "source_id",
                                                                                "server_name",
                                                                                "partition_id")
 
@@ -111,7 +111,7 @@ class DuplicatesBasedFiltering(SparkFilterToolBase):
 
         duplicate_records = (successes_df
                              .join(not_duplicate_records, on="hashsum_original", how='left_anti')
-                             .select("uuid", "gbif_id", "server_name", "partition_id", "hashsum_original"))
+                             .select("uuid", "source_id", "server_name", "partition_id", "hashsum_original"))
 
         window = ps.Window.partitionBy("hashsum_original").orderBy("partition_id", "server_name")
 
@@ -122,7 +122,7 @@ class DuplicatesBasedFiltering(SparkFilterToolBase):
 
         duplicate_records_top = duplicate_records_top.withColumnsRenamed(
             {"uuid": "uuid_main",
-             "gbif_id": "gbif_id_main",
+             "source_id": "source_id_main",
              "server_name": "server_name_main",
              "partition_id": "partition_id_main"})
 

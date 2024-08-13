@@ -8,7 +8,6 @@ from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
-from distributed_downloader.core.schemes import multimedia_scheme
 from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.utils import load_dataframe, truncate_paths, init_logger
 
@@ -46,12 +45,12 @@ if __name__ == "__main__":
     spark.conf.set("spark.sql.parquet.datetimeRebaseModeInWrite", "CORRECTED")
     spark.conf.set("spark.sql.parquet.int96RebaseModeInWrite", "CORRECTED")
 
-    multimedia_df = load_dataframe(spark, input_path, multimedia_scheme.schema)
+    multimedia_df = load_dataframe(spark, input_path)
 
     multimedia_df_prep = (multimedia_df
                           .filter((multimedia_df["uuid"].isNotNull())
                                   & (multimedia_df["url"].isNotNull())
-                                  & (multimedia_df["valid"]))
+                                  & (multimedia_df["valid"].cast("boolean")))
                           .repartition(20)
                           .withColumnsRenamed({"uuid": "source_id", "url": "identifier"})
                           .withColumn("license", func.lit("https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.en")))
@@ -82,7 +81,7 @@ if __name__ == "__main__":
                                        .otherwise(func.col("partition_id"))))
                           .select(*columns, "partition_id"))
 
-    logger.info("Writing to parquet")
+    logger.info(f"Writing to parquet: {output_path}")
 
     (master_df_filtered
      .repartition("server_name", "partition_id")
