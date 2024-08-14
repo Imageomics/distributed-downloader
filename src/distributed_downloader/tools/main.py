@@ -25,25 +25,26 @@ class Tools:
 
     logger: Logger = field(default=Factory(lambda: init_logger(__name__)))
 
-    tool_folder: str = None
-    tool_job_history_path: str = None
-    tool_checkpoint_path: str = None
+    tool_folder: Optional[str] = None
+    tool_job_history_path: Optional[str] = None
+    tool_checkpoint_path: Optional[str] = None
     checkpoint_scheme = {
         "filtered": False,
         "schedule_created": False,
         "completed": False
     }
 
-    tool_checkpoint: Checkpoint = None
+    tool_checkpoint: Optional[Checkpoint] = None
     _checkpoint_override: Optional[Dict[str, bool]] = None
-    tool_job_history: List[int] = None
-    tool_job_history_io: TextIO = None
+    tool_job_history: Optional[List[int]] = None
+    tool_job_history_io: Optional[TextIO] = None
 
     @classmethod
     def from_path(cls, path: str,
                   tool_name: str,
-                  checkpoint_override: Optional[Dict[str, bool]] = None) -> "Tools":
-        if tool_name not in ToolsRegistryBase.TOOLS_REGISTRY.keys():
+                  checkpoint_override: Optional[Dict[str, bool]] = None,
+                  tool_name_override: Optional[bool] = False) -> "Tools":
+        if not tool_name_override and tool_name not in ToolsRegistryBase.TOOLS_REGISTRY.keys():
             raise ValueError("unknown tool name")
 
         return cls(config=Config.from_path(path, "tools"),
@@ -58,7 +59,7 @@ class Tools:
         self.tool_checkpoint_path: str = os.path.join(self.tool_folder, "tool_checkpoint.yaml")
 
         self.__init_environment()
-        self.__init_filestructure()
+        self.__init_file_structure()
 
     def __init_environment(self) -> None:
         os.environ["CONFIG_PATH"] = self.config.config_path
@@ -77,7 +78,7 @@ class Tools:
 
         self.logger.info("Environment initialized")
 
-    def __init_filestructure(self):
+    def __init_file_structure(self):
         ensure_created([
             self.tool_folder,
             os.path.join(self.tool_folder, "filter_table"),
@@ -90,6 +91,7 @@ class Tools:
             for key, value in self._checkpoint_override.items():
                 if key == "verification":
                     truncate_paths([os.path.join(self.tool_folder, "verification")])
+                    self.tool_checkpoint["completed"] = False
                     continue
                 if key not in self.checkpoint_scheme.keys():
                     raise KeyError("Unknown key for override in checkpoint")
@@ -186,6 +188,8 @@ def main():
     parser.add_argument("--reset_filtering", action="store_true", help="Will reset filtering and scheduling steps")
     parser.add_argument("--reset_scheduling", action="store_true", help="Will reset scheduling step")
     parser.add_argument("--reset_runners", action="store_true", help="Will reset runners, making them to start over")
+    parser.add_argument("--tool_name_override", action="store_true",
+                        help="Will override tool name check (allows for custom tool run)")
     _args = parser.parse_args()
 
     config_path = _args.config_path
@@ -201,14 +205,15 @@ def main():
         state_override = {
             "schedule_created": False
         }
-    elif _args.reset_runners:
+    if _args.reset_runners:
         state_override = {
             "verification": False
         }
 
     dd = Tools.from_path(config_path,
                          tool_name,
-                         state_override)
+                         state_override,
+                         _args.tool_name_override)
     dd.apply_tool()
 
 
