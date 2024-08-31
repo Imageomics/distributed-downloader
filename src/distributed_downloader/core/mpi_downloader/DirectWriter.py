@@ -46,9 +46,11 @@ def write_batch(
         logger.info(f"Completed collecting entries for {output_path}")
 
         pd.DataFrame(successes_list, columns=SuccessEntry.get_names()).to_parquet(f"{output_path}/successes.parquet",
-                                                                                  index=False)
+                                                                                  index=False, compression="zstd",
+                                                                                  compression_level=3)
         pd.DataFrame(errors_list, columns=ErrorEntry.get_names()).to_parquet(f"{output_path}/errors.parquet",
-                                                                             index=False)
+                                                                             index=False, compression="zstd",
+                                                                             compression_level=3)
 
         logger.info(f"Completed writing to {output_path}")
 
