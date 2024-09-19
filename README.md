@@ -123,3 +123,32 @@ when respective tool is called:
     - `TOOLS_CPU_PER_WORKER`
     - `TOOLS_THRESHOLD_SIZE`
     - `TOOLS_NEW_RESIZE_SIZE`
+
+## Working with downloaded data
+
+Downloaded data is stored in `images_folder` (configured in config file),
+partitioned by `server_name` and `partition_id`, in two parquet files with following schemes:
+
+- `successes.parquet`:
+    - uuid: string
+    - source_id: integer
+    - identifier: string
+    - is_license_full: boolean
+    - license: string
+    - source: string
+    - title: string
+    - hashsum_original: string
+    - hashsum_resized: string
+    - original_size: [height, width]
+    - resized_size: [height, width]
+    - image: bytes
+- `errors.parquet`:
+    - uuid: string
+    - identifier: string
+    - retry_count: integer
+    - error_code: integer
+    - error_msg: string
+
+For general operations (that do not involve access to `image` column, e.g. count the total number of entries, create
+size distribution etc.) it is recommended to use Spark or similar applications. For any operation that does involve
+`image` column, it is recommended to use Pandas or similar library to access each parquet file separately.

@@ -93,7 +93,7 @@ class SuccessEntry:
     def __success_dtype(self, img_size: int):
         return np.dtype([
             ("uuid", "S32"),
-            ("source_id", "i4"),
+            ("source_id", "S32"),
             ("identifier", "S256"),
             ("is_license_full", "bool"),
             ("license", "S256"),
@@ -118,7 +118,7 @@ class SuccessEntry:
 
         return StructType([
             StructField("uuid", StringType(), False),
-            StructField("source_id", LongType(), False),
+            StructField("source_id", StringType(), False),
             StructField("identifier", StringType(), False),
             StructField("is_license_full", BooleanType(), False),
             StructField("license", StringType(), True),
