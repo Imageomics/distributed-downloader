@@ -131,7 +131,7 @@ partitioned by `server_name` and `partition_id`, in two parquet files with follo
 
 - `successes.parquet`:
     - uuid: string
-    - source_id: integer
+    - source_id: string
     - identifier: string
     - is_license_full: boolean
     - license: string
