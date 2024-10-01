@@ -1,11 +1,10 @@
-import os.path
+import os
 
-import pyspark.sql.functions as func
 from pyspark.sql import SparkSession, Window
+import pyspark.sql.functions as func
 
 from distributed_downloader.core.initialization import get_server_name, get_uuid
-from distributed_downloader.tools.config import Config
-from distributed_downloader.tools.utils import load_dataframe, init_logger
+from distributed_downloader.tools import load_dataframe, init_logger, Config
 
 if __name__ == "__main__":
     config_path = os.environ.get("CONFIG_PATH")
@@ -27,14 +26,29 @@ if __name__ == "__main__":
 
     multimedia_df = load_dataframe(spark, input_path)
 
-    multimedia_df_prep = (multimedia_df
-                          .filter((multimedia_df["uuid"].isNotNull())
-                                  & (multimedia_df["url"].isNotNull())
-                                  & (multimedia_df["valid"].cast("boolean")))
-                          .repartition(20)
-                          .withColumnsRenamed({"uuid": "source_id", "url": "identifier"})
-                          .withColumn("license",
-                                      func.lit("https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.en")))
+    multimedia_df_prep = (
+        multimedia_df
+        .filter(
+            (
+                    multimedia_df["url_gcp"].isNotNull() |
+                    multimedia_df["url_aws"].isNotNull() |
+                    multimedia_df["url_azure"].isNotNull()
+            ) &
+            (multimedia_df["original_label"] != "empty")
+        )
+        .repartition(20)
+        .withColumn("identifier",
+                    func.when(multimedia_df["url_gcp"].isNotNull(), multimedia_df["url_gcp"])
+                    .otherwise(
+                        func.when(multimedia_df["url_aws"].isNotNull(), multimedia_df["url_aws"])
+                        .otherwise(multimedia_df["url_azure"])
+                    ))
+        .withColumnsRenamed(
+            {
+                "image_id": "source_id"
+            }
+        )
+    )
 
     multimedia_df_prep = multimedia_df_prep.withColumn("server_name",
                                                        get_server_name(multimedia_df_prep.identifier))

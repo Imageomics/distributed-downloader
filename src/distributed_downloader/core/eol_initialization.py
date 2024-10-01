@@ -1,32 +1,11 @@
 import os.path
-import uuid
-from typing import Dict
-from urllib.parse import urlparse
 
 import pyspark.sql.functions as func
 from pyspark.sql import SparkSession, Window
-from pyspark.sql.functions import udf
-from pyspark.sql.types import StringType
 
+from distributed_downloader.core.initialization import get_server_name, get_uuid
 from distributed_downloader.tools.config import Config
-from distributed_downloader.tools.utils import load_dataframe, truncate_paths, init_logger
-
-
-@udf(returnType=StringType())
-def get_server_name(url: str):
-    return urlparse(url).netloc
-
-
-@udf(returnType=StringType())
-def get_uuid():
-    return str(uuid.uuid4())
-
-
-def init_filestructure(file_structure: Dict[str, str]) -> None:
-    filtered_fs = [value for key, value in file_structure.items() if
-                   key not in ["inner_checkpoint_file", "ignored_table"]]
-    truncate_paths(filtered_fs)
-
+from distributed_downloader.tools.utils import load_dataframe, init_logger
 
 if __name__ == "__main__":
     config_path = os.environ.get("CONFIG_PATH")
