@@ -9,7 +9,6 @@ import cv2
 import numpy as np
 import pandas as pd
 from PIL import UnidentifiedImageError, Image
-import mpi4py.MPI as MPI
 
 from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.registry import ToolsBase, ToolsRegistryBase
@@ -33,6 +32,8 @@ class RunnerToolBase(ToolsBase):
 class MPIRunnerTool(RunnerToolBase):
 
     def __init__(self, cfg: Config):
+        import mpi4py.MPI as MPI
+
         super().__init__(cfg)
 
         self.filter_folder: Optional[str] = None

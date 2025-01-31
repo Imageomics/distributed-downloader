@@ -34,7 +34,7 @@ dependencies = [
     "idna",
     "inflate64",
     "iniconfig",
-    "mpi4py",
+    "mpi4py < 4",
     "multivolumefile",
     "numpy",
     "opencv-python",
