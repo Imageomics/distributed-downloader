@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/distributed_downloader"]
+
+[project]
+name = "distributed_downloader"
+dynamic = ["dependencies", "version"]
+authors = [
+    { name = "Andrey Kopanev", email = "kopanev.1@osu.edu" },
+    { name = "Elizabeth G. Campolongo", email = "e.campolongo479@gmail.com" },
+    { name = "Matthew J. Thompson", email = "thompson.m.j@outlook.com" },
+]
+description = "A tool for downloading files from a list of URLs in parallel."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+keywords = [
+    "parallel",
+    "distributed",
+    "download",
+    "url",
+]
+
+[project.urls]
+Homepage = "https://github.com/Imageomics/distributed-downloader"
+Repository = "https://github.com/Imageomics/distributed-downloader.git"
+"Bug Tracker" = "https://github.com/Imageomics/distributed-downloader/issues"
+
+[project.scripts]
+distributed_downloader = "distributed_downloader.main:main"
+distributed_downloader_tools = "distributed_downloader.tools:main"
+
+[tool.hatch.version]
+path = "src/distributed_downloader/core/__about__.py"
