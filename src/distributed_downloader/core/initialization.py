@@ -36,8 +36,8 @@ if __name__ == "__main__":
         raise ValueError("CONFIG_PATH not set")
     config = Config.from_path(config_path, "downloader")
     assert (
-            "initializer_type" in config
-    ), "No initialization type specified, can't proceed"
+            config["initializer_type"] in __initializers.keys()
+    ), "Unknown initialization type, aborting"
 
     initializer = __initializers[config["initializer_type"]](config)
     initializer.run()
