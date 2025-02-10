@@ -23,15 +23,9 @@ class FathomNetInitializer(BaseInitializer):
             )
         )
 
-        multimedia_df_prep = multimedia_df_prep.withColumn(
-            "server_name", self.get_server_name(multimedia_df_prep.identifier)
-        )
-        multimedia_df_prep = multimedia_df_prep.withColumn("uuid", self.get_uuid())
-
+        multimedia_df_prep = self.extract_server_name(multimedia_df_prep)
+        multimedia_df_prep = self.generate_uuid(multimedia_df_prep)
         master_df_filtered = self.partition_dataframe(multimedia_df_prep)
-
         self.logger.info(f"Writing to parquet: {self.output_path}")
-
         self.save_results(master_df_filtered)
-
         self.logger.info("Finished batching")

@@ -30,15 +30,9 @@ class LilaInitializer(BaseInitializer):
             .withColumnsRenamed({"image_id": "source_id"})
         )
 
-        multimedia_df_prep = multimedia_df_prep.withColumn(
-            "server_name", self.get_server_name(multimedia_df_prep.identifier)
-        )
-        multimedia_df_prep = multimedia_df_prep.withColumn("uuid", self.get_uuid())
-
+        multimedia_df_prep = self.extract_server_name(multimedia_df_prep)
+        multimedia_df_prep = self.generate_uuid(multimedia_df_prep)
         master_df_filtered = self.partition_dataframe(multimedia_df_prep)
-
         self.logger.info("Writing to parquet")
-
         self.save_results(master_df_filtered)
-
         self.logger.info("Finished batching")

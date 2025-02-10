@@ -35,6 +35,14 @@ class BaseInitializer(ABC):
             .save(self.output_path)
         )
 
+    def extract_server_name(self, data_frame: DataFrame) -> DataFrame:
+        return data_frame.withColumn(
+            "server_name", self.get_server_name(data_frame.identifier)
+        )
+
+    def generate_uuid(self, data_frame: DataFrame) -> DataFrame:
+        return data_frame.withColumn("uuid", self.get_uuid())
+
     def partition_dataframe(self, data_frame: DataFrame) -> DataFrame:
         columns = data_frame.columns
 
