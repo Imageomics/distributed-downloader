@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name tool_filter
 #SBATCH --mem=0
+#SBATCH --time=01:00:00
 
 if [ "$#" -eq 0 ]; then
     echo "Usage: $0 tool_name"

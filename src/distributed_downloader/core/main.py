@@ -168,14 +168,16 @@ def main() -> None:
 
     config_path = _args.config_path
     state_override = None
-    if _args.reset_filtering:
+    if _args.reset_batched:
         state_override = {
             "batched": False,
-            "profiled": False
+            "profiled": False,
+            "schedule_creation_scheduled": False
         }
-    elif _args.reset_scheduling:
+    elif _args.reset_profiled:
         state_override = {
-            "profiled": False
+            "profiled": False,
+            "schedule_creation_scheduled": False
         }
 
     dd = DistributedDownloader.from_path(config_path, state_override)
