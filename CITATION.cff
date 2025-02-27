@@ -12,21 +12,14 @@ authors:
     family-names: Kopanev
     email: kopanev.1@buckeyemail.osu.edu
     affiliation: Imageomics Institute
-  - given-names: 'Matthew '
+  - given-names: 'Matthew J'
     family-names: Thompson
     affiliation: Imageomics Institute
     email: thompson.4509@osu.edu
-  - given-names: 'Elizabeth '
+  - given-names: 'Elizabeth G'
     family-names: Campolongo
     email: campolongo.4@osu.edu
     affiliation: Imageomics Institute
-  - name: Imageomics Institute
-    website: 'https://imageomics.osu.edu/'
-    email: imageomics-contact@osu.edu
-    address: 350 Pomerene Hall 1760 Neil Ave
-    post-code: '43210'
-    city: Columbus
-    country: US
 repository-code: 'https://github.com/Imageomics/distributed-downloader'
 abstract: >-
   MPI-based distributed downloading tool for retrieving data
@@ -36,6 +29,8 @@ keywords:
   - distributed
   - download
   - url
+  - "dataset generation"
+  - "MPI application"
 license: MIT
 commit: a38107246515493df93cd61e6612dd7933814b6d
 version: 0.0.1
