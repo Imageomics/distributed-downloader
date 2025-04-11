@@ -15,7 +15,7 @@ authors = [
 ]
 description = "A tool for downloading files from a list of URLs in parallel."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -24,51 +24,38 @@ classifiers = [
 dependencies = [
     "attrs",
     "brotli",
-    "certifi",
-    "charset-normalizer",
     "cramjam",
     "cython",
-    "exceptiongroup",
     "fsspec",
-    "idna",
     "inflate64",
-    "iniconfig",
     "mpi4py < 4",
     "multivolumefile",
-    "numpy",
     "opencv-python",
-    "packaging",
     "pandas",
     "pathspec",
     "pillow",
-    "pluggy",
     "psutil",
-    "py4j",
     "pyarrow",
     "pybcj",
     "pycryptodomex",
     "pyppmd",
     "pyspark",
-    "pytest",
-    "python-dateutil",
     "python-dotenv",
-    "pytz",
     "pyyaml",
     "pyzstd",
     "requests",
     "setuptools",
-    "six",
     "texttable",
-    "tomli",
     "trove-classifiers",
     "typing-extensions",
-    "tzdata",
-    "urllib3",
     "wheel"
 ]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = [
+    "pytest",
+    "ruff"
+]
 
 keywords = [
     "parallel",
