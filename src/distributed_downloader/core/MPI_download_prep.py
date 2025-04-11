@@ -1,3 +1,15 @@
+"""
+Preparation module for MPI-based distributed image downloads.
+
+This module handles the creation of download schedules and submission of download jobs
+based on configuration parameters. It coordinates the distribution of download tasks
+across multiple nodes and handles dependency chains between jobs.
+
+The main workflow:
+1. Create schedules based on server profiles and available resources
+2. Submit downloaders with appropriate dependencies
+3. Submit verifiers to check the completion of download jobs
+"""
 import os
 from logging import Logger
 from typing import Dict, List, Tuple
@@ -5,13 +17,30 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from pandas._libs.missing import NAType
 
+from distributed_downloader.core.utils import (
+    create_schedule_configs,
+    verify_batches_for_prep,
+)
 from distributed_downloader.tools.checkpoint import Checkpoint
 from distributed_downloader.tools.config import Config
-from distributed_downloader.tools.utils import submit_job, init_logger, preprocess_dep_ids
-from distributed_downloader.core.utils import create_schedule_configs, verify_batches_for_prep
+from distributed_downloader.tools.utils import (
+    init_logger,
+    preprocess_dep_ids,
+    submit_job,
+)
 
 
 def schedule_rule(total_batches: int, rule: List[Tuple[int, int]]) -> int | NAType:
+    """
+    Determine the number of nodes to allocate based on batch count and rules.
+    
+    Args:
+        total_batches: The total number of batches to process
+        rule: List of tuples (min_batches, nodes) for resource allocation rules
+    
+    Returns:
+        int: Number of nodes to allocate or pd.NA if no rule matches
+    """
     for min_batches, nodes in rule:
         if total_batches >= min_batches:
             return nodes
@@ -19,6 +48,14 @@ def schedule_rule(total_batches: int, rule: List[Tuple[int, int]]) -> int | NATy
 
 
 def init_new_current_folder(old_folder: str) -> None:
+    """
+    Initialize a new 'current' folder for schedules or logs.
+    
+    If a 'current' folder exists, rename it with a sequential number and create a new empty one.
+    
+    Args:
+        old_folder: Path to the parent folder containing the 'current' directory
+    """
     if os.path.exists(f"{old_folder}/current"):
         number_of_folders = len(
             [folder for folder in os.listdir(old_folder) if os.path.isdir(f"{old_folder}/{folder}")])
@@ -28,6 +65,15 @@ def init_new_current_folder(old_folder: str) -> None:
 
 
 def fix_rule(rule: Dict[str, int]) -> List[Tuple[int, int]]:
+    """
+    Convert scheduling rules from config dict format to sorted list of tuples.
+    
+    Args:
+        rule: Dict mapping minimum batch count (as string) to number of nodes
+    
+    Returns:
+        List[Tuple[int, int]]: List of (min_batches, nodes) tuples, sorted by min_batches in descending order
+    """
     fixed_rule = []
     for key, value in rule.items():
         fixed_rule.append((int(key), value))
@@ -40,6 +86,19 @@ def submit_downloader(_schedule: str,
                       dep_id: int,
                       mpi_submitter_script: str,
                       downloading_script: str) -> int:
+    """
+    Submit a download job through the MPI submitter script.
+    
+    Args:
+        _schedule: Path to the schedule directory
+        iteration_id: Iteration identifier for the job
+        dep_id: ID of the job this submission depends on, or None
+        mpi_submitter_script: Path to the MPI job submission script
+        downloading_script: Path to the downloading script to be executed
+    
+    Returns:
+        int: Job ID of the submitted job
+    """
     iteration = str(iteration_id).zfill(4)
 
     idx = submit_job(mpi_submitter_script,
@@ -56,6 +115,19 @@ def submit_verifier(_schedule: str,
                     mpi_submitter_script: str,
                     verifying_script: str,
                     dep_id: int = None) -> int:
+    """
+    Submit a verification job through the MPI submitter script.
+    
+    Args:
+        _schedule: Path to the schedule directory
+        iteration_id: Iteration identifier for the job
+        mpi_submitter_script: Path to the MPI job submission script
+        verifying_script: Path to the verifying script to be executed
+        dep_id: ID of the job this submission depends on, or None
+    
+    Returns:
+        int: Job ID of the submitted job
+    """
     iteration = str(iteration_id).zfill(4)
 
     idx = submit_job(mpi_submitter_script,
@@ -68,6 +140,17 @@ def submit_verifier(_schedule: str,
 
 
 def create_schedules(config: Config, logger: Logger) -> None:
+    """
+    Create download schedules based on server profiles and available resources.
+    
+    This function analyzes server profiles, determines how many resources to allocate
+    to each server based on scheduling rules, and creates schedule configurations
+    for the downloader jobs.
+    
+    Args:
+        config: Configuration object with download parameters
+        logger: Logger instance for output
+    """
     logger.info("Creating schedules")
     # Get parameters from config
     server_ignored_csv: str = config.get_folder("ignored_table")
@@ -116,6 +199,18 @@ def create_schedules(config: Config, logger: Logger) -> None:
 
 
 def submit_downloaders(config: Config, logger: Logger) -> None:
+    """
+    Submit download and verification jobs for all schedules.
+    
+    For each schedule:
+    1. Submit multiple download jobs with appropriate dependencies
+    2. Submit a verification job dependent on the last download job
+    3. Record job IDs for future reference
+    
+    Args:
+        config: Configuration object with job submission parameters
+        logger: Logger instance for output
+    """
     logger.info("Submitting downloaders")
     # Get parameters from config
     schedules_path: str = os.path.join(config.get_folder("schedules_folder"),
@@ -164,6 +259,14 @@ def submit_downloaders(config: Config, logger: Logger) -> None:
 
 
 def main():
+    """
+    Main entry point that coordinates the schedule creation and job submission process.
+    
+    1. Loads configuration from environment variables
+    2. Creates downloading schedules based on server profiles
+    3. Submits downloading and verification jobs
+    4. Updates the checkpoint to indicate completion
+    """
     config_path = os.environ.get("CONFIG_PATH")
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")

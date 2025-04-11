@@ -4,7 +4,30 @@ from distributed_downloader.core.initializers.base_initializer import BaseInitia
 
 
 class LilaInitializer(BaseInitializer):
+    """
+    Initializer for the Labeled Information Library of Alexandria (Lila) dataset.
+
+    This initializer processes the Lila dataset with the following steps:
+    1. Loads the raw dataframe from the specified input path.
+    2. Filters out entries that:
+       - Don't have a URL value (checking url_gcp, url_aws, and url_azure columns)
+       - Have "empty" as the original_label
+    3. Creates an 'identifier' column from available URL columns with the following priority:
+       url_gcp -> url_aws -> url_azure
+    4. Renames 'image_id' to 'source_id'
+    5. Extracts server names from the identifiers
+    6. Generates UUIDs for each entry
+    7. Partitions the dataframe based on server names and batch size
+    8. Saves the processed dataset to the specified output location
+    """
+
     def run(self):
+        """
+        Executes the initialization process for the Lila dataset.
+        
+        This method performs the complete pipeline of loading, filtering, 
+        processing, and saving the Lila data.
+        """
         multimedia_df = self.load_raw_df()
 
         multimedia_df_prep = (

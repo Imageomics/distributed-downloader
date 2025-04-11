@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 
 import pyspark.sql.functions as func
-from pyspark.sql import SparkSession, DataFrame, Window
+from pyspark.sql import DataFrame, SparkSession, Window
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 
@@ -157,6 +157,9 @@ class BaseInitializer(ABC):
         return str(uuid.uuid4())
 
     def __del__(self):
+        """
+        Destructor method that stops the Spark session when the object is deleted.
+        """
         self.spark.stop()
 
     @abstractmethod
