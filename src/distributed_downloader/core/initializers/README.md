@@ -45,15 +45,16 @@ The following initializers are available:
 - `GBIFInitializer`: Initializer for the GBIF dataset. It filters out any entries without an `gbifID` or `identifier`
   value.
   Additionally, removes any entries that are not `StillImage` by type or `image` by format.
-  And lastly, it removes any entries that have `MATERIAL_CITATION` in `basisOfRecord`.
+  And lastly, it removes any entries that have `MATERIAL_CITATION` in `basisOfRecord`. This is because these are known to be images of text documents.
 - `FathomNetInitializer`: Initializer for the FathomNet dataset. It filters out any entries without an `uuid` or `url`
   value.
   Additionally, removes any entries that are "not valid" by the `valid` column.
-- `EoLInitializer`: Initializer for the EoL dataset. It filters out any entries without an `EOL content ID` or
+- `EoLInitializer`: Initializer for the EOL dataset. It filters out any entries without an `EOL content ID` or
   `EOL Full-Size Copy URL` value.
-- `LilaInitializer`: Initializer for the Lila dataset. It filters out any entries that do not have a `url` value (by
+    - The `EOL content ID` is set as the `source_id`, which is used to map to the original metadata file to get the `EOL page ID` to match to the `taxon.tab` for taxa information. `EOL content ID` is not a persistent identifier at EOL, so it is important to maintain the original metadata file.
+- `LilaInitializer`: Initializer for the LILA dataset. It filters out any entries that do not have a `url` value (by
   `url_gcp`, `url_aws` or `url_azure`).
-  Additionally, removes any entries that are `emptu` by the `original_label` column.
+  Additionally, removes any entries that are `empty` by the `original_label` column.
 
 ## Creating a new Initializer
 
