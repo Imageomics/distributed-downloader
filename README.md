@@ -122,7 +122,7 @@ Following tools are available:
 
 - `resize` - resizes images to a new size (specified in config)
 - `image_verification` - verifies images by checking if they are corrupted
-- `duplication_based` - removes duplicate images using perceptual hashing
+- `duplication_based` - removes duplicate images using MD5 hashing
 - `size_based` - removes images that are too small (threshold specified in config)
 
 ### Creating a new tool
