@@ -32,7 +32,7 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
 3. Install required package:
     - For general use:
       ```commandline
-      pip install git+https://github.com/Imageomics/distributed-downloader
+      pip install distributed-downloader
       ```
     - For development:
       ```commandline
