@@ -8,7 +8,7 @@ The following steps are performed by the initializers:
 2. Filter the dataset to remove unwanted data.
 3. Rename the columns to match the downloader's schema. Specifically:
     - `identifier` is the url to the image.
-    - `source_id` some identification of the image, that can later be used to access relative information from the
+    - `source_id` some identification of the image, that can later be used to access relevant information from the
       source.
     - `license` (optional) the license of the image (needs to be an url to the license).
     - `source` (optional) source of the image, for licensing purposes.
