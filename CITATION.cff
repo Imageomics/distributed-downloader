@@ -1,0 +1,39 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Distributed-downloader
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Andrei
+    family-names: Kopanev
+    email: kopanev.1@buckeyemail.osu.edu
+    affiliation: Imageomics Institute
+  - given-names: 'Matthew J'
+    family-names: Thompson
+    affiliation: Imageomics Institute
+    email: thompson.4509@osu.edu
+    orcid: 'https://orcid.org/0000-0003-0583-8585'
+  - given-names: 'Elizabeth G'
+    family-names: Campolongo
+    email: campolongo.4@osu.edu
+    affiliation: Imageomics Institute
+    orcid: 'https://orcid.org/0000-0003-0846-2413'
+repository-code: 'https://github.com/Imageomics/distributed-downloader'
+abstract: >-
+  MPI-based distributed downloading tool for retrieving data
+  from diverse domains.
+keywords:
+  - parallel
+  - distributed
+  - download
+  - url
+  - "dataset generation"
+  - "MPI application"
+license: MIT
+commit: a38107246515493df93cd61e6612dd7933814b6d
+version: 0.0.1
+date-released: '2025-02-27'

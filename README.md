@@ -36,7 +36,7 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
       ```
     - For development:
       ```commandline
-      pip install .[dev]
+      pip install -e .[dev]
       ```
 
 ## How to Use
