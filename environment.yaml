@@ -3,51 +3,35 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - openmpi
-  - python
-  - uv
-  - opencv
-  - pyspark
+  - python>=3.10 <=3.12
   - attrs
   - brotli
-  - certifi
-  - charset-normalizer
   - cramjam
   - cython
-  - exceptiongroup
   - fsspec
-  - hatchling
-  - idna
   - inflate64
-  - iniconfig
+  - openmpi
   - mpi4py
   - multivolumefile
-  - numpy
-  - packaging
+  - opencv
   - pandas
   - pathspec
   - pillow
-  - pip
-  - pluggy
   - psutil
-  - py4j
   - pyarrow
   - pybcj
   - pycryptodomex
   - pyppmd
-  - pytest
-  - python-dateutil
+  - pyspark>=3.4.0
   - python-dotenv
-  - pytz
   - pyyaml
   - pyzstd
   - requests
   - setuptools
-  - six
   - texttable
-  - tomli
   - trove-classifiers
   - typing-extensions
-  - tzdata
-  - urllib3
   - wheel
+  # Development dependencies
+  - pytest
+  - ruff

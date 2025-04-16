@@ -29,7 +29,7 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
    official websites:
     - [OpenMPI](https://docs.open-mpi.org/en/v5.0.x/installing-open-mpi/quickstart.html)
     - [IntelMPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html)
-3. Install required package:
+3. Install the required package:
     - For general use:
       ```commandline
       pip install git+https://github.com/Imageomics/distributed-downloader
@@ -101,9 +101,9 @@ download_images("/path/to/config.yaml")
 
 Downloader has two logging profiles:
 
-- `INFO` - logs only the most important information, for example when a batch is started and finished. It also logs out
+- `INFO` - logs only the most important information, for example, when a batch is started and finished. It also logs out
   any error that occurred during download, image decoding, or writing batch to the filesystem
-- `DEBUG` - logs all information, for example logging start and finish of each downloaded image.
+- `DEBUG` - logs all information, for example, logging start and finish of each downloaded image.
 
 ### Tools script
 
@@ -118,7 +118,7 @@ from distributed_downloader import apply_tools
 apply_tools("/path/to/config.yaml", "resize")
 ```
 
-Following tools are available:
+The following tools are available:
 
 - `resize` - resizes images to a new size (specified in config)
 - `image_verification` - verifies images by checking if they are corrupted

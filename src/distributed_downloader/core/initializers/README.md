@@ -70,3 +70,11 @@ already implemented in the `BaseInitializer` class, and should be called in the 
 - `source_id` is highly recommended to be unique for each image, and be persistent across iterations of the dataset.
   Otherwise, it may be challenging to map additional information to the images. Or it may be challenging to update the
   dataset in the future.
+
+### Required columns for proper `distributed-downloader` work
+
+Initializer has to create a dataset with the following columns:
+- `uuid` - unique internal identifier that is highly recommended to be generated on this step for later consistency
+- `identifier` - url to the image
+- `source_id` - some identification of the image that can later be used to access relative information from the
+  source

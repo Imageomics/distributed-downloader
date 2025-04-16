@@ -15,7 +15,7 @@ authors = [
 ]
 description = "A tool for downloading files from a list of URLs in parallel."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10, <=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -28,7 +28,7 @@ dependencies = [
     "cython",
     "fsspec",
     "inflate64",
-    "mpi4py < 4",
+    "mpi4py",
     "multivolumefile",
     "opencv-python",
     "pandas",
