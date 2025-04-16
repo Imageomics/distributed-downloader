@@ -210,7 +210,7 @@ Downloaded data is stored in `images_folder` (configured in config file),
 partitioned by `server_name` and `partition_id`, in two parquet files with following schemes:
 
 - `successes.parquet`:
-  - uuid: string - TreeOfLife internal unique identifier
+  - uuid: string - downloaded dataset internal unique identifier (created to distinguish between all component datasets downloaded with this package)
   - source_id: string - id of the entry provided by its source (e.g., `gbifID`)
   - identifier: string - source URL of the image
   - is_license_full: boolean - True indicates that `license`, `source`, and `title` all have non-null values for that
@@ -225,7 +225,7 @@ partitioned by `server_name` and `partition_id`, in two parquet files with follo
   - image: bytes - binary image data
 
 - `errors.parquet`:
-  - uuid: string - TreeOfLife internal id
+  - uuid: string - downloaded dataset internal unique identifier (created to distinguish between all component datasets downloaded with this package)
   - identifier: string - URL of the image
   - retry_count: integer - number of download attempts
   - error_code: integer - HTTP or other error code
