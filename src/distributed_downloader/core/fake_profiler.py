@@ -32,7 +32,7 @@ def main():
     Future Direction:
     ----------------
     1. Move partition counting to initialization phase
-    2. Implement Master-slave downloader architecture to:
+    2. Implement controller-worker downloader architecture to:
        - Dynamically adjust speeds based on real-time performance
        - Vary the number of concurrent downloaders per server
        - Self-regulate without needing a separate profiling step
