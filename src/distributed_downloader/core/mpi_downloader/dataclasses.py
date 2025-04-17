@@ -556,14 +556,14 @@ class WriterServer:
     Attributes:
         server_name: Name of the server
         download_complete: Event signaling when downloads are complete
-        competed_queue: Queue of completed batches
+        completed_queue: Queue of completed batches
         total_batches: Total number of batches to process
         done_batches: Number of batches that have been processed
     """
     
     server_name: str
     download_complete: threading.Event
-    competed_queue: queue.Queue[CompletedBatch]
+    completed_queue: queue.Queue[CompletedBatch]
     total_batches: int
     done_batches: int = 0
 
