@@ -13,10 +13,11 @@ authors = [
     { name = "Elizabeth G. Campolongo", email = "e.campolongo479@gmail.com" },
     { name = "Matthew J. Thompson", email = "thompson.m.j@outlook.com" },
 ]
-description = "A tool for downloading files from a list of URLs in parallel."
+description = "MPI-based tool for downloading images from a list of URLs in parallel."
 readme = "README.md"
 requires-python = ">=3.10, <=3.12"
 classifiers = [
+    Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
