@@ -23,6 +23,13 @@ authors:
     affiliation: Imageomics Institute
     orcid: 'https://orcid.org/0000-0003-0846-2413'
 repository-code: 'https://github.com/Imageomics/distributed-downloader'
+identifiers:
+  - description: "The GitHub release URL of tag v0.2.0."
+    type: url
+    value: "https://github.com/Imageomics/distributed-downloader/releases/tag/v0.2.0"
+  - description: "The GitHub URL of the commit tagged with v0.2.0."
+    type: url
+    value: "https://github.com/Imageomics/distributed-downloader/tree/<commit-hash>" # update post release
 abstract: >-
   MPI-based distributed downloading tool for retrieving data
   from diverse domains.
@@ -34,6 +41,5 @@ keywords:
   - "dataset generation"
   - "MPI application"
 license: MIT
-commit: a38107246515493df93cd61e6612dd7933814b6d
-version: 0.0.1
-date-released: '2025-02-27'
+version: 0.2.0
+date-released: '2025-04-17'
