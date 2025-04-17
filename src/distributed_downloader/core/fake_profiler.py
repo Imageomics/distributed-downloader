@@ -7,6 +7,37 @@ from distributed_downloader.tools.config import Config
 
 
 def main():
+    """
+    Generates a profiling table for servers with default rate limits.
+
+    Background:
+    -----------
+    The original concept was to dynamically profile server performance by:
+    - Running test downloads to measure actual download speeds
+    - Identifying response times and download capacity before throttling occurs
+    - Filtering out non-responsive or problematic servers
+
+    Current Implementation:
+    ----------------------
+    This simpler approach was adopted because comprehensive profiling:
+    - Is time-consuming to execute
+    - Isn't compatible with the current downloader architecture (lacks dynamic
+      allocation of new downloaders when bandwidth permits)
+
+    Current behavior:
+    1. Counts available download partitions for each server
+    2. Assigns a default rate limit (from config) to all servers
+    3. Creates a profiles table CSV with this information
+
+    Future Direction:
+    ----------------
+    1. Move partition counting to initialization phase
+    2. Implement controller-worker downloader architecture to:
+       - Dynamically adjust speeds based on real-time performance
+       - Vary the number of concurrent downloaders per server
+       - Self-regulate without needing a separate profiling step
+    3. Allow initial speed/concurrency suggestions to optimize early performance
+    """
     config_path = os.environ.get("CONFIG_PATH")
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
