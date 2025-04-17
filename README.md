@@ -24,7 +24,7 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
 
 ### Pip installation
 
-1. Install Python 3.10 or higher
+1. Install Python 3.10 or 3.11
 2. Install MPI, any MPI should work, tested with OpenMPI and IntelMPI. Installation instructions can be found on
    official websites:
     - [OpenMPI](https://docs.open-mpi.org/en/v5.0.x/installing-open-mpi/quickstart.html)
@@ -32,7 +32,7 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
 3. Install the required package:
     - For general use:
       ```commandline
-      pip install git+https://github.com/Imageomics/distributed-downloader
+      pip install distributed-downloader
       ```
     - For development:
       ```commandline
