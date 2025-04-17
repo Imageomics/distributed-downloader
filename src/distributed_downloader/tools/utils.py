@@ -46,7 +46,7 @@ def load_dataframe(spark: SparkSession, input_path: str, scheme: Optional[Struct
     return df
 
 
-def ensure_created(list_of_path: List[str]) -> None:
+def ensure_created(list_of_path: Sequence[str]) -> None:
     for path in list_of_path:
         os.makedirs(path, exist_ok=True)
 

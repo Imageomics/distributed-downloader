@@ -18,6 +18,8 @@ class Checkpoint:
         try:
             with open(path, "r") as file:
                 checkpoint = yaml.full_load(file)
+            if checkpoint is None:
+                checkpoint = {}
             for key, value in default_structure.items():
                 if key not in checkpoint:
                     checkpoint[key] = value

@@ -1,16 +1,29 @@
+"""
+Core downloader module for retrieving and processing images.
+
+This module implements the Downloader class which is responsible for:
+- Downloading images from URLs with rate limiting and error handling
+- Processing and resizing downloaded images
+- Managing parallel downloads with thread pooling
+- Adapting download rates based on server responses
+
+The downloader uses concurrent threads with semaphores to control the
+rate of requests to each server.
+"""
+
 import concurrent.futures
 import hashlib
 import logging
 import queue
 import threading
 import time
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple
 
 import cv2
 import numpy as np
 import requests
 
-from .dataclasses import DownloadedImage, CompletedBatch, RateLimit
+from .dataclasses import CompletedBatch, DownloadedImage, RateLimit
 
 _MAX_RETRIES = 5
 _TIMEOUT = 5
@@ -19,6 +32,26 @@ _RETRY_ERRORS = [429, 500, 501, 502, 503, 504]
 
 
 class Downloader:
+    """
+    Image downloader with concurrent processing, rate limiting, and error handling.
+    
+    This class manages the downloading and processing of images from URLs, controlling
+    request rates to avoid server throttling while maximizing throughput. It handles
+    retries for transient failures and processes images for storage.
+    
+    Attributes:
+        header: HTTP headers to use for requests
+        job_end_time: UNIX timestamp when the job should end
+        logger: Logger instance for output messages
+        session: HTTP session for making requests
+        rate_limit: Current download rate limit (requests per second)
+        img_size: Maximum size for image resize
+        upper_limit: Maximum allowed download rate
+        bottom_limit: Minimum allowed download rate
+        semaphore: Controls concurrent access to resources
+        convert_image: Whether to process and resize images after download
+    """
+    
     def __init__(self,
                  header: dict,
                  session: requests.Session,
@@ -27,6 +60,18 @@ class Downloader:
                  job_end_time: int = 0,
                  convert_image: bool = True,
                  logger=logging.getLogger()):
+        """
+        Initialize a new Downloader instance.
+        
+        Args:
+            header: HTTP headers to use for requests
+            session: Prepared requests.Session for HTTP connections
+            rate_limit: Rate limit object with initial, min, and max rates
+            img_size: Maximum size for image resize
+            job_end_time: UNIX timestamp when the job should end
+            convert_image: Whether to process and resize images
+            logger: Logger instance for output messages
+        """
         self.header = header
         self.job_end_time = job_end_time
         self.logger = logger
@@ -50,6 +95,20 @@ class Downloader:
                    images_requested: List[Dict[str, Any]],
                    new_rate_limit: RateLimit = None) \
             -> Tuple[CompletedBatch, float]:
+        """
+        Download and process a batch of images.
+        
+        This method handles the concurrent downloading of multiple images,
+        managing rate limits and collecting results.
+        
+        Args:
+            images_requested: List of dictionaries containing image metadata and URLs
+            new_rate_limit: Optional new rate limit to apply
+            
+        Returns:
+            Tuple[CompletedBatch, float]: A completed batch containing successful and
+                failed downloads, and the final download rate
+        """
         if new_rate_limit is not None:
             self.rate_limit = new_rate_limit.initial_rate
             self.upper_limit = new_rate_limit.upper_bound
@@ -87,6 +146,24 @@ class Downloader:
         return CompletedBatch(self.success_queue, self.error_queue), self.rate_limit
 
     def load_url(self, url: DownloadedImage, timeout: int = 2, was_delayed=True) -> bytes:
+        """
+        Download an image from a URL with rate limiting.
+        
+        This method handles the actual HTTP request to download an image,
+        respecting rate limits and checking for job timeouts.
+        
+        Args:
+            url: DownloadedImage object containing the URL and metadata
+            timeout: HTTP request timeout in seconds
+            was_delayed: Whether a delay was already applied before calling
+            
+        Returns:
+            bytes: Raw image content
+            
+        Raises:
+            TimeoutError: If the job end time is approaching
+            requests.HTTPError: For HTTP-related errors
+        """
         with self.semaphore:
             if self.job_end_time - time.time() < 0:
                 raise TimeoutError("Not enough time")
@@ -109,6 +186,19 @@ class Downloader:
             return response.content
 
     def _callback_builder(self, executor: concurrent.futures.ThreadPoolExecutor, prep_img: DownloadedImage):
+        """
+        Build a callback function for handling download completion or failure.
+        
+        This method creates a callback function that will be called when a download
+        completes or fails, handling retry logic and rate limit adjustments.
+        
+        Args:
+            executor: Thread executor for submitting retry tasks
+            prep_img: DownloadedImage object being processed
+            
+        Returns:
+            function: Callback function to handle download results
+        """
         def _done_callback(future: concurrent.futures.Future):
             with self._condition:
                 try:
@@ -144,6 +234,22 @@ class Downloader:
         return _done_callback
 
     def process_image(self, return_entry: DownloadedImage, raw_image_bytes: bytes) -> None:
+        """
+        Process a downloaded image by resizing and computing checksums.
+        
+        This method processes raw image data by:
+        1. Converting to a NumPy array
+        2. Computing checksums for integrity verification
+        3. Resizing if larger than the target dimensions
+        4. Storing the processed image and metadata
+        
+        Args:
+            return_entry: DownloadedImage object to update with processed data
+            raw_image_bytes: Raw image bytes from the download
+            
+        Raises:
+            ValueError: If the image is corrupted or invalid
+        """
         return_entry.end_time = time.perf_counter()
 
         self.logger.debug(f"Processing {return_entry.identifier}")
@@ -180,6 +286,20 @@ class Downloader:
         self.logger.debug(f"Processed {return_entry.identifier}")
 
     def process_error(self, return_entry: DownloadedImage, error: Exception) -> bool:
+        """
+        Process download errors and determine if retry is appropriate.
+        
+        This method handles various error types that can occur during download
+        and decides if a retry should be attempted based on the error type and
+        retry count.
+        
+        Args:
+            return_entry: DownloadedImage object that encountered an error
+            error: Exception that occurred during download or processing
+            
+        Returns:
+            bool: True if a retry should be attempted, False otherwise
+        """
         if isinstance(error, TimeoutError):
             self.logger.info("Timout, trying to exit")
 
@@ -216,6 +336,16 @@ class Downloader:
 
     @staticmethod
     def image_resize(image: np.ndarray, max_size=1024) -> tuple[np.ndarray[int, np.dtype[np.uint8]], np.ndarray[int, np.dtype[np.uint32]]]:
+        """
+        Resize an image while preserving aspect ratio.
+        
+        Args:
+            image: NumPy array containing the image data
+            max_size: Maximum dimension for the resized image
+            
+        Returns:
+            tuple: (resized_image, new_dimensions) where dimensions are [height, width]
+        """
         h, w = image.shape[:2]
         if h > w:
             new_h = max_size

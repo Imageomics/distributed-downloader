@@ -3,13 +3,12 @@ import hashlib
 import os
 import time
 from functools import partial
-from typing import List, TextIO, Tuple
+from typing import List, TextIO, Tuple, Optional
 
 import cv2
 import numpy as np
 import pandas as pd
 from PIL import UnidentifiedImageError, Image
-import mpi4py.MPI as MPI
 
 from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.registry import ToolsBase, ToolsRegistryBase
@@ -33,19 +32,21 @@ class RunnerToolBase(ToolsBase):
 class MPIRunnerTool(RunnerToolBase):
 
     def __init__(self, cfg: Config):
+        import mpi4py.MPI as MPI
+
         super().__init__(cfg)
 
-        self.filter_folder: str = None
-        self.filter_table_folder: str = None
-        self.verification_folder: str = None
-        self.verification_IO: TextIO = None
+        self.filter_folder: Optional[str] = None
+        self.filter_table_folder: Optional[str] = None
+        self.verification_folder: Optional[str] = None
+        self.verification_IO: Optional[TextIO] = None
 
-        self.data_scheme: List[str] = None
-        self.verification_scheme: List[str] = None
+        self.data_scheme: Optional[List[str]] = None
+        self.verification_scheme: Optional[List[str]] = None
 
         self.mpi_comm: MPI.Intracomm = MPI.COMM_WORLD
         self.mpi_rank: int = self.mpi_comm.rank
-        self.total_time: int = None
+        self.total_time: Optional[int] = None
 
     def is_enough_time(self):
         assert self.total_time is not None, ValueError("total_time is not set")
@@ -83,8 +84,8 @@ class MPIRunnerTool(RunnerToolBase):
     def get_schedule(self):
         schedule_df = pd.read_csv(os.path.join(self.filter_folder, "schedule.csv"))
         schedule_df = schedule_df.query(f"rank == {self.mpi_rank}")
-        verification_df = self.load_table(self.verification_folder, ["server_name", "partition_id"])
-        outer_join = schedule_df.merge(verification_df, how='outer', indicator=True, on=["server_name", "partition_id"])
+        verification_df = self.load_table(self.verification_folder, self.verification_scheme)
+        outer_join = schedule_df.merge(verification_df, how='outer', indicator=True, on=self.verification_scheme)
         return outer_join[(outer_join["_merge"] == 'left_only')].drop('_merge', axis=1)
 
     def get_remaining_table(self, schedule: pd.DataFrame) -> pd.api.typing.DataFrameGroupBy:
@@ -93,10 +94,10 @@ class MPIRunnerTool(RunnerToolBase):
         df = self.load_table(self.filter_table_folder)
         df = df.merge(schedule,
                       how="right",
-                      on=["server_name", "partition_id"])
+                      on=self.verification_scheme)
         df = df[self.data_scheme]
 
-        return df.groupby(["server_name", "partition_id"], group_keys=True)
+        return df.groupby(self.verification_scheme, group_keys=True)
 
     def apply_filter(self, filtering_df: pd.DataFrame, server_name: str, partition_id: str) -> int:
         raise NotImplementedError()
@@ -143,7 +144,7 @@ class FilterRunnerTool(MPIRunnerTool):
 
     def __init__(self, cfg: Config):
         super().__init__(cfg)
-        self.data_scheme: List[str] = ["uuid", "gbif_id", "server_name", "partition_id"]
+        self.data_scheme: List[str] = ["uuid", "source_id", "server_name", "partition_id"]
         self.verification_scheme: List[str] = ["server_name", "partition_id"]
         self.total_time = 150
 
@@ -203,9 +204,9 @@ class ImageVerificationRunnerTool(MPIRunnerTool):
 
         self.data_scheme: List[str] = ["server_name", "partition_id"]
         self.verification_scheme: List[str] = ["server_name", "partition_id"]
-        self.corrupted_folder: str = None
-        self.corrupted_scheme: List[str] = ["uuid", "gbif_id", "server_name", "partition_id"]
-        self.corrupted_IO: TextIO = None
+        self.corrupted_folder: Optional[str] = None
+        self.corrupted_scheme: List[str] = ["uuid", "source_id", "server_name", "partition_id"]
+        self.corrupted_IO: Optional[TextIO] = None
         self.total_time = 150
 
     def ensure_folders_created(self):

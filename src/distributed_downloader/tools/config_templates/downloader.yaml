@@ -1,6 +1,7 @@
 account: ""
 path_to_input: ""
 path_to_output_folder: ""
+initializer_type: ""
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster

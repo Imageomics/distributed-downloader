@@ -1,11 +1,22 @@
+"""
+Data structures for the distributed downloader system.
+
+This module defines the core data structures used throughout the downloader:
+- DownloadedImage: Represents an image being downloaded with metadata
+- SuccessEntry/ErrorEntry: Models for successful and failed downloads
+- CompletedBatch: Collection of download results
+- RateLimit: Dynamic rate limiting configuration
+- Other supporting classes for batch processing and scheduling
+"""
+
 from __future__ import annotations
 
+import math
 import multiprocessing
 import queue
 import threading
 import uuid
-import math
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import numpy as np
 from attr import define, field
@@ -16,6 +27,32 @@ _NOT_PROVIDED = "Not provided"
 
 @define
 class DownloadedImage:
+    """
+    Represents an image being downloaded with its metadata and processing state.
+    
+    This class tracks the state of an image throughout the download process,
+    including retry attempts, error conditions, and image processing results.
+    
+    Attributes:
+        retry_count: Number of retry attempts made
+        error_code: Error code if download failed (0 for success)
+        error_msg: Error message if download failed
+        unique_name: Unique identifier for the image
+        source_id: Source identifier from the original dataset
+        identifier: URL or other identifier for the image
+        is_license_full: Whether complete license information is available (license, source, and title)
+        license: License information
+        source: Source information
+        title: Title or caption information
+        hashsum_original: MD5 checksum of the original image
+        hashsum_resized: MD5 checksum of the resized image
+        image: Actual image data as bytes
+        original_size: Original dimensions [height, width]
+        resized_size: Resized dimensions [height, width]
+        start_time: Time when download started
+        end_time: Time when download completed
+    """
+    
     retry_count: int
     error_code: int
     error_msg: str
@@ -40,12 +77,26 @@ class DownloadedImage:
 
     @classmethod
     def from_row(cls, row: Dict[str, Any]) -> DownloadedImage:
+        """
+        Create a DownloadedImage instance from a dictionary row.
+        
+        Args:
+            row: Dictionary containing image metadata
+            
+        Returns:
+            DownloadedImage: A new initialized instance
+        """
+        if "EOL content ID" in row.keys() and 'EOL page ID' in row.keys():
+            source_id = row["EOL content ID"] + "_" + row['EOL page ID']
+        else:
+            source_id = "None"
+
         return cls(
             retry_count=0,
             error_code=0,
             error_msg="",
             unique_name=row.get("uuid", uuid.uuid4().hex),
-            source_id=row.get("source_id", 0),
+            source_id=row.get("source_id", source_id),
             identifier=row.get("identifier", ""),
             is_license_full=all([row.get("license", None), row.get("source", None), row.get("title", None)]),
             license=row.get("license", _NOT_PROVIDED) or _NOT_PROVIDED,
@@ -55,6 +106,16 @@ class DownloadedImage:
 
 
 def init_downloaded_image_entry(image_entry: np.ndarray, row: Dict[str, Any]) -> np.ndarray:
+    """
+    Initialize a numpy array entry with image metadata.
+    
+    Args:
+        image_entry: numpy array to be initialized
+        row: Dictionary containing image metadata
+        
+    Returns:
+        np.ndarray: Initialized array entry
+    """
     image_entry["is_downloaded"] = False
     image_entry["retry_count"] = 0
     image_entry["error_code"] = 0
@@ -72,6 +133,27 @@ def init_downloaded_image_entry(image_entry: np.ndarray, row: Dict[str, Any]) ->
 
 @define
 class SuccessEntry:
+    """
+    Represents a successfully downloaded image with all required metadata.
+    
+    This class stores all information about a successfully downloaded and processed image,
+    including image data, checksums, and metadata from the original source.
+    
+    Attributes:
+        uuid: Unique identifier for the image
+        source_id: Source identifier from the original dataset
+        identifier: URL or other identifier for the image
+        is_license_full: Whether complete license information is available (license, source, and title)
+        license: License information
+        source: Source information
+        title: Title or caption information
+        hashsum_original: MD5 checksum of the original image
+        hashsum_resized: MD5 checksum of the resized image
+        original_size: Original dimensions [height, width]
+        resized_size: Resized dimensions [height, width]
+        image: Actual image data as bytes
+    """
+    
     uuid: str
     source_id: int
     identifier: str
@@ -86,9 +168,18 @@ class SuccessEntry:
     image: bytes
 
     def __success_dtype(self, img_size: int):
+        """
+        Define the NumPy dtype for storing success entries.
+        
+        Args:
+            img_size: Size of the image dimension
+            
+        Returns:
+            np.dtype: NumPy data type definition
+        """
         return np.dtype([
             ("uuid", "S32"),
-            ("source_id", "i4"),
+            ("source_id", "S32"),
             ("identifier", "S256"),
             ("is_license_full", "bool"),
             ("license", "S256"),
@@ -103,17 +194,25 @@ class SuccessEntry:
 
     @staticmethod
     def get_success_spark_scheme():
-        from pyspark.sql.types import StructType
-        from pyspark.sql.types import StringType
-        from pyspark.sql.types import LongType
-        from pyspark.sql.types import StructField
-        from pyspark.sql.types import BooleanType
-        from pyspark.sql.types import ArrayType
-        from pyspark.sql.types import BinaryType
+        """
+        Define the PySpark schema for success entries.
+        
+        Returns:
+            StructType: PySpark schema definition
+        """
+        from pyspark.sql.types import (
+            ArrayType,
+            BinaryType,
+            BooleanType,
+            LongType,
+            StringType,
+            StructField,
+            StructType,
+        )
 
         return StructType([
             StructField("uuid", StringType(), False),
-            StructField("source_id", LongType(), False),
+            StructField("source_id", StringType(), False),
             StructField("identifier", StringType(), False),
             StructField("is_license_full", BooleanType(), False),
             StructField("license", StringType(), True),
@@ -128,6 +227,15 @@ class SuccessEntry:
 
     @classmethod
     def from_downloaded(cls, downloaded: DownloadedImage) -> SuccessEntry:
+        """
+        Create a SuccessEntry from a DownloadedImage.
+        
+        Args:
+            downloaded: The DownloadedImage to convert
+            
+        Returns:
+            SuccessEntry: A new success entry instance
+        """
         return cls(
             uuid=downloaded.unique_name,
             source_id=downloaded.source_id,
@@ -145,6 +253,15 @@ class SuccessEntry:
 
     @staticmethod
     def to_list_download(downloaded: DownloadedImage) -> List:
+        """
+        Convert a DownloadedImage to a list format for storage.
+        
+        Args:
+            downloaded: DownloadedImage to convert
+            
+        Returns:
+            List: List of values in the correct order for storage
+        """
         return [
             downloaded.unique_name,
             downloaded.source_id,
@@ -162,6 +279,12 @@ class SuccessEntry:
 
     @staticmethod
     def get_names() -> List[str]:
+        """
+        Get the column names for success entries.
+        
+        Returns:
+            List[str]: List of column names
+        """
         return [
             "uuid",
             "source_id",
@@ -178,6 +301,12 @@ class SuccessEntry:
         ]
 
     def to_list(self) -> List:
+        """
+        Convert this SuccessEntry to a list format.
+        
+        Returns:
+            List: List representation of this entry
+        """
         return [
             self.uuid,
             self.source_id,
@@ -194,6 +323,12 @@ class SuccessEntry:
         ]
 
     def to_np(self) -> np.ndarray:
+        """
+        Convert this SuccessEntry to a NumPy array.
+        
+        Returns:
+            np.ndarray: NumPy array representation of this entry
+        """
         np_structure = np.array(
             [
                 (self.uuid,
@@ -216,6 +351,20 @@ class SuccessEntry:
 
 @define
 class ErrorEntry:
+    """
+    Represents a failed download attempt with error information.
+    
+    This class stores information about failed downloads, including
+    the error code, error message, and retry count.
+    
+    Attributes:
+        uuid: Unique identifier for the download attempt
+        identifier: URL or other identifier for the image
+        retry_count: Number of retry attempts made
+        error_code: Error code from the download attempt
+        error_msg: Error message describing the failure
+    """
+    
     uuid: str
     identifier: str
     retry_count: int
@@ -232,6 +381,15 @@ class ErrorEntry:
 
     @classmethod
     def from_downloaded(cls, downloaded: DownloadedImage) -> ErrorEntry:
+        """
+        Create an ErrorEntry from a DownloadedImage.
+        
+        Args:
+            downloaded: The DownloadedImage that failed
+            
+        Returns:
+            ErrorEntry: A new error entry instance
+        """
         return cls(
             uuid=downloaded.unique_name,
             identifier=downloaded.identifier,
@@ -242,6 +400,15 @@ class ErrorEntry:
 
     @staticmethod
     def to_list_download(downloaded: DownloadedImage) -> List:
+        """
+        Convert a DownloadedImage to a list format for error storage.
+        
+        Args:
+            downloaded: DownloadedImage to convert
+            
+        Returns:
+            List: List of error values in the correct order for storage
+        """
         return [
             downloaded.unique_name,
             downloaded.identifier,
@@ -251,6 +418,12 @@ class ErrorEntry:
         ]
 
     def to_list(self) -> List:
+        """
+        Convert this ErrorEntry to a list format.
+        
+        Returns:
+            List: List representation of this entry
+        """
         return [
             self.uuid,
             self.identifier,
@@ -260,6 +433,12 @@ class ErrorEntry:
         ]
 
     def to_np(self) -> np.ndarray:
+        """
+        Convert this ErrorEntry to a NumPy array.
+        
+        Returns:
+            np.ndarray: NumPy array representation of this entry
+        """
         np_structure = np.array(
             [
                 (self.uuid,
@@ -274,6 +453,12 @@ class ErrorEntry:
 
     @staticmethod
     def get_names() -> List[str]:
+        """
+        Get the column names for error entries.
+        
+        Returns:
+            List[str]: List of column names
+        """
         return [
             "uuid",
             "identifier",
@@ -285,6 +470,21 @@ class ErrorEntry:
 
 @define
 class ImageBatchesByServerToRequest:
+    """
+    Container for batches of images to be requested from a specific server.
+    
+    This class manages queue of URL batches for a single server, along with
+    synchronization primitives for coordinating access.
+    
+    Attributes:
+        server_name: Name of the server
+        lock: Lock for synchronized access to this container
+        writer_notification: Event to notify when writing is completed
+        urls: Queue of URL batches to process
+        max_rate: Maximum request rate for this server
+        total_batches: Total number of batches to process
+    """
+    
     server_name: str
     lock: threading.Lock
     writer_notification: threading.Event
@@ -298,6 +498,18 @@ class ImageBatchesByServerToRequest:
                     manager: multiprocessing.Manager,
                     urls: List[DataFrame],
                     max_rate: int = 50) -> ImageBatchesByServerToRequest:
+        """
+        Create an instance from pandas DataFrames.
+        
+        Args:
+            server_name: Name of the server
+            manager: Multiprocessing manager for creating synchronized objects
+            urls: List of DataFrame batches containing URLs
+            max_rate: Maximum request rate for this server
+            
+        Returns:
+            ImageBatchesByServerToRequest: A new instance
+        """
         urls_queue: queue.Queue[List[Dict[str, Any]]] = queue.Queue()
         for url_batch in urls:
             urls_queue.put(url_batch.to_dict("records"))
@@ -314,6 +526,19 @@ class ImageBatchesByServerToRequest:
 
 @define
 class CompletedBatch:
+    """
+    Container for completed download results.
+    
+    This class holds queues of successful and failed downloads
+    from a batch processing operation.
+    
+    Attributes:
+        success_queue: Queue of successfully downloaded images
+        error_queue: Queue of failed download attempts
+        batch_id: Identifier for this batch
+        offset: Offset within the processing sequence
+    """
+    
     success_queue: queue.Queue[DownloadedImage]
     error_queue: queue.Queue[DownloadedImage]
     batch_id: int = -1
@@ -322,30 +547,67 @@ class CompletedBatch:
 
 @define
 class WriterServer:
+    """
+    Coordinates writing results for a specific server.
+    
+    This class tracks the completion status of downloads for a server
+    and manages the queue of completed batches.
+    
+    Attributes:
+        server_name: Name of the server
+        download_complete: Event signaling when downloads are complete
+        completed_queue: Queue of completed batches
+        total_batches: Total number of batches to process
+        done_batches: Number of batches that have been processed
+    """
+    
     server_name: str
     download_complete: threading.Event
-    competed_queue: queue.Queue[CompletedBatch]
+    completed_queue: queue.Queue[CompletedBatch]
     total_batches: int
     done_batches: int = 0
 
 
 @define
 class RateLimit:
+    """
+    Dynamic rate limiting configuration.
+    
+    This class manages the rate limits for download requests,
+    providing upper and lower bounds for adaptive rate control.
+    
+    Attributes:
+        initial_rate: Starting rate limit
+        _multiplier: Multiplier for determining bounds
+        lower_bound: Minimum allowed rate
+        upper_bound: Maximum allowed rate
+    """
+    
     initial_rate = field(init=True, type=float)
     _multiplier = field(init=True, type=float, default=0.5, validator=lambda _, __, value: 0 < value)
     lower_bound = field(init=False, type=int, converter=math.floor, default=0)
     upper_bound = field(init=False, type=int, converter=math.floor, default=0)
 
     def __attrs_post_init__(self):
+        """
+        Post-initialization setup to calculate rate limits.
+        """
         self.lower_bound = max(self.initial_rate * (1 - self._multiplier), 1)
         self.upper_bound = self.initial_rate * (1 + self._multiplier)
 
     def change_rate(self, new_rate: float):
+        """
+        Update rate limits based on a new rate.
+        
+        Args:
+            new_rate: New rate to base limits on
+        """
         self.initial_rate = new_rate
         self.lower_bound = max(self.initial_rate * (1 - self._multiplier), 1)
         self.upper_bound = self.initial_rate * (1 + self._multiplier)
 
 
+# NumPy dtype for server profile data
 profile_dtype = np.dtype([
     ("server_name", "S256"),
     ("total_batches", "i4"),

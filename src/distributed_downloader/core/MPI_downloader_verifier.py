@@ -13,6 +13,24 @@ from distributed_downloader.tools.utils import init_logger
 def verify_batches(config: Config,
                    server_schedule: str,
                    logger: Logger) -> None:
+    """
+    Verifies download completion status for batches in a schedule.
+
+    This function:
+    1. Loads the schedule configuration and existing verification data
+    2. Checks each batch's status on disk (completed/failed)
+    3. Updates the verification file with current status
+    4. Creates _UNCHANGED flag if verification is stable
+    5. Creates _DONE flag when all batches are completed
+
+    Args:
+        config: Configuration object with paths to relevant folders
+        server_schedule: Path to the schedule directory to verify
+        logger: Logger instance for output messages
+
+    Raises:
+        ValueError: If the schedule config file is not found
+    """
     logger.info(f"Verifying batches for {server_schedule}")
 
     server_urls_downloaded = config.get_folder("images_folder")
@@ -88,6 +106,18 @@ def verify_batches(config: Config,
 
 
 def main():
+    """
+    Main entry point that loads configuration and triggers batch verification.
+    
+    This function:
+    1. Reads the configuration from the environment
+    2. Parses command line arguments to get the schedule path
+    3. Initializes a logger
+    4. Calls verify_batches() to check download completion status
+    
+    Raises:
+        ValueError: If the CONFIG_PATH environment variable is not set
+    """
     config_path = os.environ.get("CONFIG_PATH")
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")

@@ -1,11 +1,19 @@
+"""
+Storage module for the distributed downloader.
+
+This module handles writing downloaded image data to persistent storage.
+It processes both successful and failed downloads, storing them in
+separate parquet files with appropriate metadata.
+"""
+
 import logging
 import os
 import time
-from typing import List, Any
+from typing import Any, List
 
 import pandas as pd
 
-from .dataclasses import ErrorEntry, SuccessEntry, CompletedBatch
+from .dataclasses import CompletedBatch, ErrorEntry, SuccessEntry
 
 
 def write_batch(
@@ -14,6 +22,24 @@ def write_batch(
         job_end_time: int,
         logger: logging.Logger = logging.getLogger()
 ) -> None:
+    """
+    Write a completed batch of downloads to storage.
+    
+    This function processes successful and failed downloads from a batch,
+    writing them to separate parquet files with appropriate metadata.
+    It also creates marker files indicating completion status.
+    
+    Args:
+        completed_batch: CompletedBatch object containing successful and failed downloads
+        output_path: Directory path to write the batch data
+        job_end_time: UNIX timestamp when the job should end
+        logger: Logger instance for output messages
+        
+    Raises:
+        TimeoutError: If there is not enough time left to complete writing
+        ValueError: If the batch is empty (no successes or errors)
+        Exception: For other errors during the write process
+    """
     logger.debug(f"Writing batch to {output_path}")
 
     os.makedirs(output_path, exist_ok=True)
@@ -46,9 +72,11 @@ def write_batch(
         logger.info(f"Completed collecting entries for {output_path}")
 
         pd.DataFrame(successes_list, columns=SuccessEntry.get_names()).to_parquet(f"{output_path}/successes.parquet",
-                                                                                  index=False)
+                                                                                  index=False, compression="zstd",
+                                                                                  compression_level=3)
         pd.DataFrame(errors_list, columns=ErrorEntry.get_names()).to_parquet(f"{output_path}/errors.parquet",
-                                                                             index=False)
+                                                                             index=False, compression="zstd",
+                                                                             compression_level=3)
 
         logger.info(f"Completed writing to {output_path}")
 
