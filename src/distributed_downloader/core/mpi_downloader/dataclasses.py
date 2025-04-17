@@ -40,7 +40,7 @@ class DownloadedImage:
         unique_name: Unique identifier for the image
         source_id: Source identifier from the original dataset
         identifier: URL or other identifier for the image
-        is_license_full: Whether complete license information is available
+        is_license_full: Whether complete license information is available (license, source, and title)
         license: License information
         source: Source information
         title: Title or caption information
@@ -143,7 +143,7 @@ class SuccessEntry:
         uuid: Unique identifier for the image
         source_id: Source identifier from the original dataset
         identifier: URL or other identifier for the image
-        is_license_full: Whether complete license information is available
+        is_license_full: Whether complete license information is available (license, source, and title)
         license: License information
         source: Source information
         title: Title or caption information
