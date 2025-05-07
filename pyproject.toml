@@ -75,8 +75,8 @@ Repository = "https://github.com/Imageomics/distributed-downloader.git"
 "Bug Tracker" = "https://github.com/Imageomics/distributed-downloader/issues"
 
 [project.scripts]
-distributed_downloader = "distributed_downloader.main:main"
-distributed_downloader_tools = "distributed_downloader.tools:main"
+distributed_downloader = "distributed_downloader.core.main:main"
+distributed_downloader_tools = "distributed_downloader.tools.main:main"
 
 [tool.hatch.version]
 path = "src/distributed_downloader/core/__about__.py"

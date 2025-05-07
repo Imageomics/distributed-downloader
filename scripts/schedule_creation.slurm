@@ -4,15 +4,12 @@
 
 set -e
 
-logs_dir="${OUTPUT_LOGS_FOLDER}"
-mkdir -p "${logs_dir}"
-
 module load miniconda3/23.3.1-py310
 source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 
 python \
-  "${REPO_ROOT}/src/distributed_downloader/core/MPI_download_prep.py" \
+  "${DISTRIBUTED_DOWNLOADER_PATH}/core/MPI_download_prep.py" \
   > "${logs_dir}/MPI_downloader_prep.log"
 
 mv "${logs_dir}/${LOGS_BASE_FILENAME}.out" "${logs_dir}/current"

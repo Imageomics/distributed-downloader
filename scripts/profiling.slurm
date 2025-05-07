@@ -11,5 +11,5 @@ source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 
 python \
-  "${REPO_ROOT}/src/distributed_downloader/core/fake_profiler.py" \
+  "${DISTRIBUTED_DOWNLOADER_PATH}/core/fake_profiler.py" \
   > "${OUTPUT_LOGS_FOLDER}/profiler.log"

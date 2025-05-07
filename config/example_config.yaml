@@ -1,6 +1,7 @@
 account: "account_name" # Account name for the cluster
 path_to_input: "path_to_input_file" # Path to the input file with the list of servers
 path_to_output_folder: "path_to_output_folder" # Path to the output folder
+initializer_type: ""
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster

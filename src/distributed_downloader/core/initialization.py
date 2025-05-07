@@ -20,6 +20,16 @@ __initializers: Dict[str, Type[BaseInitializer]] = {
     "eol": EoLInitializer,
 }
 
+__all__ = [
+    "init_filestructure",
+    "BaseInitializer",
+    "GBIFInitializer",
+    "FathomNetInitializer",
+    "LilaInitializer",
+    "EoLInitializer",
+    "initializer",
+]
+
 
 def init_filestructure(file_structure: Dict[str, str]) -> None:
     filtered_fs = [
@@ -30,14 +40,18 @@ def init_filestructure(file_structure: Dict[str, str]) -> None:
     truncate_paths(filtered_fs)
 
 
-if __name__ == "__main__":
+def initializer():
     config_path = os.environ.get("CONFIG_PATH")
     if config_path is None:
         raise ValueError("CONFIG_PATH not set")
     config = Config.from_path(config_path, "downloader")
     assert (
-            config["initializer_type"] in __initializers.keys()
+        config["initializer_type"] in __initializers.keys()
     ), "Unknown initialization type, aborting"
 
-    initializer = __initializers[config["initializer_type"]](config)
-    initializer.run()
+    _initializer = __initializers[config["initializer_type"]](config)
+    _initializer.run()
+
+
+if __name__ == "__main__":
+    initializer()

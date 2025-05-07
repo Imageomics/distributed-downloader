@@ -2,21 +2,24 @@ import argparse
 import csv
 import os.path
 from logging import Logger
+from pathlib import Path
+from typing import Dict, Optional
 
 from distributed_downloader.tools.checkpoint import Checkpoint
 from distributed_downloader.tools.config import Config
 
-from typing import Optional, Dict
-
 try:
     from typing import LiteralString
 except ImportError:
-    from typing_extensions import LiteralString
+    pass
 
-from attr import define, field, Factory
-
+from attr import Factory, define, field
 from distributed_downloader.core.initialization import init_filestructure
-from distributed_downloader.tools.utils import submit_job, preprocess_dep_ids, init_logger
+from distributed_downloader.tools.utils import (
+    init_logger,
+    preprocess_dep_ids,
+    submit_job,
+)
 
 
 @define
@@ -25,10 +28,10 @@ class DistributedDownloader:
 
     logger: Logger = field(default=Factory(lambda: init_logger(__name__)))
 
-    urls_path: str = None
-    inner_checkpoint_path: str = None
-    profiles_path: str = None
-    schedules_folder: str = None
+    urls_path: str = ""
+    inner_checkpoint_path: str = ""
+    profiles_path: str = ""
+    schedules_folder: str = ""
 
     inner_checkpoint: Checkpoint = None
     _checkpoint_override: Optional[Dict[str, bool]] = None
@@ -60,6 +63,7 @@ class DistributedDownloader:
 
     def __init_environment(self) -> None:
         os.environ["CONFIG_PATH"] = self.config.config_path
+        os.environ["DISTRIBUTED_DOWNLOADER_PATH"] = str(Path(__file__).parent.parent.resolve())
 
         os.environ["ACCOUNT"] = self.config["account"]
         os.environ["PATH_TO_INPUT"] = self.config["path_to_input"]

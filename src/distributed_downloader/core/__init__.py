@@ -1,7 +1,8 @@
 from logging import Logger
 from typing import Optional
 
-from .main import DistributedDownloader
+from distributed_downloader.core.initialization import *
+from distributed_downloader.core.main import DistributedDownloader
 
 
 def download_images(config_path: str, logger: Optional[Logger] = None) -> None:
