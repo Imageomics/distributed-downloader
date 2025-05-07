@@ -8,11 +8,6 @@ from typing import Dict, Optional
 from distributed_downloader.tools.checkpoint import Checkpoint
 from distributed_downloader.tools.config import Config
 
-try:
-    from typing import LiteralString
-except ImportError:
-    pass
-
 from attr import Factory, define, field
 from distributed_downloader.core.initialization import init_filestructure
 from distributed_downloader.tools.utils import (

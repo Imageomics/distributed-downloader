@@ -1,8 +1,15 @@
 from logging import Logger
 from typing import Optional
 
-from distributed_downloader.core.initialization import *
 from distributed_downloader.core.main import DistributedDownloader
+from distributed_downloader.core.fake_profiler import main as fake_profiler_main
+from distributed_downloader.core.initialization import *
+from distributed_downloader.core.MPI_download_prep import main as mpi_download_prep_main
+from distributed_downloader.core.MPI_downloader_verifier import verify_batches
+from distributed_downloader.core.MPI_multimedia_downloader import download_schedule
+from distributed_downloader.core.MPI_multimedia_downloader_controller import (
+    main as mpi_multimedia_downloader_controller,
+)
 
 
 def download_images(config_path: str, logger: Optional[Logger] = None) -> None:
