@@ -10,8 +10,8 @@ export PYARROW_IGNORE_TIMEZONE=1
 
 python \
   "${DISTRIBUTED_DOWNLOADER_PATH}/core/MPI_download_prep.py" \
-  > "${logs_dir}/MPI_downloader_prep.log"
+  > "${OUTPUT_LOGS_FOLDER}/MPI_downloader_prep.log"
 
-mv "${logs_dir}/${LOGS_BASE_FILENAME}.out" "${logs_dir}/current"
-mv "${logs_dir}/${LOGS_BASE_FILENAME}.err" "${logs_dir}/current"
-mv "${logs_dir}/MPI_downloader_prep.log" "${logs_dir}/current"
+mv "${OUTPUT_LOGS_FOLDER}/${LOGS_BASE_FILENAME}.out" "${OUTPUT_LOGS_FOLDER}/current"
+mv "${OUTPUT_LOGS_FOLDER}/${LOGS_BASE_FILENAME}.err" "${OUTPUT_LOGS_FOLDER}/current"
+mv "${OUTPUT_LOGS_FOLDER}/MPI_downloader_prep.log" "${OUTPUT_LOGS_FOLDER}/current"
