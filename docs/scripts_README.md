@@ -136,7 +136,7 @@ underlying scripts.
 2. `schedule#`: The general schedule identifier to process
 3. `iteration_number`: The iteration number for the current download batch
 4. `dependency`: (Optional) The job ID that this job depends on
-5. `--recheck`: (Optional) Flag to indicate this is a recheck run
+5. `--recheck`: (Optional) Flag indicating this is a recheck job (for server_verifying.slurm)
 
 ### Features
 
@@ -146,6 +146,7 @@ underlying scripts.
 - Passes all arguments through to the submitted script
 - Uses the `afterany` dependency type, which runs after dependencies complete regardless of exit status
 - Sets up appropriate node allocation based on downloader configuration
+- Handles the special `--recheck` flag for `server_verifying.slurm` jobs
 
 ### Environment Variables Used
 
@@ -241,22 +242,25 @@ operations. It supports both regular and Spark-based tool submissions and handle
 The distributed-downloader package uses several Slurm scripts to handle different aspects of the download process. These
 scripts are environment-specific and are currently configured for the Ohio Supercomputer Center (OSC).
 
-### Job Output Format Requirement
-
-All Slurm scripts must output the job ID of the submitted job in a specific format. The job ID must be the last item on
-the line and separated by a space:
-
-```
-{anything} {id}
-```
-
-For example:
-
-```
-Submitted batch job 12345
-```
-
-This format is essential as the submission scripts parse this output to extract the job ID for dependency tracking.
+> [!IMPOTANT]
+>
+> ### Job Output Format Requirement
+>
+> All Slurm scripts must output the job ID of the submitted job in a specific format. The job ID must be the last item
+> on
+> the line and separated by a space:
+>
+> ```
+> {anything} {id}
+> ```
+>
+> For example:
+>
+> ```
+> Submitted batch job 12345
+> ```
+>
+> This format is essential as the submission scripts parse this output to extract the job ID for dependency tracking.
 
 ### initialization.slurm
 
@@ -315,6 +319,7 @@ This format is essential as the submission scripts parse this output to extract 
 - Calls `core/MPI_downloader_verifier.py` to check completion status
 - Typical run time is 2 minutes
 - Creates verification logs for each schedule
+- Haves a special `--recheck` flag to indicate rechecking of completed batches
 
 ### Environment Notes
 
@@ -338,16 +343,18 @@ The scripts assume the existence of a virtual environment at `${REPO_ROOT}/.venv
 The distributed-downloader package includes several specialized Slurm scripts to handle different aspects of the tools
 pipeline. These scripts are designed to work with the tools framework which processes downloaded images in various ways.
 
-### Job Output Format Requirement
-
-Like all other scripts in the system, the tools scripts must output the job ID of any submitted jobs in the specific
-format with the ID as the last item on a line separated by a space:
-
-```
-{anything} {id}
-```
-
-This format is essential for job dependency tracking.
+> [!IMPORTANT]
+>
+> ### Job Output Format Requirement
+>
+> Like all other scripts in the system, the tools scripts must output the job ID of any submitted jobs in the specific
+> format with the ID as the last item on a line separated by a space:
+>
+> ```
+> {anything} {id}
+> ```
+>
+> This format is essential for job dependency tracking.
 
 ### tools_filter.slurm
 

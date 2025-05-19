@@ -12,7 +12,8 @@ from distributed_downloader.tools.utils import init_logger
 
 def verify_batches(config: Config,
                    server_schedule: str,
-                   logger: Logger) -> None:
+                   logger: Logger,
+                   recheck: bool = False) -> None:
     """
     Verifies download completion status for batches in a schedule.
 
@@ -27,6 +28,7 @@ def verify_batches(config: Config,
         config: Configuration object with paths to relevant folders
         server_schedule: Path to the schedule directory to verify
         logger: Logger instance for output messages
+        recheck: Flag to force recheck of finished batches (default: False)
 
     Raises:
         ValueError: If the schedule config file is not found
@@ -42,7 +44,7 @@ def verify_batches(config: Config,
     if not os.path.exists(config_file):
         raise ValueError(f"Schedule config file {config_file} not found")
 
-    if os.path.exists(verification_file):
+    if not recheck and os.path.exists(verification_file):
         verification_df = pd.read_csv(verification_file)
     else:
         verification_df = pd.DataFrame(columns=["server_name", "partition_id", "status"])
@@ -127,12 +129,14 @@ def main():
 
     parser = argparse.ArgumentParser(description='Server downloader verifier')
     parser.add_argument("schedule_path", metavar="schedule_path", type=str, help="the path to the schedule")
+    parser.add_argument("--recheck", action="store_true", help="Force recheck finished batches")
     _args = parser.parse_args()
 
     verify_batches(
         config,
         _args.schedule_path,
-        logger
+        logger,
+        recheck=_args.recheck
     )
 
 
