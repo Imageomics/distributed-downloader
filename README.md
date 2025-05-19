@@ -230,7 +230,7 @@ when respective tool is called:
 
 - General parameters
     - `CONFIG_PATH`
-  - `DISTRIBUTED_DOWNLOADER_PATH` - path to the package directory, so that python files could be called from outside
+    - `DISTRIBUTED_DOWNLOADER_PATH` - path to the package directory, so that python files could be called from outside
     scripts
     - `ACCOUNT`
     - `PATH_TO_INPUT`
