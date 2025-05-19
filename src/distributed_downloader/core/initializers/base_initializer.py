@@ -53,8 +53,7 @@ class BaseInitializer(ABC):
             None
         """
         (
-            resul_df.repartition("server_name", "partition_id")
-            .write.partitionBy("server_name", "partition_id")
+            resul_df.write.partitionBy("server_name", "partition_id")
             .mode("overwrite")
             .format("parquet")
             .save(self.output_path)

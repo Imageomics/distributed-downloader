@@ -8,6 +8,12 @@ from distributed_downloader.core.initializers.fathom_net_initializer import (
 )
 from distributed_downloader.core.initializers.gbif_initializer import GBIFInitializer
 from distributed_downloader.core.initializers.lila_initializer import LilaInitializer
+from distributed_downloader.core.initializers.tol_fathomNet_initializer import (
+    TolFathomNetInitializer,
+)
+from distributed_downloader.core.initializers.tol_general_initializer import (
+    TolGeneralInitializer,
+)
 from distributed_downloader.tools import Config
 from distributed_downloader.tools.utils import (
     truncate_paths,
@@ -18,6 +24,8 @@ __initializers: Dict[str, Type[BaseInitializer]] = {
     "fathom_net": FathomNetInitializer,
     "lila": LilaInitializer,
     "eol": EoLInitializer,
+    "tol200m_general": TolGeneralInitializer,
+    "tol200m_fathomNet": TolFathomNetInitializer,
 }
 
 __all__ = [
@@ -27,6 +35,8 @@ __all__ = [
     "FathomNetInitializer",
     "LilaInitializer",
     "EoLInitializer",
+    "TolGeneralInitializer",
+    "TolFathomNetInitializer",
     "initializer",
 ]
 
