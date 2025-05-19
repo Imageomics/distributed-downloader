@@ -242,7 +242,7 @@ operations. It supports both regular and Spark-based tool submissions and handle
 The distributed-downloader package uses several Slurm scripts to handle different aspects of the download process. These
 scripts are environment-specific and are currently configured for the Ohio Supercomputer Center (OSC).
 
-> [!IMPOTANT]
+> [!IMPORTANT]
 >
 > ### Job Output Format Requirement
 >

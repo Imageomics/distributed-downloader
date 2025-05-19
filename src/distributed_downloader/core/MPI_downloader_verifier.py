@@ -10,10 +10,9 @@ from distributed_downloader.tools.config import Config
 from distributed_downloader.tools.utils import init_logger
 
 
-def verify_batches(config: Config,
-                   server_schedule: str,
-                   logger: Logger,
-                   recheck: bool = False) -> None:
+def verify_batches(
+    config: Config, server_schedule: str, logger: Logger, recheck: bool = False
+) -> None:
     """
     Verifies download completion status for batches in a schedule.
 
