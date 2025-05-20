@@ -17,7 +17,7 @@ class TolFathomNetInitializer(BaseInitializer):
             multimedia_df_dedup.select("uuid", "source_url")
             .withColumnRenamed("uuid", "image_uuid")
             .join(
-                multimedia_df.select("uuid", "source_url"), on="source_url", how="inner"
+                multimedia_df.select("uuid", "source_id", "source_url"), on="source_url", how="inner"
             )
             .drop("source_url")
         )

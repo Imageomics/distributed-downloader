@@ -27,7 +27,9 @@ class TolGeneralInitializer(BaseInitializer):
                 self.config["excluded_servers_path"], header=True
             )
 
-        multimedia_df = self.extract_server_name(multimedia_df.withColumnRenamed("source_url", "identifier"))
+        multimedia_df = self.extract_server_name(
+            multimedia_df.withColumnRenamed("source_url", "identifier")
+        )
         multimedia_df = multimedia_df.filter(
             multimedia_df["data_source"].isin(included_sources)
         ).filter(~multimedia_df["server_name"].isin(excluded_servers["server_name"]))
