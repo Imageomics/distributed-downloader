@@ -136,7 +136,7 @@ underlying scripts.
 2. `schedule#`: The general schedule identifier to process
 3. `iteration_number`: The iteration number for the current download batch
 4. `dependency`: (Optional) The job ID that this job depends on
-5. `--recheck`: (Optional) Flag indicating this is a recheck job (for server_verifying.slurm)
+5. `--recheck`: (Optional) Flag indicating this is a recheck job (for server_verifying.slurm, goes through to check that all expected downloads were completed)
 
 ### Features
 
@@ -319,7 +319,7 @@ scripts are environment-specific and are currently configured for the Ohio Super
 - Calls `core/MPI_downloader_verifier.py` to check completion status
 - Typical run time is 2 minutes
 - Creates verification logs for each schedule
-- Haves a special `--recheck` flag to indicate rechecking of completed batches
+- Has a special `--recheck` flag to indicate rechecking of completed batches
 
 ### Environment Notes
 
