@@ -9,6 +9,7 @@ fi
 
 schedule=$1
 iteration_number=$2
+recheck_flag=$3
 
 schedule_path="${OUTPUT_SCHEDULES_FOLDER}/current/${schedule}"
 logs_dir="${OUTPUT_LOGS_FOLDER}/current/${schedule}/${iteration_number}"
@@ -21,6 +22,11 @@ source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
 
+params = "$schedule_path"
+if [ "$recheck_flag" == "--recheck" ]; then
+  params = "$schedule_path --recheck"
+fi
+
 srun \
   --mpi=pmi2 \
   --nodes=1 \
@@ -28,5 +34,5 @@ srun \
   --cpus-per-task=1 \
   --output="${logs_dir}/MPI_downloader_verifier.log" \
   python \
-  "${REPO_ROOT}/src/distributed_downloader/core/MPI_downloader_verifier.py" \
-  "$schedule_path"
+  "${DISTRIBUTED_DOWNLOADER_PATH}/core/MPI_downloader_verifier.py" \
+  "$params"

@@ -86,8 +86,11 @@ tools_parameters:
 
 ### Main script
 
-There is one manual step to get the downloader running as designed:
-You need to call function `download_images` from package `distributed_downloader` with the `config_path` as an argument.
+There are two ways to launch the downloader:
+
+#### Python Interface
+
+You can call function `download_images` from package `distributed_downloader` with the `config_path` as an argument.
 This will initialize filestructure in the output folder, partition the input file, profile the servers for their
 possible download speed, and start downloading images. If downloading didn't finish, you can call the same function with
 the same `config_path` argument to continue downloading.
@@ -99,6 +102,27 @@ from distributed_downloader import download_images
 download_images("/path/to/config.yaml")
 ```
 
+#### Command-Line Interface
+
+Alternatively, you can use the CLI interface provided by the package:
+
+```bash
+# Basic usage
+distributed_downloader /path/to/config.yaml
+
+# Reset batching (will restart file initialization and partitioning)
+distributed_downloader /path/to/config.yaml --reset_batched
+
+# Reset profiling (will keep partitioned files but redo server profiling)
+distributed_downloader /path/to/config.yaml --reset_profiled
+```
+
+The CLI provides these options:
+
+- No flags: Continue download process from current state
+- `--reset_batched`: Restart from scratch, including reinitializing file structure and repartitioning input file
+- `--reset_profiled`: Keep partitioned files but redo server profiling step
+
 Downloader has two logging profiles:
 
 - `INFO` - logs only the most important information, for example, when a batch is started and finished. It also logs out
@@ -108,8 +132,11 @@ Downloader has two logging profiles:
 ### Tools script
 
 After downloading is finished, you can use the `tools` package to perform various operations on the downloaded images.
-To do this, you need to call the function `apply_tools` from package `distributed_downloader` with the `config_path`
-and `tool_name` as an argument.
+
+#### Python Interface
+
+You can call the function `apply_tools` from package `distributed_downloader` with the `config_path`
+and `tool_name` as arguments.
 
 ```python
 from distributed_downloader import apply_tools
@@ -117,6 +144,35 @@ from distributed_downloader import apply_tools
 # Apply a specific tool
 apply_tools("/path/to/config.yaml", "resize")
 ```
+
+#### Command-Line Interface
+
+You can also use the CLI interface to run tools:
+
+```bash
+# Basic usage
+distributed_downloader_tools /path/to/config.yaml resize
+
+# Reset filtering step (will restart the entire tool pipeline)
+distributed_downloader_tools /path/to/config.yaml resize --reset_filtering
+
+# Reset scheduling step (keeps filtered data but redoes scheduling)
+distributed_downloader_tools /path/to/config.yaml resize --reset_scheduling
+
+# Reset runners (keeps scheduling but restarts the runner jobs)
+distributed_downloader_tools /path/to/config.yaml resize --reset_runners
+
+# For custom tools not in the registry
+distributed_downloader_tools /path/to/config.yaml my_custom_tool --tool_name_override
+```
+
+The CLI provides these options:
+
+- No flags: Continue tool process from current state
+- `--reset_filtering`: Restart the entire tool pipeline from scratch
+- `--reset_scheduling`: Keep filtered data but redo scheduling step
+- `--reset_runners`: Keep scheduling but restart the runner jobs
+- `--tool_name_override`: Allow running tools not registered in the internal registry
 
 The following tools are available:
 
@@ -127,7 +183,7 @@ The following tools are available:
 
 ### Creating a new tool
 
-You can also add your own tool by creating 3 classes and registering them with respective decorators.
+You can also add your own tool by creating 3 classes and registering them with the respective decorators.
 
 - Each tool's output will be saved in separate folder in `{config.output_structure.tools_folder}/{tool_name}`
 - There are 3 steps in the tool pipeline: `filter`, `scheduler` and `runner`.
@@ -174,6 +230,8 @@ when respective tool is called:
 
 - General parameters
     - `CONFIG_PATH`
+    - `DISTRIBUTED_DOWNLOADER_PATH` - path to the package directory, so that python files could be called from outside
+    scripts
     - `ACCOUNT`
     - `PATH_TO_INPUT`
     - `PATH_TO_OUTPUT`

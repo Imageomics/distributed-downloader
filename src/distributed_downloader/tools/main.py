@@ -1,6 +1,7 @@
 import argparse
 import os
 from logging import Logger
+from pathlib import Path
 from typing import Dict, List, Optional, TextIO, Tuple
 
 import pandas as pd
@@ -78,6 +79,7 @@ class Tools:
 
     def __init_environment(self) -> None:
         os.environ["CONFIG_PATH"] = self.config.config_path
+        os.environ["DISTRIBUTED_DOWNLOADER_PATH"] = str(Path(__file__).parent.parent.resolve())
 
         os.environ["ACCOUNT"] = self.config["account"]
         os.environ["PATH_TO_INPUT"] = self.config["path_to_input"]

@@ -1,14 +1,14 @@
 from logging import Logger
 from typing import Optional
 
-from .checkpoint import Checkpoint
-from .config import Config
-from .filters import *
-from .main import Tools
-from .registry import ToolsRegistryBase
-from .runners import *
-from .schedulers import *
-from .utils import (
+from distributed_downloader.tools.checkpoint import Checkpoint
+from distributed_downloader.tools.config import Config
+from distributed_downloader.tools.filters import *
+from distributed_downloader.tools.main import Tools
+from distributed_downloader.tools.registry import ToolsRegistryBase
+from distributed_downloader.tools.runners import *
+from distributed_downloader.tools.schedulers import *
+from distributed_downloader.tools.utils import (
     ensure_created,
     get_id,
     init_logger,
