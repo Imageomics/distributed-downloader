@@ -18,6 +18,7 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
 
 1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 2. Create a new conda environment:
+
     ```commandline
     conda env create -f environment.yaml --solver=libmamba -y
     ```
@@ -31,13 +32,20 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
     - [IntelMPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html)
 3. Install the required package:
     - For general use:
+
       ```commandline
       pip install distributed-downloader
       ```
+
     - For development:
+
       ```commandline
       pip install -e .[dev]
       ```
+
+### Scripts creation
+
+After installation, you need to create scripts for the downloader and tools. Follow the instructions [here](./docs/scripts_README.md)
 
 ## How to Use
 
@@ -187,9 +195,9 @@ You can also add your own tool by creating 3 classes and registering them with t
 
 - Each tool's output will be saved in separate folder in `{config.output_structure.tools_folder}/{tool_name}`
 - There are 3 steps in the tool pipeline: `filter`, `scheduler` and `runner`.
-    - `filter` - filters the images that should be processed by the tool and creates csv files with them
-    - `scheduler` - creates a schedule for processing the images for MPI
-    - `runner` - processes the images using MPI
+  - `filter` - filters the images that should be processed by the tool and creates csv files with them
+  - `scheduler` - creates a schedule for processing the images for MPI
+  - `runner` - processes the images using MPI
 - Each step should be implemented in a separate class.
 - Tool name should be the same across all classes.
 - Each tool should inherit from `ToolsBase` class.
@@ -229,38 +237,38 @@ All scripts can expect to have the following custom environment variables, speci
 when respective tool is called:
 
 - General parameters
-    - `CONFIG_PATH`
-    - `DISTRIBUTED_DOWNLOADER_PATH` - path to the package directory, so that python files could be called from outside
+  - `CONFIG_PATH`
+  - `DISTRIBUTED_DOWNLOADER_PATH` - path to the package directory, so that python files could be called from outside
     scripts
-    - `ACCOUNT`
-    - `PATH_TO_INPUT`
-    - `PATH_TO_OUTPUT`
-    - `OUTPUT_URLS_FOLDER`
-    - `OUTPUT_LOGS_FOLDER`
-    - `OUTPUT_IMAGES_FOLDER`
-    - `OUTPUT_SCHEDULES_FOLDER`
-    - `OUTPUT_PROFILES_TABLE`
-    - `OUTPUT_IGNORED_TABLE`
-    - `OUTPUT_INNER_CHECKPOINT_FILE`
-    - `OUTPUT_TOOLS_FOLDER`
+  - `ACCOUNT`
+  - `PATH_TO_INPUT`
+  - `PATH_TO_OUTPUT`
+  - `OUTPUT_URLS_FOLDER`
+  - `OUTPUT_LOGS_FOLDER`
+  - `OUTPUT_IMAGES_FOLDER`
+  - `OUTPUT_SCHEDULES_FOLDER`
+  - `OUTPUT_PROFILES_TABLE`
+  - `OUTPUT_IGNORED_TABLE`
+  - `OUTPUT_INNER_CHECKPOINT_FILE`
+  - `OUTPUT_TOOLS_FOLDER`
 - Specific for downloader
-    - `DOWNLOADER_NUM_DOWNLOADS`
-    - `DOWNLOADER_MAX_NODES`
-    - `DOWNLOADER_WORKERS_PER_NODE`
-    - `DOWNLOADER_CPU_PER_WORKER`
-    - `DOWNLOADER_HEADER`
-    - `DOWNLOADER_IMAGE_SIZE`
-    - `DOWNLOADER_LOGGER_LEVEL`
-    - `DOWNLOADER_BATCH_SIZE`
-    - `DOWNLOADER_RATE_MULTIPLIER`
-    - `DOWNLOADER_DEFAULT_RATE_LIMIT`
+  - `DOWNLOADER_NUM_DOWNLOADS`
+  - `DOWNLOADER_MAX_NODES`
+  - `DOWNLOADER_WORKERS_PER_NODE`
+  - `DOWNLOADER_CPU_PER_WORKER`
+  - `DOWNLOADER_HEADER`
+  - `DOWNLOADER_IMAGE_SIZE`
+  - `DOWNLOADER_LOGGER_LEVEL`
+  - `DOWNLOADER_BATCH_SIZE`
+  - `DOWNLOADER_RATE_MULTIPLIER`
+  - `DOWNLOADER_DEFAULT_RATE_LIMIT`
 - Specific for tools
-    - `TOOLS_NUM_WORKERS`
-    - `TOOLS_MAX_NODES`
-    - `TOOLS_WORKERS_PER_NODE`
-    - `TOOLS_CPU_PER_WORKER`
-    - `TOOLS_THRESHOLD_SIZE`
-    - `TOOLS_NEW_RESIZE_SIZE`
+  - `TOOLS_NUM_WORKERS`
+  - `TOOLS_MAX_NODES`
+  - `TOOLS_WORKERS_PER_NODE`
+  - `TOOLS_CPU_PER_WORKER`
+  - `TOOLS_THRESHOLD_SIZE`
+  - `TOOLS_NEW_RESIZE_SIZE`
 
 ## Working with downloaded data
 
