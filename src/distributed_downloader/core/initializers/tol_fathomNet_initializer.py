@@ -1,6 +1,6 @@
 import os
 
-from distributed_downloader.core import BaseInitializer
+from distributed_downloader.core.initializers.base_initializer import BaseInitializer
 
 
 class TolFathomNetInitializer(BaseInitializer):

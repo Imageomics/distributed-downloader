@@ -1,4 +1,4 @@
-from distributed_downloader.core import BaseInitializer
+from distributed_downloader.core.initializers.base_initializer import BaseInitializer
 
 
 class TolGeneralInitializer(BaseInitializer):
@@ -32,7 +32,8 @@ class TolGeneralInitializer(BaseInitializer):
         )
         multimedia_df = multimedia_df.filter(
             multimedia_df["data_source"].isin(included_sources)
-        ).filter(~multimedia_df["server_name"].isin(excluded_servers["server_name"]))
+        ).join(excluded_servers, on="server_name", how="left_anti")
+
         master_df_filtered = self.partition_dataframe(multimedia_df)
 
         self.logger.info("Writing to parquet")
