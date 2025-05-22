@@ -5,7 +5,7 @@ package. These scripts are used to submit jobs to Slurm and execute various task
 
 ## Submission Scripts
 
-## general_submit.sh
+## general_submitter (general_submit.sh)
 
 ### Purpose
 
@@ -64,7 +64,7 @@ resource allocation.
 - The `afterok` dependency ensures the job only runs if all dependencies completed successfully (unlike `afterany` which
   runs regardless of the exit status of the dependencies)
 
-## submit_schedule_creator.sh
+## schedule_creator_submitter (submit_schedule_creator.sh)
 
 ### Purpose
 
@@ -116,7 +116,7 @@ additional environment variables needed for schedule creation.
 - Unlike `general_submit.sh`, this script always specifies resource requirements to ensure proper operation of the
   schedule creation process
 
-## submit_mpi_download.sh
+## mpi_submitter (submit_mpi_download.sh)
 
 ### Purpose
 
@@ -185,7 +185,7 @@ underlying scripts.
 - The nested log directory structure helps organize output by schedule and iteration number
 - Unlike `general_submit.sh`, this script expects specific arguments for the downloader process
 
-## tools_submit.sh
+## tools_submitter (tools_submit.sh)
 
 ### Purpose
 
@@ -247,8 +247,7 @@ scripts are environment-specific and are currently configured for the Ohio Super
 > ### Job Output Format Requirement
 >
 > All Slurm scripts must output the job ID of the submitted job in a specific format. The job ID must be the last item
-> on
-> the line and separated by a space:
+> on the line and separated by a space:
 >
 > ```
 > {anything} {id}
@@ -262,7 +261,7 @@ scripts are environment-specific and are currently configured for the Ohio Super
 >
 > This format is essential as the submission scripts parse this output to extract the job ID for dependency tracking.
 
-### initialization.slurm
+### initialization_script (initialization.slurm)
 
 **Purpose**: Sets up the initial environment and partitions the input file using Spark.
 
@@ -273,7 +272,7 @@ scripts are environment-specific and are currently configured for the Ohio Super
 - Typical run time is 30 minutes
 - Requires 4 nodes for optimal performance
 
-### profiling.slurm
+### profiling_script (profiling.slurm)
 
 **Purpose**: Profiles the servers to determine download rates and capabilities.
 
@@ -284,7 +283,7 @@ scripts are environment-specific and are currently configured for the Ohio Super
 - Typical run time is 5 minutes
 - Creates a server profiles CSV file
 
-### schedule_creation.slurm
+### schedule_creation_script (schedule_creation.slurm)
 
 **Purpose**: Creates download schedules based on server profiles.
 
@@ -295,7 +294,7 @@ scripts are environment-specific and are currently configured for the Ohio Super
 - Typical run time is 5 minutes
 - Moves logs to a structured directory after completion
 
-### server_downloading.slurm
+### download_script (server_downloading.slurm)
 
 **Purpose**: Executes the actual downloading process using MPI.
 
@@ -309,7 +308,7 @@ scripts are environment-specific and are currently configured for the Ohio Super
 - Configures memory settings for optimal performance
 - Typical run time is 3 hours
 
-### server_verifying.slurm
+### verify_script (server_verifying.slurm)
 
 **Purpose**: Verifies the completion status of downloads.
 
@@ -356,7 +355,7 @@ pipeline. These scripts are designed to work with the tools framework which proc
 >
 > This format is essential for job dependency tracking.
 
-### tools_filter.slurm
+### tools_filter_script (tools_filter.slurm)
 
 **Purpose**: Performs the first step in the tool pipeline, filtering images based on specific criteria.
 
@@ -372,7 +371,7 @@ pipeline. These scripts are designed to work with the tools framework which proc
 For a size-based filter tool, this script would identify all images smaller than a threshold size and write their UUIDs,
 server names, and partition IDs to CSV files.
 
-### tools_scheduler.slurm
+### tools_scheduling_script (tools_scheduler.slurm)
 
 **Purpose**: Creates execution schedules for the tool workers based on filtered data.
 
@@ -389,7 +388,7 @@ server names, and partition IDs to CSV files.
 For a size-based filter tool, the scheduler might group images by server name and partition ID (which corresponds to a
 single parquet file) and assign these groups to different MPI ranks (e.g., worker 1 processes partitions 1,2,3,4).
 
-### tools_worker.slurm
+### tools_worker_script (tools_worker.slurm)
 
 **Purpose**: Executes the actual tool processing using MPI parallelism.
 
@@ -407,7 +406,7 @@ single parquet file) and assign these groups to different MPI ranks (e.g., worke
 For an image resizing tool, each worker would load the images assigned to it from the schedule, resize them to the
 specified dimensions, and save the results to the output location.
 
-### tools_verifier.slurm
+### tools_verification_script (tools_verifier.slurm)
 
 **Purpose**: Verifies the completion of the tool processing and updates status flags.
 
