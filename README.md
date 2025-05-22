@@ -45,7 +45,7 @@ in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
 
 ### Scripts creation
 
-After installation, you need to create scripts for the downloader and tools. Follow this instructions [here](./docs/scripts_README.md)
+After installation, you need to create scripts for the downloader and tools. Follow the instructions [here](./docs/scripts_README.md)
 
 ## How to Use
 
