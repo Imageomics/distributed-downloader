@@ -1,0 +1,2 @@
+2025-05-21 20:14:28,354 - INFO - 87275 - Rank 4 started, getting latest schedule
+2025-05-21 20:14:28,365 - ERROR - 87275 - Rank 4 failed with error: Rank 4 not found in the scheduler

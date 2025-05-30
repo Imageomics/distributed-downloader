@@ -1,0 +1,3 @@
+2025-05-21 20:16:58,555 - INFO - 178328 - Creating new schedule for /fs/scratch/PAS2136/gbif/test/download_eol/schedules/current/0000
+2025-05-21 20:16:58,579 - INFO - 178328 - Filtered out already downloaded batches, creating schedule...
+2025-05-21 20:16:58,582 - INFO - 178328 - Schedule created for /fs/scratch/PAS2136/gbif/test/download_eol/schedules/current/0000

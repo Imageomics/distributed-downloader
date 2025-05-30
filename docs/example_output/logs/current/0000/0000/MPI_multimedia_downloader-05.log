@@ -1,0 +1,2 @@
+2025-05-21 20:17:01,941 - INFO - 78730 - Rank 5 started, getting latest schedule
+2025-05-21 20:17:01,949 - ERROR - 78730 - Rank 5 failed with error: Rank 5 not found in the scheduler

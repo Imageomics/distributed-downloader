@@ -16,6 +16,8 @@ from distributed_downloader.tools.registry import ToolsRegistryBase
 FilterRegister = partial(ToolsRegistryBase.register, "filter")
 __all__ = [
     "FilterRegister",
+    "PythonFilterToolBase",
+    "SparkFilterToolBase",
     "SizeBasedFiltering",
     "DuplicatesBasedFiltering",
     "ResizeToolFilter",

@@ -1,0 +1,6 @@
+2025-05-21 20:16:29,230 - INFO - 100123 - Creating schedules
+2025-05-21 20:16:29,285 - INFO - 100123 - Schedules created
+2025-05-21 20:16:29,285 - INFO - 100123 - Submitting downloaders
+2025-05-21 20:16:29,520 - INFO - 100123 - Submitted downloader 35797633 for 0000
+2025-05-21 20:16:29,693 - INFO - 100123 - Submitted verifier 35797634 for 0000
+2025-05-21 20:16:29,695 - INFO - 100123 - All downloading scripts submitted

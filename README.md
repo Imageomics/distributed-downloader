@@ -1,66 +1,74 @@
 # Distributed Downloader
 
-MPI-based distributed downloading tool for retrieving data from diverse domains.
+A high-performance, MPI-based distributed downloading tool for retrieving large-scale image datasets from diverse web
+sources.
 
-## Background
+## Overview
 
-This MPI-based distributed downloader was initially designed for the purpose of downloading all images from the
-monthly [GBIF occurrence snapshot](https://www.gbif.org/occurrence-snapshots). The overall setup is general enough that
-it could be transformed into a functional tool beyond just our use; it should work on any list of URLs. We chose to
-build this tool instead of using something like [img2dataset](https://github.com/rom1504/img2dataset) to better avoid
-overloading source servers (GBIF documents approximately 200M images across 545 servers) and have more control over the
-final dataset construction and metadata management (e.g., using `HDF5` as discussed
-in [issue #1](https://github.com/Imageomics/distributed-downloader/issues/1)).
+The Distributed Downloader was initially developed to handle the massive scale of downloading all images from the
+monthly [GBIF occurrence snapshot](https://www.gbif.org/occurrence-snapshots), which contains approximately 200 million
+images distributed across 545 servers. The tool is designed with general-purpose capabilities and can efficiently
+process any collection of URLs.
 
-## Installation Instructions
+### Why Build This Tool?
 
-### Conda installation
+We chose to develop this custom solution instead of using existing tools
+like [img2dataset](https://github.com/rom1504/img2dataset) for several key reasons:
+
+- **Server-friendly operation**: Implements sophisticated rate limiting to avoid overloading source servers
+- **Enhanced control**: Provides fine-grained control over dataset construction and metadata management
+- **Scalability**: Handles massive datasets that exceed the capabilities of single-machine solutions
+- **Fault tolerance**: Robust checkpoint and recovery system for long-running downloads
+- **Flexibility**: Supports diverse output formats and custom processing pipelines
+
+## Installation
+
+### Prerequisites
+
+- Python 3.10 or 3.11
+- MPI implementation (OpenMPI or Intel MPI)
+- High-performance computing environment with Slurm (recommended)
+
+### Conda Installation (Recommended)
 
 1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-2. Create a new conda environment:
+2. Create the environment:
+   
+   ```bash
+   conda env create -f environment.yaml --solver=libmamba -y
+   ```
 
-    ```commandline
-    conda env create -f environment.yaml --solver=libmamba -y
-    ```
-
-### Pip installation
+### Pip Installation
 
 1. Install Python 3.10 or 3.11
-2. Install MPI, any MPI should work, tested with OpenMPI and IntelMPI. Installation instructions can be found on
-   official websites:
+2. Install an MPI implementation:
     - [OpenMPI](https://docs.open-mpi.org/en/v5.0.x/installing-open-mpi/quickstart.html)
-    - [IntelMPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html)
-3. Install the required package:
-    - For general use:
+   - [Intel MPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html)
+3. Install the package:
+   
+   ```bash
+   # For general use
+   pip install distributed-downloader
 
-      ```commandline
-      pip install distributed-downloader
-      ```
+   # For development
+   pip install -e .[dev]
+   ```
 
-    - For development:
+### Script Configuration
 
-      ```commandline
-      pip install -e .[dev]
-      ```
+After installation, create the necessary Slurm scripts for your environment. See
+the [Scripts Documentation](./docs/scripts_README.md) for detailed instructions.
 
-### Scripts creation
+## Configuration
 
-After installation, you need to create scripts for the downloader and tools. Follow the instructions [here](./docs/scripts_README.md)
-
-## How to Use
-
-`distributed-downloader` utilizes multiple nodes on a High Performance Computing (HPC) system (specifically, an HPC
-with `slurm` workload manager) to download a collection of images specified in a given tab-delimited text file.
-
-### Configuration
-
-The downloader is configured using a YAML configuration file. Here's an example configuration:
+The downloader uses YAML configuration files to specify all operational parameters:
 
 ```yaml
-# Example configuration file
+# Core paths
 path_to_input: "/path/to/input/urls.csv"
 path_to_output: "/path/to/output"
 
+# Output structure
 output_structure:
   urls_folder: "urls"
   logs_folder: "logs"
@@ -71,6 +79,7 @@ output_structure:
   inner_checkpoint_file: "checkpoint.json"
   tools_folder: "tools"
 
+# Downloader parameters
 downloader_parameters:
   num_downloads: 1
   max_nodes: 20
@@ -83,6 +92,7 @@ downloader_parameters:
   rate_multiplier: 0.5
   default_rate_limit: 3
 
+# Tools parameters
 tools_parameters:
   num_workers: 1
   max_nodes: 10
@@ -92,59 +102,44 @@ tools_parameters:
   new_resize_size: 224
 ```
 
-### Main script
+## Usage
 
-There are two ways to launch the downloader:
+### Primary Downloading Interface
 
-#### Python Interface
-
-You can call function `download_images` from package `distributed_downloader` with the `config_path` as an argument.
-This will initialize filestructure in the output folder, partition the input file, profile the servers for their
-possible download speed, and start downloading images. If downloading didn't finish, you can call the same function with
-the same `config_path` argument to continue downloading.
+#### Python API
 
 ```python
 from distributed_downloader import download_images
 
-# Start or continue downloading
+# Start or continue downloading process
 download_images("/path/to/config.yaml")
 ```
 
 #### Command-Line Interface
 
-Alternatively, you can use the CLI interface provided by the package:
-
 ```bash
-# Basic usage
+# Continue from current state
 distributed_downloader /path/to/config.yaml
 
-# Reset batching (will restart file initialization and partitioning)
+# Reset and restart from initialization
 distributed_downloader /path/to/config.yaml --reset_batched
 
-# Reset profiling (will keep partitioned files but redo server profiling)
+# Restart from profiling step
 distributed_downloader /path/to/config.yaml --reset_profiled
 ```
 
-The CLI provides these options:
+**CLI Options**:
 
-- No flags: Continue download process from current state
-- `--reset_batched`: Restart from scratch, including reinitializing file structure and repartitioning input file
-- `--reset_profiled`: Keep partitioned files but redo server profiling step
+- No flags: Resume from current checkpoint
+- `--reset_batched`: Restart completely, including file initialization and partitioning
+- `--reset_profiled`: Keep partitioned files but redo server profiling
 
-Downloader has two logging profiles:
+### Tools Pipeline
 
-- `INFO` - logs only the most important information, for example, when a batch is started and finished. It also logs out
-  any error that occurred during download, image decoding, or writing batch to the filesystem
-- `DEBUG` - logs all information, for example, logging start and finish of each downloaded image.
+After completing the download process, use the tools pipeline to perform post-processing operations on downloaded
+images.
 
-### Tools script
-
-After downloading is finished, you can use the `tools` package to perform various operations on the downloaded images.
-
-#### Python Interface
-
-You can call the function `apply_tools` from package `distributed_downloader` with the `config_path`
-and `tool_name` as arguments.
+#### Python API
 
 ```python
 from distributed_downloader import apply_tools
@@ -155,177 +150,208 @@ apply_tools("/path/to/config.yaml", "resize")
 
 #### Command-Line Interface
 
-You can also use the CLI interface to run tools:
-
 ```bash
-# Basic usage
+# Continue tool pipeline from current state
 distributed_downloader_tools /path/to/config.yaml resize
 
-# Reset filtering step (will restart the entire tool pipeline)
+# Reset pipeline stages
 distributed_downloader_tools /path/to/config.yaml resize --reset_filtering
-
-# Reset scheduling step (keeps filtered data but redoes scheduling)
 distributed_downloader_tools /path/to/config.yaml resize --reset_scheduling
-
-# Reset runners (keeps scheduling but restarts the runner jobs)
 distributed_downloader_tools /path/to/config.yaml resize --reset_runners
 
-# For custom tools not in the registry
+# Use custom tools not in registry
 distributed_downloader_tools /path/to/config.yaml my_custom_tool --tool_name_override
 ```
 
-The CLI provides these options:
+**CLI Options**:
 
-- No flags: Continue tool process from current state
-- `--reset_filtering`: Restart the entire tool pipeline from scratch
-- `--reset_scheduling`: Keep filtered data but redo scheduling step
-- `--reset_runners`: Keep scheduling but restart the runner jobs
-- `--tool_name_override`: Allow running tools not registered in the internal registry
+- No flags: Continue from current tool state
+- `--reset_filtering`: Restart entire tool pipeline
+- `--reset_scheduling`: Keep filtered data, redo scheduling
+- `--reset_runners`: Keep scheduling, restart runner jobs
+- `--tool_name_override`: Allow unregistered custom tools
 
-The following tools are available:
+### Available Tools
 
-- `resize` - resizes images to a new size (specified in config)
-- `image_verification` - verifies images by checking if they are corrupted
-- `duplication_based` - removes duplicate images using MD5 hashing
-- `size_based` - removes images that are too small (threshold specified in config)
+The following built-in tools are available:
 
-### Creating a new tool
+- **`resize`**: Resizes images to specified dimensions
+- **`image_verification`**: Validates image integrity and identifies corruption
+- **`duplication_based`**: Removes duplicate images using MD5 hash comparison
+- **`size_based`**: Filters out images below specified size thresholds
 
-You can also add your own tool by creating 3 classes and registering them with the respective decorators.
+### Custom Tool Development
 
-- Each tool's output will be saved in separate folder in `{config.output_structure.tools_folder}/{tool_name}`
-- There are 3 steps in the tool pipeline: `filter`, `scheduler` and `runner`.
-  - `filter` - filters the images that should be processed by the tool and creates csv files with them
-  - `scheduler` - creates a schedule for processing the images for MPI
-  - `runner` - processes the images using MPI
-- Each step should be implemented in a separate class.
-- Tool name should be the same across all classes.
-- Each tool should inherit from `ToolsBase` class.
-- Each tool should have a `run` method that will be called by the main script.
-- Each tool should be registered with a decorator from a respective package (`FilterRegister` from `filters` etc.)
-
-Example of creating a custom tool:
+Create custom tools by implementing three pipeline stages:
 
 ```python
-from distributed_downloader.tools import FilterRegister, SchedulerRegister, RunnerRegister, ToolsBase
+from distributed_downloader.tools import (FilterRegister, SchedulerRegister, RunnerRegister, PythonFilterToolBase,
+                                          MPIRunnerTool, DefaultScheduler)
 
 
 @FilterRegister("my_custom_tool")
-class MyCustomToolFilter(ToolsBase):
+class MyCustomToolFilter(PythonFilterToolBase):
   def run(self):
-    # Implementation of filter step
+    # Filter implementation
     pass
 
 
 @SchedulerRegister("my_custom_tool")
-class MyCustomToolScheduler(ToolsBase):
+class MyCustomToolScheduler(DefaultScheduler):
   def run(self):
-    # Implementation of scheduler step
+    # Scheduling implementation
     pass
 
 
 @RunnerRegister("my_custom_tool")
-class MyCustomToolRunner(ToolsBase):
+class MyCustomToolRunner(MPIRunnerTool):
   def run(self):
-    # Implementation of runner step
+    # Processing implementation
     pass
 ```
 
-## Environment Variables
+## Data Format and Storage
 
-All scripts can expect to have the following custom environment variables, specific variables are only initialized
-when respective tool is called:
+### Input Requirements
 
-- General parameters
-  - `CONFIG_PATH`
-  - `DISTRIBUTED_DOWNLOADER_PATH` - path to the package directory, so that python files could be called from outside
-    scripts
-  - `ACCOUNT`
-  - `PATH_TO_INPUT`
-  - `PATH_TO_OUTPUT`
-  - `OUTPUT_URLS_FOLDER`
-  - `OUTPUT_LOGS_FOLDER`
-  - `OUTPUT_IMAGES_FOLDER`
-  - `OUTPUT_SCHEDULES_FOLDER`
-  - `OUTPUT_PROFILES_TABLE`
-  - `OUTPUT_IGNORED_TABLE`
-  - `OUTPUT_INNER_CHECKPOINT_FILE`
-  - `OUTPUT_TOOLS_FOLDER`
-- Specific for downloader
-  - `DOWNLOADER_NUM_DOWNLOADS`
-  - `DOWNLOADER_MAX_NODES`
-  - `DOWNLOADER_WORKERS_PER_NODE`
-  - `DOWNLOADER_CPU_PER_WORKER`
-  - `DOWNLOADER_HEADER`
-  - `DOWNLOADER_IMAGE_SIZE`
-  - `DOWNLOADER_LOGGER_LEVEL`
-  - `DOWNLOADER_BATCH_SIZE`
-  - `DOWNLOADER_RATE_MULTIPLIER`
-  - `DOWNLOADER_DEFAULT_RATE_LIMIT`
-- Specific for tools
-  - `TOOLS_NUM_WORKERS`
-  - `TOOLS_MAX_NODES`
-  - `TOOLS_WORKERS_PER_NODE`
-  - `TOOLS_CPU_PER_WORKER`
-  - `TOOLS_THRESHOLD_SIZE`
-  - `TOOLS_NEW_RESIZE_SIZE`
+Input files must be tab-delimited or CSV format containing URLs with the following required columns:
 
-## Working with downloaded data
+- `uuid`: Unique internal identifier
+- `identifier`: Image URL
+- `source_id`: Source-specific identifier
 
-Downloaded data is stored in `images_folder` (configured in config file),
-partitioned by `server_name` and `partition_id`, in two parquet files with following schemes:
+Optional columns:
 
-- `successes.parquet`:
-  - uuid: string - downloaded dataset internal unique identifier (created to distinguish between all component datasets downloaded with this package)
-  - source_id: string - id of the entry provided by its source (e.g., `gbifID`)
-  - identifier: string - source URL of the image
-  - is_license_full: boolean - True indicates that `license`, `source`, and `title` all have non-null values for that
-    particular entry.
-    - license: string
-    - source: string
-    - title: string
-  - hashsum_original: string - MD5 hash of the original image data
-  - hashsum_resized: string - MD5 hash of the resized image data
-  - original_size: [height, width] - dimensions of original image
-  - resized_size: [height, width] - dimensions after resizing
-  - image: bytes - binary image data
+- `license`: License URL
+- `source`: Source attribution
+- `title`: Image title
 
-- `errors.parquet`:
-  - uuid: string - downloaded dataset internal unique identifier (created to distinguish between all component datasets downloaded with this package)
-  - identifier: string - URL of the image
-  - retry_count: integer - number of download attempts
-  - error_code: integer - HTTP or other error code
-  - error_msg: string - detailed error message
+### Output Structure
 
-For general operations (that do not involve access to `image` column, e.g. count the total number of entries, create
-size distribution etc.) it is recommended to use Spark or similar applications. For any operation that does involve
-`image` column, it is recommended to use Pandas or similar library to access each parquet file separately.
+Downloaded data is stored in the configured `images_folder`, partitioned by server name and partition ID:
+
+#### Success Records (`successes.parquet`)
+
+- `uuid`: Dataset internal identifier
+- `source_id`: Source-provided identifier
+- `identifier`: Original image URL
+- `is_license_full`: Boolean indicating complete license information
+- `license`, `source`, `title`: Attribution information
+- `hashsum_original`, `hashsum_resized`: MD5 hashes
+- `original_size`, `resized_size`: Image dimensions
+- `image`: Binary image data
+
+#### Error Records (`errors.parquet`)
+
+- `uuid`: Dataset internal identifier
+- `identifier`: Failed image URL
+- `retry_count`: Number of download attempts
+- `error_code`: HTTP or internal error code
+- `error_msg`: Detailed error description
 
 ## Supported Image Formats
 
-The downloader supports most common image formats, including:
+The downloader supports common web image formats:
 
 - JPEG/JPG
 - PNG
-- GIF (first frame only)
+- GIF (first frame extraction)
 - BMP
 - TIFF
 
-## Error Handling and Troubleshooting
+## Logging and Monitoring
 
-Common issues and solutions:
+### Logging Levels
 
-1. **Rate limiting errors**: If you see many errors with code 429, adjust the `default_rate_limit` in your config to a
-   lower value.
+- **`INFO`**: Essential information including batch progress and errors
+- **`DEBUG`**: Detailed information including individual download events
 
-2. **Memory issues**: If the process is killed due to memory constraints, try reducing `batch_size` or
-   `workers_per_node` in your config.
+### Log Organization
 
-3. **Corrupt images**: Images that cannot be decoded are logged in the errors parquet file with appropriate error codes.
+Logs are organized hierarchically by:
 
-4. **Resuming failed downloads**: The downloader creates checkpoints automatically. Simply run the same command again to
-   resume from the last checkpoint.
+- Pipeline stage (initialization, profiling, downloading)
+- Batch number and iteration
+- Worker process ID
+
+See [Structure Documentation](./docs/structure_README.md) for detailed log organization.
+
+## Performance and Troubleshooting
+
+### Common Performance Issues
+
+1. **Rate limiting errors (429, 403)**:
+
+- Reduce `default_rate_limit` in configuration
+- Increase `rate_multiplier` for longer delays
+
+2. **Memory constraints**:
+
+- Reduce `batch_size` or `workers_per_node`
+- Monitor system memory usage
+
+3. **Network timeouts**:
+
+- Check connectivity to source servers
+- Review firewall and proxy settings
+
+### Error Recovery
+
+The system automatically resumes from checkpoints. For manual intervention:
+
+- Review error distributions in parquet files
+- Check server-specific error patterns
+- Use ignored server list for problematic hosts
+
+See [Troubleshooting Guide](./docs/troubleshooting_README.md) for comprehensive error resolution.
+
+## Environment Variables
+
+The system exports numerous environment variables for script coordination:
+
+**General Parameters**:
+
+- `CONFIG_PATH`, `PATH_TO_INPUT`, `PATH_TO_OUTPUT`
+- `OUTPUT_*_FOLDER` variables for each output component
+
+**Downloader-Specific**:
+
+- `DOWNLOADER_MAX_NODES`, `DOWNLOADER_WORKERS_PER_NODE`
+- `DOWNLOADER_BATCH_SIZE`, `DOWNLOADER_RATE_MULTIPLIER`
+
+**Tools-Specific**:
+
+- `TOOLS_MAX_NODES`, `TOOLS_WORKERS_PER_NODE`
+- `TOOLS_THRESHOLD_SIZE`, `TOOLS_NEW_RESIZE_SIZE`
+
+## System Requirements
+
+### Minimum Requirements
+
+- Multi-node HPC cluster with Slurm
+- High-bandwidth network connectivity
+- Substantial storage capacity for downloaded datasets
+- MPI-capable compute environment
+
+### Recommended Configuration
+
+- 20+ compute nodes with 20+ cores each
+- High-speed interconnect (InfiniBand recommended)
+- Parallel file system (Lustre, GPFS)
+- Dedicated network bandwidth for external downloads
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Documentation
+
+- [Process Overview](./docs/process_README.md) — High-level workflow description
+- [Output Structure](./docs/structure_README.md) — Detailed output organization
+- [Scripts Documentation](./docs/scripts_README.md) — Slurm script configuration
+- [Troubleshooting Guide](./docs/troubleshooting_README.md) — Common issues and solutions
+
+## Contributing
+
+We welcome contributions! Please see our contributing guidelines and ensure all tests pass before submitting pull
+requests.

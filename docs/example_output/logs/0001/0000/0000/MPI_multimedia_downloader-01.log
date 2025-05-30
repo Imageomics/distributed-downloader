@@ -1,0 +1,2 @@
+2025-05-21 20:14:28,354 - INFO - 99556 - Rank 1 started, getting latest schedule
+2025-05-21 20:14:28,360 - ERROR - 99556 - Rank 1 failed with error: Rank 1 not found in the scheduler
