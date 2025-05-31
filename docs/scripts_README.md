@@ -118,7 +118,7 @@ and iteration numbers.
 **Key Features**:
 
 - Creates nested log directory structure based on schedule and iteration
-- Handles the special `--recheck` flag for verification jobs
+- Handles the special `--recheck` flag for verification jobs (to check that all expected downloads were completed)
 - Uses `afterany` dependency type
 - Configures node allocation based on downloader configuration
 

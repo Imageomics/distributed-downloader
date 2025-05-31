@@ -26,10 +26,13 @@ like [img2dataset](https://github.com/rom1504/img2dataset) for several key reaso
 ### Prerequisites
 
 - Python 3.10 or 3.11
-- MPI implementation (OpenMPI or Intel MPI)
+- MPI implementation ([OpenMPI](https://docs.open-mpi.org/en/v5.0.x/installing-open-mpi/quickstart.html)
+  or [Intel MPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html))
 - High-performance computing environment with Slurm (recommended)
 
-### Conda Installation (Recommended)
+The downloader can be installed using either Conda or Pip.
+
+### Conda Installation
 
 1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 2. Create the environment:
@@ -37,19 +40,27 @@ like [img2dataset](https://github.com/rom1504/img2dataset) for several key reaso
    ```bash
    conda env create -f environment.yaml --solver=libmamba -y
    ```
+3. Activate the environment:
+   
+   ```bash
+   conda activate distributed-downloader
+   ```
+4. Install the package:
+   
+   ```bash
+   pip install -e .[dev]
+   ```
 
-### Pip Installation
+### Pip Installation (Recommended)
 
-1. Install Python 3.10 or 3.11
-2. Install an MPI implementation:
-    - [OpenMPI](https://docs.open-mpi.org/en/v5.0.x/installing-open-mpi/quickstart.html)
-   - [Intel MPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html)
-3. Install the package:
+1. Install the package:
    
    ```bash
    # For general use
    pip install distributed-downloader
-
+   ```
+   
+   ```bash
    # For development
    pip install -e .[dev]
    ```
@@ -191,23 +202,23 @@ from distributed_downloader.tools import (FilterRegister, SchedulerRegister, Run
 
 @FilterRegister("my_custom_tool")
 class MyCustomToolFilter(PythonFilterToolBase):
-  def run(self):
-    # Filter implementation
-    pass
+   def run(self):
+      # Filter implementation
+      pass
 
 
 @SchedulerRegister("my_custom_tool")
 class MyCustomToolScheduler(DefaultScheduler):
-  def run(self):
-    # Scheduling implementation
-    pass
+   def run(self):
+      # Scheduling implementation
+      pass
 
 
 @RunnerRegister("my_custom_tool")
 class MyCustomToolRunner(MPIRunnerTool):
-  def run(self):
-    # Processing implementation
-    pass
+   def run(self):
+      # Processing implementation
+      pass
 ```
 
 ## Data Format and Storage
@@ -348,6 +359,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 - [Process Overview](./docs/process_README.md) — High-level workflow description
 - [Output Structure](./docs/structure_README.md) — Detailed output organization
+- [Example Output](./docs/example_output/) — Example output files for schedule and log generation processes
 - [Scripts Documentation](./docs/scripts_README.md) — Slurm script configuration
 - [Troubleshooting Guide](./docs/troubleshooting_README.md) — Common issues and solutions
 
