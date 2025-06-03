@@ -30,7 +30,7 @@ like [img2dataset](https://github.com/rom1504/img2dataset) for several key reaso
   or [Intel MPI](https://www.intel.com/content/www/us/en/docs/mpi-library/developer-guide-linux/2021-6/installation.html))
 - High-performance computing environment with Slurm (recommended)
 
-The downloader can be installed using either Conda or Pip.
+The downloader can be directly installed using Pip. Alternatively, one can clone the repo and install with Conda. Either way, it is recommended to install within a virtual environment.
 
 ### Conda Installation
 
