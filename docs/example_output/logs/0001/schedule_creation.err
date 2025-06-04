@@ -1,0 +1,6 @@
+2025-05-21 20:13:55,910 - INFO - 131867 - Creating schedules
+2025-05-21 20:13:55,953 - INFO - 131867 - Schedules created
+2025-05-21 20:13:55,953 - INFO - 131867 - Submitting downloaders
+2025-05-21 20:13:56,205 - INFO - 131867 - Submitted downloader 35797367 for 0000
+2025-05-21 20:13:56,377 - INFO - 131867 - Submitted verifier 35797368 for 0000
+2025-05-21 20:13:56,378 - INFO - 131867 - All downloading scripts submitted

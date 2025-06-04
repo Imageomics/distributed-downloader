@@ -1,0 +1,2 @@
+2025-05-21 20:14:28,354 - INFO - 87278 - Rank 7 started, getting latest schedule
+2025-05-21 20:14:28,362 - ERROR - 87278 - Rank 7 failed with error: Rank 7 not found in the scheduler

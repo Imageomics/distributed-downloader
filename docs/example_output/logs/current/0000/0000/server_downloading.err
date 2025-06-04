@@ -1,0 +1,12 @@
+
+Lmod is automatically replacing "intel/19.0.5" with "oneapi/2024.0.2".
+
+
+Inactive Modules:
+  1) mvapich2
+
+The following have been reloaded with a version change:
+  1) gcc-compatibility/8.4.0 => gcc-compatibility/11.2.0
+
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** JOB 35797633 ON p0539 CANCELLED AT 2025-05-21T20:17:21 ***

@@ -1,0 +1,9 @@
+2025-05-21 20:15:27,032 - INFO - 99896 - Verifying batches for 
+Traceback (most recent call last):
+  File "/users/PAS2119/andreykopanev/distributed_downloader_test/src/distributed_downloader/core/MPI_downloader_verifier.py", line 143, in <module>
+    main()
+  File "/users/PAS2119/andreykopanev/distributed_downloader_test/src/distributed_downloader/core/MPI_downloader_verifier.py", line 134, in main
+    verify_batches(
+  File "/users/PAS2119/andreykopanev/distributed_downloader_test/src/distributed_downloader/core/MPI_downloader_verifier.py", line 44, in verify_batches
+    raise ValueError(f"Schedule config file {config_file} not found")
+ValueError: Schedule config file /_config.csv not found

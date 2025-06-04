@@ -1,0 +1,6 @@
+starting org.apache.spark.deploy.master.Master, logging to /users/PAS2119/andreykopanev/distributed_downloader_test/spark-andreykopanev-org.apache.spark.deploy.master.Master-1-p0687.out
+2025-05-21 20:09:32,627 - INFO - 43993 - Starting batching
+2025-05-21 20:09:32,874 - INFO - 43993 - Finished batching
+2025-05-21 20:09:32,874 - INFO - 43993 - Writing to parquet
+2025-05-21 20:09:40,537 - INFO - 43993 - Finished batching
+2025-05-21 20:09:40,538 - INFO - 43993 - Closing down clientserver connection
