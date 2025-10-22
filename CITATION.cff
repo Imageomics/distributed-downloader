@@ -29,7 +29,7 @@ identifiers:
     value: "https://github.com/Imageomics/distributed-downloader/releases/tag/v0.3.0-beta"
   - description: "The GitHub URL of the commit tagged with v0.3.0-beta."
     type: url
-    value: "https://github.com/Imageomics/distributed-downloader/tree/<commit-hash>" # update post release
+    value: "https://github.com/Imageomics/distributed-downloader/tree/961259bd25eaf9f8f1c7d37a68dff45c3613e0b6"
 abstract: >-
   MPI-based distributed downloading tool for retrieving data
   from diverse domains.
@@ -43,4 +43,4 @@ keywords:
 license: MIT
 version: 0.3.0-beta
 date-released: '2025-10-22'
-doi: # to be added post-release
+doi: 10.5281/zenodo.17418004

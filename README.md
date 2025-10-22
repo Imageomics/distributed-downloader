@@ -1,5 +1,10 @@
 # Distributed Downloader
 
+[![DOI](https://zenodo.org/badge/802194540.svg)](https://doi.org/10.5281/zenodo.17418004)
+
+[![PyPI - Version](https://img.shields.io/pypi/v/distributed-downloader.svg)](https://pypi.org/project/distributed-downloader)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/distributed-downloader.svg)](https://pypi.org/project/distributed-downloader)
+
 A high-performance, MPI-based distributed downloading tool for retrieving large-scale image datasets from diverse web
 sources.
 
