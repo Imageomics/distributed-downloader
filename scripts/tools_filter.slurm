@@ -17,7 +17,8 @@ driver_memory="110G"
 executor_memory="64G"
 
 module load spark/3.4.1
-module load miniconda3/23.3.1-py310
+# OSC Cardinal requires explicit version — check `module spider miniconda3` if this fails
+module load miniconda3/24.1.2-py310
 source "${REPO_ROOT}/.venv/bin/activate"
 export PYTHONPATH=${PYTHONPATH}:"${REPO_ROOT}/src":"${REPO_ROOT}/distributed-downloader"
 

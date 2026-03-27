@@ -8,9 +8,9 @@ set -e
 driver_memory="110G"
 executor_memory="64G"
 
-module load spark/3.4.1
+module load spark/3.5.1
 
-pbs-spark-submit \
+slurm-spark-submit \
     --driver-memory $driver_memory \
     --executor-memory $executor_memory \
     "${DISTRIBUTED_DOWNLOADER_PATH}/core/initialization.py" \

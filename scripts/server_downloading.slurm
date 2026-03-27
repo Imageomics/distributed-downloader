@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --job-name mpi_downloader
-#SBATCH --mem=0
 #SBATCH --time=03:00:00
 
 if [ "$#" -eq 0 ]; then
@@ -17,7 +16,8 @@ mkdir -p "${logs_dir}"
 
 module load intel/2021.10.0
 module load intelmpi/2021.10
-module load miniconda3/23.3.1-py310
+# OSC Cardinal requires explicit version — check `module spider miniconda3` if this fails
+module load miniconda3/24.1.2-py310
 source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
@@ -50,7 +50,6 @@ export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
   --nodes="$DOWNLOADER_MAX_NODES" \
   --ntasks-per-node="$DOWNLOADER_WORKERS_PER_NODE" \
   --cpus-per-task="$DOWNLOADER_CPU_PER_WORKER" \
-  --mem=0 \
   --output="${logs_dir}/MPI_multimedia_downloader-%2t.log" \
   python "${DISTRIBUTED_DOWNLOADER_PATH}/core/MPI_multimedia_downloader.py" \
   "$schedule_path"

@@ -1,0 +1,110 @@
+# =============================================================================
+# GBIF Image Download — Configuration
+# =============================================================================
+#
+# Copy this file and fill in the values for your HPC system.
+#
+# Quick start:
+#   1. cp config/gbif_download_config.yaml my_config.yaml
+#   2. Edit the fields below (at minimum: account, path_to_input, path_to_output_folder)
+#   3. Run: distributed_downloader my_config.yaml
+#
+# HPC setup (run these before launching the pipeline):
+#   # Check what modules are available on your system:
+#   module spider spark
+#   module spider miniconda3
+#   module spider intel
+#   module spider intelmpi
+#
+#   # OSC Cardinal example:
+#   module load spark/3.5.1            # needed for initialization stage
+#   module load miniconda3/24.1.2-py310 # needed for all other stages
+#   module load intel/2021.10.0        # needed for MPI downloading
+#   module load intelmpi/2021.10       # needed for MPI downloading
+#
+#   # Activate the project venv:
+#   source /path/to/distributed-downloader/.venv/bin/activate
+#
+# =============================================================================
+
+# -- Required: change these for your system ------------------------------------
+
+account: "PAS2136"                     # SLURM billing account
+                                       # Find yours with: sacctmgr show associations user=$USER format=account
+
+path_to_input: "/path/to/multimedia_StillImage.parquet"
+                                       # Input parquet file with image URLs
+                                       # Must have columns: gbifID, identifier, type, format, basisOfRecord
+
+path_to_output_folder: "/path/to/output"
+                                       # Where downloaded images and logs go
+                                       # Use scratch/fast storage — this gets large
+                                       # OSC example: /fs/scratch/PAS2136/$USER/gbif_output
+
+initializer_type: "gbif"              # Use "gbif" for GBIF multimedia parquet data
+
+# -- Scripts: update paths to match your distributed-downloader install --------
+# If you cloned the repo to /home/user/distributed-downloader, replace the
+# prefix below. All paths must be absolute.
+
+scripts:
+  general_submitter: "/path/to/distributed-downloader/scripts/general_submit.sh"
+  tools_submitter: "/path/to/distributed-downloader/scripts/tools_submit.sh"
+  mpi_submitter: "/path/to/distributed-downloader/scripts/submit_mpi_download.sh"
+  schedule_creator_submitter: "/path/to/distributed-downloader/scripts/submit_schedule_creator.sh"
+  initialization_script: "/path/to/distributed-downloader/scripts/initialization.slurm"
+  profiling_script: "/path/to/distributed-downloader/scripts/profiling.slurm"
+  schedule_creation_script: "/path/to/distributed-downloader/scripts/schedule_creation.slurm"
+  verify_script: "/path/to/distributed-downloader/scripts/server_verifying.slurm"
+  download_script: "/path/to/distributed-downloader/scripts/server_downloading.slurm"
+  tools_filter_script: "/path/to/distributed-downloader/scripts/tools_filter.slurm"
+  tools_scheduling_script: "/path/to/distributed-downloader/scripts/tools_scheduler.slurm"
+  tools_worker_script: "/path/to/distributed-downloader/scripts/tools_worker.slurm"
+  tools_verification_script: "/path/to/distributed-downloader/scripts/tools_verifier.slurm"
+
+# -- Schedule rules ------------------------------------------------------------
+# Controls how many parallel download jobs can target the same server.
+# Format: min_batches: num_parallel_instances
+# Start with 1:1 for testing; scale up for production runs.
+schedule_rules:
+  1: 1
+
+# -- Output structure (usually no need to change) ------------------------------
+output_structure:
+  urls_folder: "servers_batched"
+  logs_folder: "logs"
+  images_folder: "downloaded_images"
+  schedules_folder: "schedules"
+  profiles_table: "servers_profiles.csv"
+  ignored_table: "ignored_servers.csv"
+  inner_checkpoint_file: "inner_checkpoint.yaml"
+  tools_folder: "tools"
+
+# -- Downloader parameters ----------------------------------------------------
+suppress_unchanged_error: False
+
+downloader_parameters:
+  num_downloads: 3                     # Download rounds (retries failed URLs each round)
+  max_nodes: 2                         # SLURM nodes per download job
+                                       # Check your cluster: sinfo -s
+  workers_per_node: 8                  # MPI workers per node
+                                       # Rule of thumb: cores_per_node / cpu_per_worker
+                                       # OSC Cardinal has 48 cores/node → 8 workers x 4 CPUs = 32 (leave headroom)
+  cpu_per_worker: 4                    # CPUs per MPI worker
+  header: "User-Agent: your.email@university.edu"
+                                       # GBIF Terms of Service require a contact email in the User-Agent header
+  image_size: 720                      # Resize images to this pixel size on download (0 = no resize)
+  logger_level: "INFO"                 # DEBUG for more detail
+  batch_size: 10000                    # URLs per batch — don't change unless you know what you're doing
+  rate_multiplier: 1                   # Multiplier on measured server rate limits
+  default_rate_limit: 10               # Fallback rate limit (req/s) if profiling has no data
+
+# -- Tools parameters (post-processing, optional) -----------------------------
+# Set num_workers > 0 to enable. Leave at 0 to skip.
+tools_parameters:
+  num_workers: 0
+  max_nodes: 0
+  workers_per_node: 0
+  cpu_per_worker: 0
+  threshold_size: 224                  # Filter out images smaller than this (px)
+  new_resize_size: 720                 # Resize target for the resize tool
